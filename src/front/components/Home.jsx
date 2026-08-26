@@ -2,7 +2,7 @@ import React from "react";
 
 export const Home = () => {
   return (
-    <div 
+    <div
       className="min-vh-100 text-light py-4 px-2 px-md-4"
       style={{
         background: "radial-gradient(ellipse at top, #1e3a8a 0%, #0f172a 70%, #090d16 100%)",
@@ -10,14 +10,14 @@ export const Home = () => {
       }}
     >
       <div className="container-fluid max-w-1200">
-        
+
         {/* REJILLA PRINCIPAL DEL PORTAL */}
         <div className="row g-4">
-          
+
           {/* COLUMNA IZQUIERDA: TARJETAS DE ACCESO RÁPIDO */}
           <div className="col-12 col-lg-8">
             <div className="row g-3">
-              
+
               {/* Citas Médicas */}
               <div className="col-12 col-md-6">
                 <div className="card h-100 bg-white bg-opacity-10 border border-white border-opacity-25 rounded-4 p-3 shadow-lg text-white" style={{ backdropFilter: "blur(12px)" }}>
@@ -71,7 +71,7 @@ export const Home = () => {
 
           {/* COLUMNA DERECHA: WIDGETS LATERALES */}
           <div className="col-12 col-lg-4 d-flex flex-column gap-3">
-            
+
             {/* Widget Mi Salud */}
             <div className="card bg-white bg-opacity-10 border border-white border-opacity-25 rounded-4 p-3 shadow-lg text-white" style={{ backdropFilter: "blur(12px)" }}>
               <div className="d-flex justify-content-between align-items-center mb-2">

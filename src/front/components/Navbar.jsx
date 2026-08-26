@@ -6,15 +6,15 @@ export const Navbar = () => {
 
   return (
     <header className="w-100 text-light py-2 px-3 px-md-4 border-bottom border-white border-opacity-10" style={{ background: "rgba(15, 23, 42, 0.8)", backdropFilter: "blur(10px)" }}>
-      
+
       {/* BARRA SUPERIOR PRINCIPAL */}
       <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
-        
+
         {/* Lado Izquierdo: Selector de Region + Búsqueda + Logo */}
         <div className="d-flex align-items-center gap-3 flex-wrap">
-          
+
           {/* Selector de Comunidad Autónoma (Requisito de Alex) */}
-          <select 
+          <select
             className="form-select form-select-sm bg-white bg-opacity-10 text-white border-0 cursor-pointer"
             style={{ width: "auto" }}
             value={selectedRegion}
