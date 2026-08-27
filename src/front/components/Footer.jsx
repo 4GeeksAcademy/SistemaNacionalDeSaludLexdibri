@@ -1,11 +1,17 @@
-export const Footer = () => (
-	<footer className="footer mt-auto py-3 text-center">
-		<p>
-			Check the <a target="_blank" href="https://4geeks.com/docs/start/react-flask-template">template documentation</a> <i className="fa-solid fa-file"></i> for help.
-		</p>
-		<p>
-			Made with <i className="fa fa-heart text-danger" /> by{" "}
-			<a href="http://www.4geeksacademy.com">4Geeks Academy</a>
-		</p>
-	</footer>
-);
+export const Footer = () => {
+    return (
+        <footer className="bg-dark text-white mt-auto py-4">
+            <div className="container text-center">
+                <h6 className="mb-2">Sistema Nacional de Salud</h6>
+
+                <p className="mb-1">
+                    Plataforma de gestión y consulta de información sanitaria.
+                </p>
+
+                <small className="text-secondary">
+                    © {new Date().getFullYear()} Sistema Nacional de Salud
+                </small>
+            </div>
+        </footer>
+    );
+};
