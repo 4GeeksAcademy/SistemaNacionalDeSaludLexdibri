@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Cardiología",
+    "description": "Especialidad dedicada al diagnóstico y tratamiento de enfermedades del corazón."
+  },
+  {
+    "name": "Dermatología",
+    "description": "Especialidad dedicada a las enfermedades de la piel."
+  },
+  {
+    "name": "Pediatría",
+    "description": "Atención médica de niños y adolescentes."
+  }
+]
