@@ -40,41 +40,48 @@ def seed_patients():
     with open(json_route, "r", encoding="utf-8") as file:
         patients = json.load(file)
 
+    existing = 0
+    created = 0
+
     for data in patients:
+
         user = User.query.filter_by(email=data["email"]).first()
+
         if user:
             existing += 1
             continue
 
-    user = User(
-        email=data["email"],
-        password_hash=generate_password_hash(data["password"]),
-        first_name=data["first_name"],
-        last_name=data["last_name"],
-        dni=data["dni"],
-        phone=data["phone"],
-        date_of_birth=datetime.strptime(
-            data["date_of_birth"], "%Y-%m-%d"
-        ).date(),
-        sex=data["sex"],
-        is_active=data["is_active"],
-        role=UserRole(data["role"])
-    )
+        user = User(
+            email=data["email"],
+            password_hash=generate_password_hash(data["password"]),
+            first_name=data["first_name"],
+            last_name=data["last_name"],
+            dni=data["dni"],
+            phone=data["phone"],
+            date_of_birth=datetime.strptime(
+                data["date_of_birth"], "%Y-%m-%d"
+            ).date(),
+            sex=data["sex"],
+            is_active=data["is_active"],
+            role=UserRole(data["role"])
+        )
 
-    patient = Patient(
-        cip=data["cip"],
-        blood_type=data["blood_type"]
-    )
+        patient = Patient(
+            cip=data["cip"],
+            blood_type=data["blood_type"]
+        )
 
-    # Relación User 1:1 Patient
-    user.patient = patient
+        # Relación User 1:1 Patient
+        user.patient = patient
 
-    db.session.add(user)
+        db.session.add(user)
+        created += 1
 
     db.session.commit()
 
     return jsonify({
         "message": "Pacientes creados correctamente",
+        "creados": created,
         "ya_existian": existing
     }), 200
 
@@ -91,8 +98,13 @@ def seed_doctors():
     with open(json_route, "r", encoding="utf-8") as file:
         doctors = json.load(file)
 
+    existing = 0
+    created = 0
+
     for data in doctors:
+
         user = User.query.filter_by(email=data["email"]).first()
+
         if user:
             existing += 1
             continue
@@ -122,11 +134,13 @@ def seed_doctors():
         user.doctor = doctor
 
         db.session.add(user)
+        created += 1
 
     db.session.commit()
 
     return jsonify({
         "message": "Doctores creados correctamente",
+        "creados": created,
         "ya_existian": existing
     }), 200
 
