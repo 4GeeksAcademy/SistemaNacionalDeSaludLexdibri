@@ -9,7 +9,8 @@ from flask_cors import CORS
 from datetime import datetime
 import os
 import json
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash,check_password_hash
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 
 api = Blueprint('api', __name__)
 
@@ -170,4 +171,168 @@ def seed_specialties():
     return jsonify({
         "message": "Especialidades creadas correctamente",
         "total": len(specialties)
+    }), 200
+
+
+@api.route("/register", methods=["POST"])
+def registro_usuario():
+
+    data = request.get_json()
+
+    if not data:
+        return jsonify({
+            "error": "No se han enviado datos"
+        }), 400
+
+    # Campos comunes
+    required_fields = [
+        "email",
+        "password",
+        "first_name",
+        "last_name",
+        "dni",
+        "phone",
+        "date_of_birth",
+        "sex",
+        "role"
+    ]
+
+    for field in required_fields:
+        if field not in data:
+            return jsonify({
+                "error": f"Falta el campo: {field}"
+            }), 400
+
+    # Comprobar role
+    if data["role"] not in ["patient", "doctor"]:
+        return jsonify({
+            "error": "El role debe ser 'patient' o 'doctor'"
+        }), 400
+
+    # Comprobar email
+    existing_user = User.query.filter_by(
+        email=data["email"]
+    ).first()
+
+    if existing_user:
+        return jsonify({
+            "error": "El email ya está registrado"
+        }), 409
+
+    # Crear User
+    user = User(
+        email=data["email"],
+        password_hash=generate_password_hash(data["password"]),
+        first_name=data["first_name"],
+        last_name=data["last_name"],
+        dni=data["dni"],
+        phone=data["phone"],
+        date_of_birth=datetime.strptime(
+            data["date_of_birth"],
+            "%Y-%m-%d"
+        ).date(),
+        sex=data["sex"],
+        is_active=True,
+        role=UserRole(data["role"])
+    )
+
+    # Si es paciente
+    if data["role"] == "patient":
+
+        if "cip" not in data or "blood_type" not in data:
+            return jsonify({
+                "error": "Para un paciente se necesita cip y blood_type"
+            }), 400
+
+        patient = Patient(
+            cip=data["cip"],
+            blood_type=data["blood_type"]
+        )
+
+        user.patient = patient
+
+    # Si es médico
+    elif data["role"] == "doctor":
+
+        if "medical_license" not in data:
+            return jsonify({
+                "error": "Para un médico se necesita medical_license"
+            }), 400
+
+        doctor = Doctor(
+            medical_license=data["medical_license"],
+            specialty_id=data["specialty_id"],
+            years_experience=data["years_experience"]
+        )
+
+        user.doctor = doctor
+
+    db.session.add(user)
+    db.session.commit()
+
+    return jsonify({
+        "message": "Usuario registrado correctamente",
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "role": user.role.value
+        }
+    }), 201
+
+
+@api.route("/login", methods=["POST"])
+def login():
+
+    data = request.get_json()
+
+    if not data:
+        return jsonify({
+            "error": "No se han enviado datos"
+        }), 400
+
+    email = data.get("email")
+    password = data.get("password")
+
+    if not email or not password:
+        return jsonify({
+            "error": "Email y contraseña son obligatorios"
+        }), 400
+
+    # Buscar usuario
+    user = User.query.filter_by(email=email).first()
+
+    if not user:
+        return jsonify({
+            "error": "Email o contraseña incorrectos"
+        }), 401
+
+    # Comprobar contraseña
+    if not check_password_hash(user.password_hash, password):
+        return jsonify({
+            "error": "Email o contraseña incorrectos"
+        }), 401
+
+    # Comprobar usuario activo
+    if not user.is_active:
+        return jsonify({
+            "error": "El usuario está desactivado"
+        }), 403
+
+    # Crear JWT
+    access_token = create_access_token(
+        identity=str(user.id)
+    )
+
+    return jsonify({
+        "message": "Inicio de sesión correcto",
+        "access_token": access_token,
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "role": user.role.value
+        }
     }), 200
