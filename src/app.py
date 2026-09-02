@@ -30,7 +30,7 @@ else:
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-app.config["JWT_SECRET_KEY"] = "super-secret-key-cambiame"
+app.config["JWT_SECRET_KEY"] = os.getenv('JWT_SECRET_KEY')
 jwt = JWTManager(app)
 
 MIGRATE = Migrate(app, db, compare_type=True)
