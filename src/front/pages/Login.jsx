@@ -9,17 +9,52 @@ export const Login = () => {
     const [error, setError] = useState("");
     const [tipoUsuario, setTipoUsuario] = useState("paciente");
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
 
-        // Por ahora hacemos un login de prueba
-        if (email && password) {
-            setError("");
-            navigate("/home");
-        } else {
+        if (!email || !password) {
             setError("Por favor, completa todos los campos");
+            return;
         }
-    };
+
+        try {
+            setError("");
+
+            const baseUrl = (import.meta.env.VITE_BACKEND_URL || "http://localhost:3001").replace(/\/$/, "");
+            const response = await fetch(`${baseUrl}/api/login`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    email: email,
+                    password: password,
+                }),
+            });
+
+            let data = {};
+            try {
+                data = await response.json();
+            } catch {
+                data = {};
+            }
+
+            console.log("status:", response.status);
+            console.log("respuesta del servidor:", data);
+
+            if (!response.ok) {
+                setError(data.message || data.error || "Email o contraseña incorrectos");
+                return;
+            }
+
+            console.log("Usuario autenticado:", data);
+            navigate("/home");
+
+        } catch (error) {
+            console.error("Error al conectar con el servidor:", error);
+            setError("No se pudo conectar con el servidor");
+        }
+    }
 
     return (
         <div
