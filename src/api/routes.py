@@ -9,7 +9,7 @@ from flask_cors import CORS
 from datetime import datetime
 import os
 import json
-from werkzeug.security import generate_password_hash,check_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 
 api = Blueprint('api', __name__)
@@ -336,3 +336,38 @@ def login():
             "role": user.role.value
         }
     }), 200
+
+
+@api.route("/dashboard", methods=["GET"])
+@jwt_required()
+def entrar_en_dashboard():
+
+    # Sacamos el ID del usuario del token
+    user_id = get_jwt_identity()
+
+    # Buscamos al usuario
+    user = User.query.get(user_id)
+
+    if not user:
+        return jsonify({
+            "error": "Usuario no encontrado"
+        }), 404
+
+    # Según el role, indicamos qué dashboard corresponde
+    if user.role == UserRole.doctor:
+        return jsonify({
+            "message": "Acceso permitido",
+            "dashboard": "doctor",
+            "redirect": "/dashboard/doctor"
+        }), 200
+
+    elif user.role == UserRole.patient:
+        return jsonify({
+            "message": "Acceso permitido",
+            "dashboard": "patient",
+            "redirect": "/dashboard/patient"
+        }), 200
+
+    return jsonify({
+        "error": "Role no válido"
+    }), 403
