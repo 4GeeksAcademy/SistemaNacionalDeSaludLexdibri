@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { iniciarSesion, getDashboard } from "../services/authServices";
 
 export const Login = () => {
     const navigate = useNavigate();
@@ -11,50 +12,18 @@ export const Login = () => {
 
     const handleLogin = async (e) => {
         e.preventDefault();
-
-        if (!email || !password) {
-            setError("Por favor, completa todos los campos");
-            return;
-        }
-
+        if (!email || !password) { setError("Por favor, completa todos los campos"); return; }
         try {
-            setError("");
-
-            const baseUrl = (import.meta.env.VITE_BACKEND_URL || "http://localhost:3001").replace(/\/$/, "");
-            const response = await fetch(`${baseUrl}/api/login`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    email: email,
-                    password: password,
-                }),
-            });
-
-            let data = {};
-            try {
-                data = await response.json();
-            } catch {
-                data = {};
-            }
-
-            console.log("status:", response.status);
-            console.log("respuesta del servidor:", data);
-
-            if (!response.ok) {
-                setError(data.message || data.error || "Email o contraseña incorrectos");
-                return;
-            }
-
+            setError(""); const data = await iniciarSesion({ email, password });
             console.log("Usuario autenticado:", data);
-            navigate("/home");
-
+            localStorage.setItem("access_token", data.access_token);
+            const dashboard = await getDashboard(data.access_token);
+            console.log("Dashboard:", dashboard); if (dashboard.dashboard === "doctor") { navigate("/dashboard/doctor"); } else if (dashboard.dashboard === "patient") { navigate("/dashboard/patient"); }
         } catch (error) {
-            console.error("Error al conectar con el servidor:", error);
-            setError("No se pudo conectar con el servidor");
+            console.error(error);
+            setError(error.message);
         }
-    }
+    };
 
     return (
         <div
