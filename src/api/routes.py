@@ -9,8 +9,10 @@ from flask_cors import CORS
 from datetime import datetime
 import os
 import json
+import requests
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+
 
 api = Blueprint('api', __name__)
 
@@ -364,3 +366,36 @@ def entrar_en_dashboard():
         }), 200
 
     return jsonify({"error": "Role no válido"}), 403
+
+
+# Obtener enfermedades de API externa
+
+@api.route("/enfermedades", methods=["GET"])
+def obtener_enfermedades():
+
+    url = "https://analisis.datosabiertos.jcyl.es/api/explore/v2.1/catalog/datasets/enfermedades-de-declaracion-obligatoria-casos-por-grupo-de-edad/records"
+
+    params = {
+        "select": "enfermedad",
+        "group_by": "enfermedad",
+        "order_by": "enfermedad",
+        "limit": 100
+    }
+
+    response = requests.get(url, params=params)
+
+    if response.status_code != 200:
+        return jsonify({
+            "error": "No se han podido obtener las enfermedades"
+        }), 500
+
+    data = response.json()
+
+    enfermedades = [
+        item["enfermedad"]
+        for item in data.get("results", [])
+    ]
+
+    return jsonify({
+        "enfermedades": enfermedades
+    }), 200
