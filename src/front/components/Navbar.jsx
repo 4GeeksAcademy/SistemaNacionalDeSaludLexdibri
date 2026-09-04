@@ -9,14 +9,9 @@ export const Navbar = () => {
       className="w-100 text-light py-2 px-3 px-md-4 border-bottom border-white border-opacity-10 position-relative" 
       style={{ background: "rgba(15, 23, 42, 0.85)", backdropFilter: "blur(10px)", zIndex: 1000 }}
     >
-
       {/* BARRA SUPERIOR PRINCIPAL */}
       <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
-
-        {/* Lado Izquierdo: Selector de Region + Búsqueda + Logo */}
         <div className="d-flex align-items-center gap-3 flex-wrap">
-
-          {/* Selector de Comunidad Autónoma */}
           <select
             className="form-select form-select-sm bg-white bg-opacity-10 text-white border-0 cursor-pointer"
             style={{ width: "auto" }}
@@ -30,7 +25,6 @@ export const Navbar = () => {
             <option value="Valencia" className="text-dark">GVA - Comunitat Valenciana</option>
           </select>
 
-          {/* Input de Búsqueda Rápida */}
           <div className="input-group input-group-sm d-none d-md-flex" style={{ maxWidth: "240px" }}>
             <span className="input-group-text bg-white bg-opacity-10 border-0 text-white-50">🔍</span>
             <input 
@@ -40,8 +34,7 @@ export const Navbar = () => {
             />
           </div>
 
-          {/* Logo Principal */}
-          <Link to="/" className="text-decoration-none h5 m-0 fw-bold text-white d-flex align-items-center gap-2">
+          <Link to="/home" className="text-decoration-none h5 m-0 fw-bold text-white d-flex align-items-center gap-2">
             <span className="fs-3 text-info">+</span> Sistema Nacional de Salud
           </Link>
         </div>
@@ -81,17 +74,30 @@ export const Navbar = () => {
         </div>
       </div>
 
-      {/* NAVEGACIÓN SECUNDARIA */}
+      {/* NAVEGACIÓN SECUNDARIA CON RUTAS CONECTADAS */}
       <nav className="d-flex gap-3 gap-md-4 text-white-50 small flex-wrap pt-2 border-top border-white border-opacity-10">
-        <span className="text-white opacity-75 cursor-pointer">Cuadro Médico ▾</span>
-        <span className="text-white opacity-75 cursor-pointer">Especialidades ▾</span>
-        <span className="text-white opacity-75 cursor-pointer">Diagnóstico y Tecnología ▾</span>
-        <span className="text-white opacity-75 cursor-pointer">Salud Pública ▾</span>
-        <span className="text-white opacity-75 cursor-pointer">El Sistema ▾</span>
-        <span className="text-white opacity-75 cursor-pointer">Contacto</span>
-        <span className="text-danger fw-bold cursor-pointer">Urgencias ▾</span>
+        <Link to="/cuadro-medico" className="text-white text-decoration-none opacity-75 opacity-100-hover">
+          Cuadro Médico
+        </Link>
+        <Link to="/especialidades" className="text-white text-decoration-none opacity-75 opacity-100-hover">
+          Especialidades
+        </Link>
+        <Link to="/diagnostico" className="text-white text-decoration-none opacity-75 opacity-100-hover">
+          Diagnóstico y Tecnología
+        </Link>
+        <Link to="/salud-publica" className="text-white text-decoration-none opacity-75 opacity-100-hover">
+          Salud Pública
+        </Link>
+        <Link to="/el-sistema" className="text-white text-decoration-none opacity-75 opacity-100-hover">
+          El Sistema
+        </Link>
+        <Link to="/contacto" className="text-white text-decoration-none opacity-75 opacity-100-hover">
+          Contacto
+        </Link>
+        <Link to="/urgencias" className="text-danger fw-bold text-decoration-none">
+          Urgencias 🚨
+        </Link>
       </nav>
-
     </header>
   );
 };
