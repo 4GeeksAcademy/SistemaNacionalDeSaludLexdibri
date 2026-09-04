@@ -338,6 +338,8 @@ def login():
     }), 200
 
 
+# Acceso a dashboard´s
+
 @api.route("/dashboard", methods=["GET"])
 @jwt_required()
 def entrar_en_dashboard():
