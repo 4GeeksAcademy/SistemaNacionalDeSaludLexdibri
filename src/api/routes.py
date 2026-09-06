@@ -3,7 +3,7 @@ This module takes care of starting the API Server, Loading the DB and Adding the
 """
 
 from flask import Flask, request, jsonify, url_for, Blueprint
-from api.models import db, User, Patient, Doctor, Specialty, UserRole
+from api.models import db, User, Patient, Doctor, Specialty, UserRole, Disease
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from datetime import datetime
@@ -370,8 +370,8 @@ def entrar_en_dashboard():
 
 # Obtener enfermedades de API externa
 
-@api.route("/enfermedades", methods=["GET"])
-def obtener_enfermedades():
+@api.route("/seed/enfermedades", methods=["GET"])
+def sincronizar_enfermedades():
 
     url = "https://analisis.datosabiertos.jcyl.es/api/explore/v2.1/catalog/datasets/enfermedades-de-declaracion-obligatoria-casos-por-grupo-de-edad/records"
 
@@ -382,20 +382,80 @@ def obtener_enfermedades():
         "limit": 100
     }
 
-    response = requests.get(url, params=params)
+    try:
+        response = requests.get(
+            url,
+            params=params,
+            timeout=10
+        )
+        response.raise_for_status()
 
-    if response.status_code != 200:
+    except requests.RequestException as e:
         return jsonify({
-            "error": "No se han podido obtener las enfermedades"
+            "error": "No se han podido obtener las enfermedades",
+            "details": str(e)
         }), 500
 
     data = response.json()
 
     enfermedades = [
-        item["enfermedad"]
+        item["enfermedad"].strip()
         for item in data.get("results", [])
+        if item.get("enfermedad")
     ]
 
+    enfermedades_creadas = 0
+
+    for nombre in enfermedades:
+
+        disease = db.session.execute(
+            db.select(Disease).where(Disease.name == nombre)
+        ).scalar_one_or_none()
+
+        if disease is None:
+
+            disease = Disease(
+                name=nombre,
+                code=None,
+                description=None
+            )
+
+            db.session.add(disease)
+            enfermedades_creadas += 1
+
+    db.session.commit()
+
     return jsonify({
-        "enfermedades": enfermedades
+        "message": "Enfermedades sincronizadas correctamente",
+        "obtenidas": len(enfermedades),
+        "nuevas": enfermedades_creadas
+    }), 200
+
+
+@api.route("/doctor/enfermedades", methods=["GET"])
+@jwt_required()
+def obtener_enfermedades():
+
+    user_id = get_jwt_identity()
+    user = db.session.get(User, int(user_id))
+
+    if not user:
+        return jsonify({
+            "error": "Usuario no encontrado"
+        }), 404
+
+    if user.role != UserRole.DOCTOR:
+        return jsonify({
+            "error": "No tienes permisos para acceder a las enfermedades"
+        }), 403
+
+    diseases = db.session.execute(
+        db.select(Disease).order_by(Disease.name)
+    ).scalars().all()
+
+    return jsonify({
+        "enfermedades": [
+            disease.serialize()
+            for disease in diseases
+        ]
     }), 200
