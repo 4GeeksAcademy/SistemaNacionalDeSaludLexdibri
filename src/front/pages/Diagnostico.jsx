@@ -29,16 +29,15 @@ export const Diagnostico = () => {
 
     return (
         <div className="diagnostico-page">
-
-            {/* HERO */}
             <section className="diagnostico-hero">
                 <div className="container">
                     <div className="row justify-content-center text-center">
                         <div className="col-lg-9">
-                            <div className="diagnostico-hero-content">
 
-                                <span className="badge rounded-pill bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-3 py-2 mb-4">
-                                    Diagnóstico y Tecnología
+                            <div className="diagnostico-hero-content scroll-reveal">
+
+                                <span className="especialidades-badge">
+                                    Sistema nacional de salud LEXDIBRI
                                 </span>
 
                                 <h1 className="display-3 fw-bold text-white mb-4">
@@ -57,6 +56,7 @@ export const Diagnostico = () => {
                                 </p>
 
                             </div>
+
                         </div>
                     </div>
                 </div>
@@ -64,10 +64,10 @@ export const Diagnostico = () => {
                 <div className="diagnostico-hero-glow"></div>
             </section>
 
-
             {/* INTRO */}
-            <section className="container pb-5">
-                <div className="diagnostico-intro">
+            <section className="container py-5">
+
+                <div className="diagnostico-intro scroll-reveal">
 
                     <span className="text-info small fw-semibold text-uppercase">
                         Innovación sanitaria
@@ -86,14 +86,17 @@ export const Diagnostico = () => {
                     </p>
 
                 </div>
+
             </section>
 
 
             {/* 01 */}
             <section className="container py-5">
+
                 <div className="row align-items-center g-5 diagnostico-feature">
 
                     <div className="col-lg-6">
+
                         <div className="diagnostico-image scroll-reveal">
 
                             <img
@@ -109,9 +112,11 @@ export const Diagnostico = () => {
                             </div>
 
                         </div>
+
                     </div>
 
                     <div className="col-lg-6">
+
                         <div className="diagnostico-content scroll-reveal">
 
                             <span className="text-info small fw-semibold">
@@ -136,6 +141,7 @@ export const Diagnostico = () => {
                             </p>
 
                             <div className="diagnostico-highlight">
+
                                 <span className="text-info fw-bold">
                                     IA + Diagnóstico
                                 </span>
@@ -145,20 +151,25 @@ export const Diagnostico = () => {
                                     profesional a tomar decisiones con mayor
                                     información.
                                 </p>
+
                             </div>
 
                         </div>
+
                     </div>
 
                 </div>
+
             </section>
 
 
             {/* 02 */}
             <section className="container py-5">
+
                 <div className="row align-items-center g-5 diagnostico-feature">
 
                     <div className="col-lg-6 order-2 order-lg-1">
+
                         <div className="diagnostico-content scroll-reveal">
 
                             <span className="text-info small fw-semibold">
@@ -188,9 +199,11 @@ export const Diagnostico = () => {
                             </div>
 
                         </div>
+
                     </div>
 
                     <div className="col-lg-6 order-1 order-lg-2">
+
                         <div className="diagnostico-image scroll-reveal">
 
                             <img
@@ -206,17 +219,21 @@ export const Diagnostico = () => {
                             </div>
 
                         </div>
+
                     </div>
 
                 </div>
+
             </section>
 
 
             {/* 03 */}
             <section className="container py-5">
+
                 <div className="row align-items-center g-5 diagnostico-feature">
 
                     <div className="col-lg-6">
+
                         <div className="diagnostico-image scroll-reveal">
 
                             <img
@@ -232,9 +249,11 @@ export const Diagnostico = () => {
                             </div>
 
                         </div>
+
                     </div>
 
                     <div className="col-lg-6">
+
                         <div className="diagnostico-content scroll-reveal">
 
                             <span className="text-info small fw-semibold">
@@ -273,17 +292,21 @@ export const Diagnostico = () => {
                             </div>
 
                         </div>
+
                     </div>
 
                 </div>
+
             </section>
 
 
             {/* 04 */}
             <section className="container py-5">
+
                 <div className="row align-items-center g-5 diagnostico-feature">
 
                     <div className="col-lg-6 order-2 order-lg-1">
+
                         <div className="diagnostico-content scroll-reveal">
 
                             <span className="text-info small fw-semibold">
@@ -314,9 +337,11 @@ export const Diagnostico = () => {
                             </div>
 
                         </div>
+
                     </div>
 
                     <div className="col-lg-6 order-1 order-lg-2">
+
                         <div className="diagnostico-image scroll-reveal">
 
                             <img
@@ -332,17 +357,21 @@ export const Diagnostico = () => {
                             </div>
 
                         </div>
+
                     </div>
 
                 </div>
+
             </section>
 
 
             {/* 05 */}
             <section className="container py-5">
+
                 <div className="row align-items-center g-5 diagnostico-feature">
 
                     <div className="col-lg-6">
+
                         <div className="diagnostico-image scroll-reveal">
 
                             <img
@@ -358,9 +387,11 @@ export const Diagnostico = () => {
                             </div>
 
                         </div>
+
                     </div>
 
                     <div className="col-lg-6">
+
                         <div className="diagnostico-content scroll-reveal">
 
                             <span className="text-info small fw-semibold">
@@ -400,16 +431,18 @@ export const Diagnostico = () => {
                             </div>
 
                         </div>
+
                     </div>
 
                 </div>
+
             </section>
 
 
             {/* FINAL */}
             <section className="container py-5">
 
-                <div className="diagnostico-future">
+                <div className="diagnostico-future scroll-reveal">
 
                     <div className="diagnostico-future-line"></div>
 

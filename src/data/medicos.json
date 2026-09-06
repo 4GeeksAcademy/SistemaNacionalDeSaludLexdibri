@@ -12,10 +12,10 @@
     "medical_license": "MED-000001",
     "specialty_id": 1,
     "years_experience": 18,
-    "role": "doctor"
+    "role": "doctor"juan.garcia@hospital.com
   },
   {
-    "email": "juan.garcia@hospital.com",
+    "email": "",
     "password": "Doctor123!",
     "first_name": "Juan",
     "last_name": "García Fernández",

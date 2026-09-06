@@ -28,13 +28,15 @@ export const router = createBrowserRouter(
             element={<Layout />}
             errorElement={<h1>Not found!</h1>}
         >
-            <Route index element={<Login />} />
+
+            <Route index element={<Home/>}/>
+            <Route path="/login" element={<Login />} />
 
             <Route path="dashboard/paciente" element={<DashboardPaciente />} />
             <Route path="registro" element={<Register />} />
             <Route path="demo" element={<Demo />} />
             <Route path="single/:theId" element={<Single />} />
-            <Route path="home" element={<Home/>}/>
+            
 
 
             {/* Rutas vinculadas a sus páginas correspondientes */}

@@ -116,11 +116,14 @@ export const Home = () => {
                 {/* TARJETAS CENTRADAS */}
                 <div className="row g-4 justify-content-center">
 
+                    {/* ESPECIALIDADES */}
                     <div className="col-md-6 col-lg-3 scroll-reveal">
+
                         <Link
                             to="/especialidades"
                             className="home-service-card text-decoration-none"
                         >
+
                             <div className="home-service-icon">
                                 🩺
                             </div>
@@ -136,15 +139,20 @@ export const Home = () => {
                             <span className="home-arrow">
                                 →
                             </span>
+
                         </Link>
+
                     </div>
 
 
+                    {/* DIAGNÓSTICO */}
                     <div className="col-md-6 col-lg-3 scroll-reveal">
+
                         <Link
                             to="/diagnostico"
                             className="home-service-card text-decoration-none"
                         >
+
                             <div className="home-service-icon">
                                 🔬
                             </div>
@@ -160,15 +168,20 @@ export const Home = () => {
                             <span className="home-arrow">
                                 →
                             </span>
+
                         </Link>
+
                     </div>
 
 
+                    {/* SALUD PÚBLICA */}
                     <div className="col-md-6 col-lg-3 scroll-reveal">
+
                         <Link
                             to="/salud-publica"
                             className="home-service-card text-decoration-none"
                         >
+
                             <div className="home-service-icon">
                                 🌐
                             </div>
@@ -184,7 +197,9 @@ export const Home = () => {
                             <span className="home-arrow">
                                 →
                             </span>
+
                         </Link>
+
                     </div>
 
                 </div>
@@ -201,6 +216,7 @@ export const Home = () => {
 
                     <div className="row align-items-center g-5">
 
+                        {/* TEXTO */}
                         <div className="col-lg-6">
 
                             <span className="text-info small fw-semibold text-uppercase">
@@ -235,12 +251,16 @@ export const Home = () => {
                         </div>
 
 
+                        {/* ESTADÍSTICAS */}
                         <div className="col-lg-6">
 
                             <div className="row g-3">
 
+                                {/* COMUNIDADES */}
                                 <div className="col-6 scroll-reveal">
+
                                     <div className="home-stat-card">
+
                                         <span className="text-info fs-2 fw-bold">
                                             17
                                         </span>
@@ -252,12 +272,17 @@ export const Home = () => {
                                         <small className="text-white-50">
                                             Servicios sanitarios coordinados
                                         </small>
+
                                     </div>
+
                                 </div>
 
 
+                                {/* ATENCIÓN */}
                                 <div className="col-6 scroll-reveal">
+
                                     <div className="home-stat-card">
+
                                         <span className="text-info fs-2 fw-bold">
                                             24/7
                                         </span>
@@ -269,12 +294,17 @@ export const Home = () => {
                                         <small className="text-white-50">
                                             Servicios de urgencias
                                         </small>
+
                                     </div>
+
                                 </div>
 
 
+                                {/* PROFESIONALES */}
                                 <div className="col-6 scroll-reveal">
+
                                     <div className="home-stat-card">
+
                                         <span className="text-info fs-2 fw-bold">
                                             +1M
                                         </span>
@@ -286,12 +316,17 @@ export const Home = () => {
                                         <small className="text-white-50">
                                             Formando parte de la red sanitaria
                                         </small>
+
                                     </div>
+
                                 </div>
 
 
+                                {/* COBERTURA */}
                                 <div className="col-6 scroll-reveal">
+
                                     <div className="home-stat-card">
+
                                         <span className="text-info fs-2 fw-bold">
                                             🇪🇸
                                         </span>
@@ -303,7 +338,9 @@ export const Home = () => {
                                         <small className="text-white-50">
                                             Atención sanitaria pública
                                         </small>
+
                                     </div>
+
                                 </div>
 
                             </div>
@@ -325,6 +362,7 @@ export const Home = () => {
                 <div className="home-emergency scroll-reveal">
 
                     <div>
+
                         <span className="text-danger fw-bold">
                             ATENCIÓN INMEDIATA
                         </span>
@@ -337,6 +375,7 @@ export const Home = () => {
                             En caso de emergencia sanitaria, contacta con los
                             servicios de emergencias de tu comunidad.
                         </p>
+
                     </div>
 
                     <Link
