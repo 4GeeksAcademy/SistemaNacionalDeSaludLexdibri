@@ -1,0 +1,557 @@
+/* ========================================
+   ESTILOS GLOBALES
+   ======================================== */
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* ========================================
+   FONDO GENERAL DE LA APLICACIÓN
+   ======================================== */
+
+.app-background {
+  min-height: 100vh;
+
+  background: radial-gradient(
+    ellipse at top,
+    #1e3a8a 0%,
+    #0f172a 70%,
+    #090d16 100%
+  );
+
+  color: white;
+}
+
+/* ========================================
+   CONTENIDO PRINCIPAL
+   ======================================== */
+
+.app-content {
+  min-height: calc(100vh - 120px);
+}
+
+/* ========================================
+   TARJETAS TRANSPARENTES
+   ======================================== */
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.1);
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  border: 1px solid rgba(255, 255, 255, 0.25);
+
+  border-radius: 1rem;
+
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+/* ========================================
+   TEXTOS
+   ======================================== */
+
+.text-muted-light {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+/* ========================================
+   BOTONES PRINCIPALES
+   ======================================== */
+
+.btn-primary-custom {
+  background: #0284c7;
+  border: none;
+  color: white;
+}
+
+.btn-primary-custom:hover {
+  background: #0369a1;
+  color: white;
+}
+
+/* ========================================
+   INPUTS
+   ======================================== */
+
+.form-control-custom {
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+}
+
+.form-control-custom:focus {
+  border-color: #0284c7;
+
+  box-shadow: 0 0 0 0.2rem rgba(2, 132, 199, 0.25);
+}
+
+/* ========================================
+   NAVBAR
+   ======================================== */
+
+.navbar-sns {
+  width: 100%;
+  padding: 0.5rem 1rem;
+
+  color: white;
+
+  background: #212529;
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+  position: relative;
+  z-index: 1000;
+}
+
+@media (min-width: 768px) {
+  .navbar-sns {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+/* ========================================
+   DIAGNÓSTICO
+   ======================================== */
+
+.diagnostico-page {
+  overflow: hidden;
+}
+
+/* ========================================
+   HERO
+   ======================================== */
+
+.diagnostico-hero {
+  position: relative;
+
+  padding: 7rem 0 6rem;
+
+  overflow: hidden;
+}
+
+.diagnostico-hero-content {
+  position: relative;
+  z-index: 2;
+}
+
+.diagnostico-hero-title {
+  letter-spacing: -0.045em;
+}
+
+.diagnostico-hero-text {
+  line-height: 1.8;
+}
+
+/* ========================================
+   BRILLO DEL HERO
+   ======================================== */
+
+.diagnostico-hero-glow {
+  position: absolute;
+
+  width: 600px;
+  height: 600px;
+
+  top: -350px;
+  left: 50%;
+
+  transform: translateX(-50%);
+
+  background: rgba(13, 202, 240, 0.1);
+
+  filter: blur(100px);
+
+  border-radius: 50%;
+
+  pointer-events: none;
+}
+
+/* ========================================
+   INTRODUCCIÓN
+   ======================================== */
+
+.diagnostico-intro {
+  max-width: 850px;
+
+  margin: 0 auto;
+
+  padding: 2rem 0;
+
+  text-align: center;
+}
+
+.diagnostico-intro h2 {
+  font-size: 2rem;
+}
+
+/* ========================================
+   BLOQUES DE TECNOLOGÍA
+   ======================================== */
+
+.diagnostico-feature {
+  min-height: 520px;
+}
+
+/* ========================================
+   COLUMNAS DE IMAGEN
+   ======================================== */
+
+.diagnostico-image-column {
+  width: 100%;
+}
+
+/* ========================================
+   CONTENEDOR DE IMAGEN
+   ======================================== */
+
+.diagnostico-image {
+  position: relative;
+
+  height: 480px;
+
+  overflow: hidden;
+
+  border-radius: 1.5rem;
+
+  background: rgba(255, 255, 255, 0.05);
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 12%,
+    black 85%,
+    transparent 100%
+  );
+
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 12%,
+    black 85%,
+    transparent 100%
+  );
+
+  opacity: 1;
+
+  transform: translateY(0);
+
+  transition:
+    opacity 1.2s ease,
+    transform 1.2s ease;
+}
+
+/* ========================================
+   ESTADO INICIAL DE LA IMAGEN
+   ======================================== */
+
+.diagnostico-image.scroll-reveal {
+  opacity: 0;
+
+  transform: translateY(40px);
+}
+
+/* ========================================
+   IMAGEN CUANDO ENTRA EN PANTALLA
+   ======================================== */
+
+.diagnostico-image.scroll-reveal.visible {
+  opacity: 1;
+
+  transform: translateY(0);
+}
+
+/* ========================================
+   IMAGEN INTERNA
+   ======================================== */
+
+.diagnostico-image img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  display: block;
+
+  transition: transform 6s ease;
+}
+
+/* ========================================
+   ZOOM DE IMAGEN AL PASAR EL RATÓN
+   ======================================== */
+
+.diagnostico-image:hover img {
+  transform: scale(1.15);
+}
+
+/* ========================================
+   OVERLAY DE IMAGEN
+   ======================================== */
+
+.diagnostico-image-overlay {
+  position: absolute;
+
+  inset: 0;
+
+  background: linear-gradient(
+    to top,
+    rgba(5, 10, 20, 0.8),
+    rgba(5, 10, 20, 0.05) 60%
+  );
+
+  pointer-events: none;
+}
+
+/* ========================================
+   ETIQUETA DE IMAGEN
+   ======================================== */
+
+.diagnostico-image-label {
+  position: absolute;
+
+  left: 1.5rem;
+  bottom: 1.5rem;
+
+  z-index: 2;
+
+  display: flex;
+  align-items: center;
+
+  gap: 0.75rem;
+
+  padding: 0.6rem 1rem;
+
+  color: white;
+
+  background: rgba(15, 23, 42, 0.75);
+
+  border: 1px solid rgba(255, 255, 255, 0.15);
+
+  border-radius: 999px;
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  font-size: 0.85rem;
+}
+
+.diagnostico-image-label span {
+  color: #0dcaf0;
+  font-weight: 700;
+}
+
+/* ========================================
+   COLUMNAS DE TEXTO
+   ======================================== */
+
+.diagnostico-text-column {
+  width: 100%;
+}
+
+/* ========================================
+   CONTENIDO DE TEXTO
+   ======================================== */
+
+.diagnostico-content {
+  max-width: 560px;
+
+  opacity: 1;
+
+  transform: translateY(0);
+
+  transition:
+    opacity 1.2s ease,
+    transform 1.2s ease;
+}
+
+/* ========================================
+   ESTADO INICIAL DEL TEXTO
+   ======================================== */
+
+.diagnostico-content.scroll-reveal {
+  opacity: 0;
+
+  transform: translateY(40px);
+}
+
+/* ========================================
+   TEXTO CUANDO ENTRA EN PANTALLA
+   ======================================== */
+
+.diagnostico-content.scroll-reveal.visible {
+  opacity: 1;
+
+  transform: translateY(0);
+}
+
+/* ========================================
+   TÍTULO DEL CONTENIDO
+   ======================================== */
+
+.diagnostico-content h2 {
+  font-size: clamp(2rem, 3vw, 3rem);
+
+  line-height: 1.1;
+
+  letter-spacing: -0.03em;
+}
+
+/* ========================================
+   PÁRRAFOS
+   ======================================== */
+
+.diagnostico-content p {
+  line-height: 1.8;
+}
+
+/* ========================================
+   HIGHLIGHT
+   ======================================== */
+
+.diagnostico-highlight {
+  margin-top: 2rem;
+
+  padding: 1.25rem 1.5rem;
+
+  border-left: 3px solid #0dcaf0;
+
+  background: rgba(13, 202, 240, 0.06);
+
+  border-radius: 0 0.75rem 0.75rem 0;
+}
+
+/* ========================================
+   TAGS
+   ======================================== */
+
+.diagnostico-tags {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 0.6rem;
+
+  margin-top: 2rem;
+}
+
+.diagnostico-tags span {
+  padding: 0.5rem 0.85rem;
+
+  color: rgba(255, 255, 255, 0.75);
+
+  background: rgba(255, 255, 255, 0.06);
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  border-radius: 999px;
+
+  font-size: 0.8rem;
+}
+
+/* ========================================
+   SECCIÓN FINAL
+   ======================================== */
+
+.diagnostico-future {
+  position: relative;
+
+  margin: 4rem 0 2rem;
+
+  padding: 5rem 2rem;
+
+  background: radial-gradient(
+    circle at center,
+    rgba(13, 202, 240, 0.1),
+    transparent 65%
+  );
+
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+  overflow: hidden;
+}
+
+.diagnostico-future h2 {
+  letter-spacing: -0.03em;
+}
+
+/* ========================================
+   LÍNEA CENTRAL
+   ======================================== */
+
+.diagnostico-future-line {
+  position: absolute;
+
+  top: 0;
+  left: 50%;
+
+  width: 1px;
+  height: 100%;
+
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(13, 202, 240, 0.35),
+    transparent
+  );
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 991px) {
+  .diagnostico-hero {
+    padding: 4rem 0 3rem;
+  }
+
+  .diagnostico-feature {
+    min-height: auto;
+  }
+
+  .diagnostico-image {
+    height: 400px;
+  }
+
+  .diagnostico-content {
+    max-width: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .diagnostico-hero h1 {
+    font-size: 2.8rem;
+  }
+
+  .diagnostico-image {
+    height: 320px;
+
+    border-radius: 1rem;
+  }
+
+  .diagnostico-content h2 {
+    font-size: 2rem;
+  }
+
+  .diagnostico-future {
+    padding: 3rem 1rem;
+  }
+
+  .diagnostico-future-line {
+    display: none;
+  }
+}

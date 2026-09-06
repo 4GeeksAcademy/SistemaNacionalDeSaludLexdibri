@@ -5,7 +5,7 @@ import {
 } from "react-router-dom";
 
 import { Layout } from "./pages/Layout";
-import { Home } from "./pages/Home";
+import { DashboardPaciente } from "./pages/DashboardPaciente";
 import { Single } from "./pages/Single";
 import { Demo } from "./pages/Demo";
 import { Login } from "./pages/Login";
@@ -19,6 +19,7 @@ import { SaludPublica } from "./pages/SaludPublica";
 import { ElSistema } from "./pages/ElSistema";
 import { Contacto } from "./pages/Contacto";
 import { Urgencias } from "./pages/Urgencias";
+import { Home } from "./pages/Home";
 
 export const router = createBrowserRouter(
     createRoutesFromElements(
@@ -29,10 +30,12 @@ export const router = createBrowserRouter(
         >
             <Route index element={<Login />} />
 
-            <Route path="home" element={<Home />} />
+            <Route path="dashboard/paciente" element={<DashboardPaciente />} />
             <Route path="registro" element={<Register />} />
             <Route path="demo" element={<Demo />} />
             <Route path="single/:theId" element={<Single />} />
+            <Route path="home" element={<Home/>}/>
+
 
             {/* Rutas vinculadas a sus páginas correspondientes */}
             <Route path="cuadro-medico" element={<CuadroMedico />} />
