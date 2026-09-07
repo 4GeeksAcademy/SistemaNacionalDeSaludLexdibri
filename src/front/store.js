@@ -1,64 +1,28 @@
 export const initialStore = () => {
   return {
     message: null,
-
-    todos: [
-      {
-        id: 1,
-        title: "Make the bed",
-        background: null,
-      },
-      {
-        id: 2,
-        title: "Do my homework",
-        background: null,
-      },
-    ],
-
-    // AUTENTICACIÓN
+    todos: [],
     user: null,
     access_token: localStorage.getItem("access_token"),
     isAuthenticated: !!localStorage.getItem("access_token"),
+
+    // Carga inicial del idioma desde el disco o "es" por defecto
+    language: localStorage.getItem("language") || "es",
   };
 };
 
 export default function storeReducer(store, action = {}) {
   switch (action.type) {
-
-    case "set_hello":
-      return {
-        ...store,
-        message: action.payload,
-      };
-
-
-    case "add_task":
-      const { id, color } = action.payload;
-
-      return {
-        ...store,
-        todos: store.todos.map((todo) =>
-          todo.id === id
-            ? { ...todo, background: color }
-            : todo
-        ),
-      };
-
-
-    // LOGIN
     case "login":
       return {
         ...store,
-        user: action.payload.user,
-        access_token: action.payload.access_token,
+        user: action.payload?.user || null,
+        access_token: action.payload?.access_token || null,
         isAuthenticated: true,
       };
 
-
-    // LOGOUT
     case "logout":
       localStorage.removeItem("access_token");
-
       return {
         ...store,
         user: null,
@@ -66,6 +30,21 @@ export default function storeReducer(store, action = {}) {
         isAuthenticated: false,
       };
 
+    case "add_task":
+      return {
+        ...store,
+        todos: store.todos.map((todo) =>
+          todo.id === action.payload?.id
+            ? { ...todo, ...action.payload }
+            : todo,
+        ),
+      };
+
+    case "SET_LANGUAGE":
+      return {
+        ...store,
+        language: action.payload,
+      };
 
     default:
       throw Error("Unknown action.");

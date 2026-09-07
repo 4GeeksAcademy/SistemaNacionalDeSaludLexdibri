@@ -1,0 +1,1009 @@
+{
+  "es": [
+    {
+      "id": 1,
+      "clave": "home.title",
+      "titulo": "Tu salud,",
+      "descripcion": "Tu salud,"
+    },
+    {
+      "id": 2,
+      "clave": "home.title.connected",
+      "titulo": " conectada.",
+      "descripcion": " conectada."
+    },
+    {
+      "id": 3,
+      "clave": "home.portal",
+      "titulo": "Acceder a Mi Portal",
+      "descripcion": "Acceder a Mi Portal"
+    },
+    {
+      "id": 4,
+      "clave": "home.services",
+      "titulo": "Explorar servicios",
+      "descripcion": "Explorar servicios"
+    },
+    {
+      "id": 5,
+      "clave": "home.specialties",
+      "titulo": "Especialidades",
+      "descripcion": "Especialidades"
+    },
+    {
+      "id": 6,
+      "clave": "home.technology",
+      "titulo": "Tecnología",
+      "descripcion": "Tecnología"
+    },
+    {
+      "id": 7,
+      "clave": "home.contact",
+      "titulo": "Contacto",
+      "descripcion": "Contacto"
+    },
+    {
+      "id": 8,
+      "clave": "home.security",
+      "titulo": "Acceso seguro",
+      "descripcion": "Acceso seguro"
+    },
+    {
+      "id": 9,
+      "clave": "emergency.title",
+      "titulo": "Urgencias sanitarias",
+      "descripcion": "Urgencias sanitarias"
+    },
+    {
+      "id": 10,
+      "clave": "emergency.call112",
+      "titulo": "Llamar al 112",
+      "descripcion": "Llamar al 112"
+    },
+    {
+      "id": 11,
+      "clave": "emergency.call061",
+      "titulo": "Llamar al 061",
+      "descripcion": "Llamar al 061"
+    },
+    {
+      "id": 12,
+      "clave": "contact.title",
+      "titulo": "Atención y contacto.",
+      "descripcion": "Atención y contacto."
+    },
+    {
+      "id": 13,
+      "clave": "contact.send",
+      "titulo": "Enviar consulta",
+      "descripcion": "Enviar consulta"
+    },
+    {
+      "id": 14,
+      "clave": "directory.title",
+      "titulo": "Cuadro Médico",
+      "descripcion": "Cuadro Médico"
+    },
+    {
+      "id": 15,
+      "clave": "publicHealth.title",
+      "titulo": "Salud Pública y Prevención",
+      "descripcion": "Salud Pública y Prevención"
+    },
+    {
+      "id": 16,
+      "clave": "login.title",
+      "titulo": "Iniciar sesión",
+      "descripcion": "Iniciar sesión"
+    },
+    {
+      "id": 17,
+      "clave": "login.subtitle",
+      "titulo": "Accede a tu cuenta de LEXDIBRI",
+      "descripcion": "Accede a tu cuenta de LEXDIBRI"
+    },
+    {
+      "id": 18,
+      "clave": "login.patient",
+      "titulo": "Paciente",
+      "descripcion": "Paciente"
+    },
+    {
+      "id": 19,
+      "clave": "login.doctor",
+      "titulo": "Médico",
+      "descripcion": "Médico"
+    },
+    {
+      "id": 20,
+      "clave": "login.email",
+      "titulo": "Email / CIP / DNI",
+      "descripcion": "Email / CIP / DNI"
+    },
+    {
+      "id": 21,
+      "clave": "login.password",
+      "titulo": "Contraseña",
+      "descripcion": "Contraseña"
+    },
+    {
+      "id": 22,
+      "clave": "login.submit",
+      "titulo": "Iniciar sesión",
+      "descripcion": "Iniciar sesión"
+    },
+    {
+      "id": 23,
+      "clave": "login.forgot",
+      "titulo": "¿Olvidó su contraseña?",
+      "descripcion": "¿Olvidó su contraseña?"
+    },
+    {
+      "id": 24,
+      "clave": "login.register",
+      "titulo": "¿No eres usuario?",
+      "descripcion": "¿No eres usuario?"
+    },
+    {
+      "id": 25,
+      "clave": "login.registerLink",
+      "titulo": "Regístrate aquí",
+      "descripcion": "Regístrate aquí"
+    },
+    {
+      "id": 26,
+      "clave": "security",
+      "titulo": "Conexión segura y protegida",
+      "descripcion": "Conexión segura y protegida"
+    },
+    {
+      "id": 27,
+      "clave": "register.title",
+      "titulo": "Crear una cuenta",
+      "descripcion": "Crear una cuenta"
+    },
+    {
+      "id": 28,
+      "clave": "register.subtitle",
+      "titulo": "Regístrate en el Sistema Nacional de Salud",
+      "descripcion": "Regístrate en el Sistema Nacional de Salud"
+    },
+    {
+      "id": 29,
+      "clave": "register.name",
+      "titulo": "Nombre",
+      "descripcion": "Nombre"
+    },
+    {
+      "id": 30,
+      "clave": "register.lastName",
+      "titulo": "Apellidos",
+      "descripcion": "Apellidos"
+    },
+    {
+      "id": 31,
+      "clave": "register.email",
+      "titulo": "Correo electrónico",
+      "descripcion": "Correo electrónico"
+    },
+    {
+      "id": 32,
+      "clave": "register.phone",
+      "titulo": "Teléfono",
+      "descripcion": "Teléfono"
+    },
+    {
+      "id": 33,
+      "clave": "register.sex",
+      "titulo": "Sexo",
+      "descripcion": "Sexo"
+    },
+    {
+      "id": 34,
+      "clave": "register.select",
+      "titulo": "Seleccione",
+      "descripcion": "Seleccione"
+    },
+    {
+      "id": 35,
+      "clave": "register.male",
+      "titulo": "Masculino",
+      "descripcion": "Masculino"
+    },
+    {
+      "id": 36,
+      "clave": "register.female",
+      "titulo": "Femenino",
+      "descripcion": "Femenino"
+    },
+    {
+      "id": 37,
+      "clave": "register.birth",
+      "titulo": "Fecha de nacimiento",
+      "descripcion": "Fecha de nacimiento"
+    },
+    {
+      "id": 38,
+      "clave": "register.blood",
+      "titulo": "Grupo sanguíneo",
+      "descripcion": "Grupo sanguíneo"
+    },
+    {
+      "id": 39,
+      "clave": "register.license",
+      "titulo": "Número de colegiatura",
+      "descripcion": "Número de colegiatura"
+    },
+    {
+      "id": 40,
+      "clave": "register.specialty",
+      "titulo": "ID de especialidad",
+      "descripcion": "ID de especialidad"
+    },
+    {
+      "id": 41,
+      "clave": "register.experience",
+      "titulo": "Años de experiencia",
+      "descripcion": "Años de experiencia"
+    },
+    {
+      "id": 42,
+      "clave": "register.confirm",
+      "titulo": "Repite la contraseña",
+      "descripcion": "Repite la contraseña"
+    },
+    {
+      "id": 43,
+      "clave": "register.submit",
+      "titulo": "Crear cuenta",
+      "descripcion": "Crear cuenta"
+    },
+    {
+      "id": 44,
+      "clave": "register.login",
+      "titulo": "¿Ya tienes una cuenta?",
+      "descripcion": "¿Ya tienes una cuenta?"
+    },
+    {
+      "id": 45,
+      "clave": "register.loginLink",
+      "titulo": "Inicia sesión aquí",
+      "descripcion": "Inicia sesión aquí"
+    },
+    {
+      "id": 46,
+      "clave": "dashboard.appointments",
+      "titulo": "Citas Médicas",
+      "descripcion": "Citas Médicas"
+    },
+    {
+      "id": 47,
+      "clave": "dashboard.prescriptions",
+      "titulo": "Recetas Electrónicas",
+      "descripcion": "Recetas Electrónicas"
+    },
+    {
+      "id": 48,
+      "clave": "dashboard.diagnoses",
+      "titulo": "Enfermedades Diagnosticadas",
+      "descripcion": "Enfermedades Diagnosticadas"
+    },
+    {
+      "id": 49,
+      "clave": "dashboard.history",
+      "titulo": "Historial Médico",
+      "descripcion": "Historial Médico"
+    },
+    {
+      "id": 50,
+      "clave": "dashboard.more",
+      "titulo": "Ver más",
+      "descripcion": "Ver más"
+    },
+    {
+      "id": 51,
+      "clave": "dashboard.health",
+      "titulo": "Mi Salud",
+      "descripcion": "Mi Salud"
+    },
+    {
+      "id": 52,
+      "clave": "dashboard.notifications",
+      "titulo": "Notificaciones",
+      "descripcion": "Notificaciones"
+    },
+    {
+      "id": 53,
+      "clave": "dashboard.messages",
+      "titulo": "Mensajes",
+      "descripcion": "Mensajes"
+    },
+    {
+      "id": 54,
+      "clave": "dashboard.viewMessages",
+      "titulo": "Ver mensajes",
+      "descripcion": "Ver mensajes"
+    },
+    {
+      "id": 55,
+      "clave": "diagnosis.future",
+      "titulo": "La medicina del futuro",
+      "descripcion": "La medicina del futuro"
+    },
+    {
+      "id": 56,
+      "clave": "diagnosis.here",
+      "titulo": "ya está aquí.",
+      "descripcion": "ya está aquí."
+    },
+    {
+      "id": 57,
+      "clave": "diagnosis.innovation",
+      "titulo": "Innovación sanitaria",
+      "descripcion": "Innovación sanitaria"
+    },
+    {
+      "id": 58,
+      "clave": "diagnosis.healthTech",
+      "titulo": "Tecnología al servicio de la salud",
+      "descripcion": "Tecnología al servicio de la salud"
+    },
+    {
+      "id": 59,
+      "clave": "diagnosis.ai",
+      "titulo": "Inteligencia artificial",
+      "descripcion": "Inteligencia artificial"
+    },
+    {
+      "id": 60,
+      "clave": "diagnosis.robotic",
+      "titulo": "Cirugía robótica",
+      "descripcion": "Cirugía robótica"
+    },
+    {
+      "id": 61,
+      "clave": "diagnosis.proton",
+      "titulo": "Protonterapia",
+      "descripcion": "Protonterapia"
+    },
+    {
+      "id": 62,
+      "clave": "diagnosis.genomics",
+      "titulo": "Genómica y medicina personalizada",
+      "descripcion": "Genómica y medicina personalizada"
+    },
+    {
+      "id": 63,
+      "clave": "diagnosis.bioprinting",
+      "titulo": "Bioimpresión y fabricación 3D",
+      "descripcion": "Bioimpresión y fabricación 3D"
+    },
+    {
+      "id": 64,
+      "clave": "specialties.areas",
+      "titulo": "Áreas de atención sanitaria",
+      "descripcion": "Áreas de atención sanitaria"
+    },
+    {
+      "id": 65,
+      "clave": "specialties.information",
+      "titulo": "Información",
+      "descripcion": "Información"
+    },
+    {
+      "id": 66,
+      "clave": "contact.name",
+      "titulo": "Nombre Completo",
+      "descripcion": "Nombre Completo"
+    },
+    {
+      "id": 67,
+      "clave": "contact.email",
+      "titulo": "Correo Electrónico",
+      "descripcion": "Correo Electrónico"
+    },
+    {
+      "id": 68,
+      "clave": "contact.message",
+      "titulo": "Consulta o Mensaje",
+      "descripcion": "Consulta o Mensaje"
+    },
+    {
+      "id": 69,
+      "clave": "contact.placeholder",
+      "titulo": "Escribe aquí tu consulta...",
+      "descripcion": "Escribe aquí tu consulta..."
+    },
+    {
+      "id": 70,
+      "clave": "directory.filter",
+      "titulo": "Filtrar médico o centro...",
+      "descripcion": "Filtrar médico o centro..."
+    },
+    {
+      "id": 71,
+      "clave": "directory.specialty",
+      "titulo": "Especialidad:",
+      "descripcion": "Especialidad:"
+    },
+    {
+      "id": 72,
+      "clave": "directory.centre",
+      "titulo": "Centro:",
+      "descripcion": "Centro:"
+    },
+    {
+      "id": 73,
+      "clave": "publicHealth.active",
+      "titulo": "Activa",
+      "descripcion": "Activa"
+    },
+    {
+      "id": 74,
+      "clave": "publicHealth.informative",
+      "titulo": "Informativa",
+      "descripcion": "Informativa"
+    },
+    {
+      "id": 75,
+      "clave": "contact.heroText",
+      "titulo": "Estamos aquí para ayudarte. Consulta nuestros canales de atención o contacta con el sistema sanitario.",
+      "descripcion": "Estamos aquí para ayudarte. Consulta nuestros canales de atención o contacta con el sistema sanitario."
+    },
+    {
+      "id": 76,
+      "clave": "contact.phoneText",
+      "titulo": "Atención y orientación al paciente a través de nuestros canales telefónicos oficiales.",
+      "descripcion": "Atención y orientación al paciente a través de nuestros canales telefónicos oficiales."
+    },
+    {
+      "id": 77,
+      "clave": "contact.supportText",
+      "titulo": "Para incidencias técnicas relacionadas con el portal sanitario.",
+      "descripcion": "Para incidencias técnicas relacionadas con el portal sanitario."
+    },
+    {
+      "id": 78,
+      "clave": "system.heroText",
+      "titulo": "LEXDIBRI nace como proyecto de tres estudiantes de 4Geeks que decidimos buscar una solución tecnológica a un problema que encontramos en la sanidad española.",
+      "descripcion": "LEXDIBRI nace como proyecto de tres estudiantes de 4Geeks que decidimos buscar una solución tecnológica a un problema que encontramos en la sanidad española."
+    },
+    {
+      "id": 79,
+      "clave": "system.historyText",
+      "titulo": "Durante el desarrollo del proyecto observamos que la información sanitaria puede encontrarse repartida entre diferentes servicios y comunidades autónomas, haciendo que acceder a determinados recursos o encontrar información relevante no siempre resulte sencillo.",
+      "descripcion": "Durante el desarrollo del proyecto observamos que la información sanitaria puede encontrarse repartida entre diferentes servicios y comunidades autónomas, haciendo que acceder a determinados recursos o encontrar información relevante no siempre resulte sencillo."
+    },
+    {
+      "id": 80,
+      "clave": "system.techText",
+      "titulo": "Para convertir nuestra idea en una plataforma funcional utilizamos diferentes tecnologías y herramientas aprendidas durante nuestra formación.",
+      "descripcion": "Para convertir nuestra idea en una plataforma funcional utilizamos diferentes tecnologías y herramientas aprendidas durante nuestra formación."
+    },
+    {
+      "id": 81,
+      "clave": "system.goalText",
+      "titulo": "LEXDIBRI es nuestro intento de demostrar cómo la tecnología puede ayudar a hacer que la información sanitaria sea más accesible, clara y sencilla para los ciudadanos.",
+      "descripcion": "LEXDIBRI es nuestro intento de demostrar cómo la tecnología puede ayudar a hacer que la información sanitaria sea más accesible, clara y sencilla para los ciudadanos."
+    },
+    {
+      "id": 82,
+      "clave": "diagnosis.introText",
+      "titulo": "Desde sistemas capaces de analizar imágenes médicas mediante inteligencia artificial hasta robots quirúrgicos y tratamientos capaces de dirigir la radiación con una precisión extraordinaria, la tecnología está ampliando las posibilidades de la medicina moderna.",
+      "descripcion": "Desde sistemas capaces de analizar imágenes médicas mediante inteligencia artificial hasta robots quirúrgicos y tratamientos capaces de dirigir la radiación con una precisión extraordinaria, la tecnología está ampliando las posibilidades de la medicina moderna."
+    },
+    {
+      "id": 83,
+      "clave": "emergency.description",
+      "titulo": "Atención sanitaria urgente y acceso rápido a los servicios de emergencia cuando más lo necesitas.",
+      "descripcion": "Atención sanitaria urgente y acceso rápido a los servicios de emergencia cuando más lo necesitas."
+    },
+    {
+      "id": 84,
+      "clave": "emergency.immediate",
+      "titulo": "Ante una emergencia de riesgo vital, actúa rápidamente y contacta con los servicios de emergencia.",
+      "descripcion": "Ante una emergencia de riesgo vital, actúa rápidamente y contacta con los servicios de emergencia."
+    }
+  ],
+  "en": [
+    {
+      "id": 1,
+      "clave": "home.title",
+      "title": "Your health,",
+      "description": "Your health,"
+    },
+    {
+      "id": 2,
+      "clave": "home.title.connected",
+      "title": " connected.",
+      "description": " connected."
+    },
+    {
+      "id": 3,
+      "clave": "home.portal",
+      "title": "Access My Portal",
+      "description": "Access My Portal"
+    },
+    {
+      "id": 4,
+      "clave": "home.services",
+      "title": "Explore services",
+      "description": "Explore services"
+    },
+    {
+      "id": 5,
+      "clave": "home.specialties",
+      "title": "Specialties",
+      "description": "Specialties"
+    },
+    {
+      "id": 6,
+      "clave": "home.technology",
+      "title": "Technology",
+      "description": "Technology"
+    },
+    {
+      "id": 7,
+      "clave": "home.contact",
+      "title": "Contact",
+      "description": "Contact"
+    },
+    {
+      "id": 8,
+      "clave": "home.security",
+      "title": "Secure access",
+      "description": "Secure access"
+    },
+    {
+      "id": 9,
+      "clave": "emergency.title",
+      "title": "Healthcare emergencies",
+      "description": "Healthcare emergencies"
+    },
+    {
+      "id": 10,
+      "clave": "emergency.call112",
+      "title": "Call 112",
+      "description": "Call 112"
+    },
+    {
+      "id": 11,
+      "clave": "emergency.call061",
+      "title": "Call 061",
+      "description": "Call 061"
+    },
+    {
+      "id": 12,
+      "clave": "contact.title",
+      "title": "Care and contact.",
+      "description": "Care and contact."
+    },
+    {
+      "id": 13,
+      "clave": "contact.send",
+      "title": "Send enquiry",
+      "description": "Send enquiry"
+    },
+    {
+      "id": 14,
+      "clave": "directory.title",
+      "title": "Medical Directory",
+      "description": "Medical Directory"
+    },
+    {
+      "id": 15,
+      "clave": "publicHealth.title",
+      "title": "Public Health and Prevention",
+      "description": "Public Health and Prevention"
+    },
+    {
+      "id": 16,
+      "clave": "login.title",
+      "title": "Log in",
+      "description": "Log in"
+    },
+    {
+      "id": 17,
+      "clave": "login.subtitle",
+      "title": "Access your LEXDIBRI account",
+      "description": "Access your LEXDIBRI account"
+    },
+    {
+      "id": 18,
+      "clave": "login.patient",
+      "title": "Patient",
+      "description": "Patient"
+    },
+    {
+      "id": 19,
+      "clave": "login.doctor",
+      "title": "Doctor",
+      "description": "Doctor"
+    },
+    {
+      "id": 20,
+      "clave": "login.email",
+      "title": "Email / CIP / ID",
+      "description": "Email / CIP / ID"
+    },
+    {
+      "id": 21,
+      "clave": "login.password",
+      "title": "Password",
+      "description": "Password"
+    },
+    {
+      "id": 22,
+      "clave": "login.submit",
+      "title": "Log in",
+      "description": "Log in"
+    },
+    {
+      "id": 23,
+      "clave": "login.forgot",
+      "title": "Forgot your password?",
+      "description": "Forgot your password?"
+    },
+    {
+      "id": 24,
+      "clave": "login.register",
+      "title": "Are you not a user?",
+      "description": "Are you not a user?"
+    },
+    {
+      "id": 25,
+      "clave": "login.registerLink",
+      "title": "Register here",
+      "description": "Register here"
+    },
+    {
+      "id": 26,
+      "clave": "security",
+      "title": "Secure and protected connection",
+      "description": "Secure and protected connection"
+    },
+    {
+      "id": 27,
+      "clave": "register.title",
+      "title": "Create an account",
+      "description": "Create an account"
+    },
+    {
+      "id": 28,
+      "clave": "register.subtitle",
+      "title": "Register with the National Health System",
+      "description": "Register with the National Health System"
+    },
+    {
+      "id": 29,
+      "clave": "register.name",
+      "title": "First name",
+      "description": "First name"
+    },
+    {
+      "id": 30,
+      "clave": "register.lastName",
+      "title": "Last name",
+      "description": "Last name"
+    },
+    {
+      "id": 31,
+      "clave": "register.email",
+      "title": "Email address",
+      "description": "Email address"
+    },
+    {
+      "id": 32,
+      "clave": "register.phone",
+      "title": "Phone",
+      "description": "Phone"
+    },
+    { "id": 33, "clave": "register.sex", "title": "Sex", "description": "Sex" },
+    {
+      "id": 34,
+      "clave": "register.select",
+      "title": "Select",
+      "description": "Select"
+    },
+    {
+      "id": 35,
+      "clave": "register.male",
+      "title": "Male",
+      "description": "Male"
+    },
+    {
+      "id": 36,
+      "clave": "register.female",
+      "title": "Female",
+      "description": "Female"
+    },
+    {
+      "id": 37,
+      "clave": "register.birth",
+      "title": "Date of birth",
+      "description": "Date of birth"
+    },
+    {
+      "id": 38,
+      "clave": "register.blood",
+      "title": "Blood type",
+      "description": "Blood type"
+    },
+    {
+      "id": 39,
+      "clave": "register.license",
+      "title": "Medical license number",
+      "description": "Medical license number"
+    },
+    {
+      "id": 40,
+      "clave": "register.specialty",
+      "title": "Specialty ID",
+      "description": "Specialty ID"
+    },
+    {
+      "id": 41,
+      "clave": "register.experience",
+      "title": "Years of experience",
+      "description": "Years of experience"
+    },
+    {
+      "id": 42,
+      "clave": "register.confirm",
+      "title": "Repeat password",
+      "description": "Repeat password"
+    },
+    {
+      "id": 43,
+      "clave": "register.submit",
+      "title": "Create account",
+      "description": "Create account"
+    },
+    {
+      "id": 44,
+      "clave": "register.login",
+      "title": "Already have an account?",
+      "description": "Already have an account?"
+    },
+    {
+      "id": 45,
+      "clave": "register.loginLink",
+      "title": "Log in here",
+      "description": "Log in here"
+    },
+    {
+      "id": 46,
+      "clave": "dashboard.appointments",
+      "title": "Medical appointments",
+      "description": "Medical appointments"
+    },
+    {
+      "id": 47,
+      "clave": "dashboard.prescriptions",
+      "title": "Electronic prescriptions",
+      "description": "Electronic prescriptions"
+    },
+    {
+      "id": 48,
+      "clave": "dashboard.diagnoses",
+      "title": "Diagnosed conditions",
+      "description": "Diagnosed conditions"
+    },
+    {
+      "id": 49,
+      "clave": "dashboard.history",
+      "title": "Medical history",
+      "description": "Medical history"
+    },
+    {
+      "id": 50,
+      "clave": "dashboard.more",
+      "title": "View more",
+      "description": "View more"
+    },
+    {
+      "id": 51,
+      "clave": "dashboard.health",
+      "title": "My health",
+      "description": "My health"
+    },
+    {
+      "id": 52,
+      "clave": "dashboard.notifications",
+      "title": "Notifications",
+      "description": "Notifications"
+    },
+    {
+      "id": 53,
+      "clave": "dashboard.messages",
+      "title": "Messages",
+      "description": "Messages"
+    },
+    {
+      "id": 54,
+      "clave": "dashboard.viewMessages",
+      "title": "View messages",
+      "description": "View messages"
+    },
+    {
+      "id": 55,
+      "clave": "diagnosis.future",
+      "title": "The medicine of the future",
+      "description": "The medicine of the future"
+    },
+    {
+      "id": 56,
+      "clave": "diagnosis.here",
+      "title": "is here.",
+      "description": "is here."
+    },
+    {
+      "id": 57,
+      "clave": "diagnosis.innovation",
+      "title": "Healthcare innovation",
+      "description": "Healthcare innovation"
+    },
+    {
+      "id": 58,
+      "clave": "diagnosis.healthTech",
+      "title": "Technology serving health",
+      "description": "Technology serving health"
+    },
+    {
+      "id": 59,
+      "clave": "diagnosis.ai",
+      "title": "Artificial intelligence",
+      "description": "Artificial intelligence"
+    },
+    {
+      "id": 60,
+      "clave": "diagnosis.robotic",
+      "title": "Robotic surgery",
+      "description": "Robotic surgery"
+    },
+    {
+      "id": 61,
+      "clave": "diagnosis.proton",
+      "title": "Proton therapy",
+      "description": "Proton therapy"
+    },
+    {
+      "id": 62,
+      "clave": "diagnosis.genomics",
+      "title": "Genomics and personalised medicine",
+      "description": "Genomics and personalised medicine"
+    },
+    {
+      "id": 63,
+      "clave": "diagnosis.bioprinting",
+      "title": "Bioprinting and 3D manufacturing",
+      "description": "Bioprinting and 3D manufacturing"
+    },
+    {
+      "id": 64,
+      "clave": "specialties.areas",
+      "title": "Healthcare areas",
+      "description": "Healthcare areas"
+    },
+    {
+      "id": 65,
+      "clave": "specialties.information",
+      "title": "Information",
+      "description": "Information"
+    },
+    {
+      "id": 66,
+      "clave": "contact.name",
+      "title": "Full name",
+      "description": "Full name"
+    },
+    {
+      "id": 67,
+      "clave": "contact.email",
+      "title": "Email address",
+      "description": "Email address"
+    },
+    {
+      "id": 68,
+      "clave": "contact.message",
+      "title": "Enquiry or message",
+      "description": "Enquiry or message"
+    },
+    {
+      "id": 69,
+      "clave": "contact.placeholder",
+      "title": "Write your enquiry here...",
+      "description": "Write your enquiry here..."
+    },
+    {
+      "id": 70,
+      "clave": "directory.filter",
+      "title": "Filter doctor or centre...",
+      "description": "Filter doctor or centre..."
+    },
+    {
+      "id": 71,
+      "clave": "directory.specialty",
+      "title": "Specialty:",
+      "description": "Specialty:"
+    },
+    {
+      "id": 72,
+      "clave": "directory.centre",
+      "title": "Centre:",
+      "description": "Centre:"
+    },
+    {
+      "id": 73,
+      "clave": "publicHealth.active",
+      "title": "Active",
+      "description": "Active"
+    },
+    {
+      "id": 74,
+      "clave": "publicHealth.informative",
+      "title": "Informative",
+      "description": "Informative"
+    },
+    {
+      "id": 75,
+      "clave": "contact.heroText",
+      "title": "We are here to help. Check our support channels or contact the healthcare system.",
+      "description": "We are here to help. Check our support channels or contact the healthcare system."
+    },
+    {
+      "id": 76,
+      "clave": "contact.phoneText",
+      "title": "Patient support and guidance through our official phone channels.",
+      "description": "Patient support and guidance through our official phone channels."
+    },
+    {
+      "id": 77,
+      "clave": "contact.supportText",
+      "title": "For technical issues related to the healthcare portal.",
+      "description": "For technical issues related to the healthcare portal."
+    },
+    {
+      "id": 78,
+      "clave": "system.heroText",
+      "title": "LEXDIBRI began as a project by three 4Geeks students who decided to find a technological solution to a problem we found in Spanish healthcare.",
+      "description": "LEXDIBRI began as a project by three 4Geeks students who decided to find a technological solution to a problem we found in Spanish healthcare."
+    },
+    {
+      "id": 79,
+      "clave": "system.historyText",
+      "title": "During the project we observed that healthcare information can be spread across different services and autonomous communities, making access to certain resources or relevant information difficult.",
+      "description": "During the project we observed that healthcare information can be spread across different services and autonomous communities, making access to certain resources or relevant information difficult."
+    },
+    {
+      "id": 80,
+      "clave": "system.techText",
+      "title": "To turn our idea into a functional platform, we used different technologies and tools learned during our training.",
+      "description": "To turn our idea into a functional platform, we used different technologies and tools learned during our training."
+    },
+    {
+      "id": 81,
+      "clave": "system.goalText",
+      "title": "LEXDIBRI is our attempt to show how technology can make healthcare information more accessible, clear and simple for citizens.",
+      "description": "LEXDIBRI is our attempt to show how technology can make healthcare information more accessible, clear and simple for citizens."
+    },
+    {
+      "id": 82,
+      "clave": "diagnosis.introText",
+      "title": "From systems capable of analysing medical images with artificial intelligence to surgical robots and treatments that direct radiation with extraordinary precision, technology is expanding the possibilities of modern medicine.",
+      "description": "From systems capable of analysing medical images with artificial intelligence to surgical robots and treatments that direct radiation with extraordinary precision, technology is expanding the possibilities of modern medicine."
+    },
+    {
+      "id": 83,
+      "clave": "emergency.description",
+      "title": "Urgent healthcare and quick access to emergency services when you need them most.",
+      "description": "Urgent healthcare and quick access to emergency services when you need them most."
+    },
+    {
+      "id": 84,
+      "clave": "emergency.immediate",
+      "title": "In a life-threatening emergency, act quickly and contact the emergency services.",
+      "description": "In a life-threatening emergency, act quickly and contact the emergency services."
+    }
+  ]
+}
