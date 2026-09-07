@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { iniciarSesion, getDashboard } from "../services/authServices";
+import { iniciarSesion } from "../services/authServices";
 import useGlobalReducer from "../hooks/useGlobalReducer";
 
 export const Login = () => {
@@ -11,6 +11,9 @@ export const Login = () => {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [tipoUsuario, setTipoUsuario] = useState("paciente");
+
+    // Visibilidad de contraseña
+    const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
         const elements = document.querySelectorAll(".scroll-reveal");
@@ -51,6 +54,7 @@ export const Login = () => {
             const data = await iniciarSesion({
                 email,
                 password,
+                tipoUsuario,
             });
 
             dispatch({
@@ -61,13 +65,7 @@ export const Login = () => {
                 },
             });
 
-            const dashboard = await getDashboard(data.access_token);
-
-            if (dashboard.dashboard === "doctor") {
-                navigate("/");
-            } else if (dashboard.dashboard === "patient") {
-                navigate("/dashboard/patient");
-            }
+            navigate(data.dashboard === "doctor" ? "/" : "/dashboard/paciente");
         } catch (error) {
             console.error(error);
             setError(error.message);
@@ -76,8 +74,6 @@ export const Login = () => {
 
     return (
         <div className="login-page">
-
-            
 
             {/* LOGIN */}
             <section className="login-section">
@@ -160,16 +156,37 @@ export const Login = () => {
                                     Contraseña
                                 </label>
 
-                                <input
-                                    id="login-password"
-                                    type="password"
-                                    className="login-input"
-                                    placeholder="Ingrese su contraseña"
-                                    value={password}
-                                    onChange={(e) =>
-                                        setPassword(e.target.value)
-                                    }
-                                />
+                                <div className="password-input-wrapper">
+                                    <input
+                                        id="login-password"
+                                        type={
+                                            showPassword
+                                                ? "text"
+                                                : "password"
+                                        }
+                                        className="login-input"
+                                        placeholder="Ingrese su contraseña"
+                                        value={password}
+                                        onChange={(e) =>
+                                            setPassword(e.target.value)
+                                        }
+                                    />
+
+                                    <button
+                                        type="button"
+                                        className="password-toggle-btn"
+                                        onClick={() =>
+                                            setShowPassword(!showPassword)
+                                        }
+                                        aria-label={
+                                            showPassword
+                                                ? "Ocultar contraseña"
+                                                : "Mostrar contraseña"
+                                        }
+                                    >
+                                        {showPassword ? "🙈" : "👁️"}
+                                    </button>
+                                </div>
                             </div>
 
                             {/* ERROR */}
@@ -221,3 +238,4 @@ export const Login = () => {
         </div>
     );
 };
+

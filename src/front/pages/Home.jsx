@@ -87,124 +87,129 @@ export const Home = () => {
             </section>
 
 
-            {/* ========================================
-                ACCESOS RÁPIDOS
-            ======================================== */}
-            <section className="container py-5">
+           
+{/* ========================================
+    ACCESOS RÁPIDOS
+======================================== */}
+<section className="container py-5">
 
-                <div className="text-center mb-5 scroll-reveal">
+    <div className="text-center mb-5 scroll-reveal">
 
-                    <span className="text-info small fw-semibold text-uppercase">
-                        Servicios digitales
-                    </span>
+        <span className="text-info small fw-semibold text-uppercase">
+            Servicios digitales
+        </span>
 
-                    <h2 className="text-white fw-bold mt-2">
-                        Todo lo que necesitas, en un solo lugar
-                    </h2>
+        <h2 className="text-white fw-bold mt-2">
+            Todo lo que necesitas, en un solo lugar
+        </h2>
 
-                    <p
-                        className="text-white-50 mx-auto"
-                        style={{ maxWidth: "650px" }}
-                    >
-                        Encuentra rápidamente información, profesionales y
-                        servicios relacionados con el Sistema Nacional de Salud.
+        <p
+            className="text-white-50 mx-auto"
+            style={{ maxWidth: "650px" }}
+        >
+            Accede rápidamente a información, recursos tecnológicos
+            y diferentes servicios del Sistema Nacional de Salud.
+        </p>
+
+    </div>
+
+
+    {/* TARJETAS */}
+    <div className="row g-4 justify-content-center">
+
+        {/* ESPECIALIDADES */}
+        <div className="col-md-6 col-lg-4 scroll-reveal">
+
+            <Link
+                to="/especialidades"
+                className="home-service-card home-service-card-blue text-decoration-none"
+            >
+
+                <div className="home-service-content">
+
+                    <h5 className="text-white fw-bold mb-3">
+                        Especialidades
+                    </h5>
+
+                    <p className="text-white-50 mb-0">
+                        Consulta las principales especialidades médicas
+                        y conoce las diferentes áreas de atención sanitaria.
                     </p>
 
                 </div>
 
+                <span className="home-arrow">
+                    DIRIGIRSE →
+                </span>
 
-                {/* TARJETAS CENTRADAS */}
-                <div className="row g-4 justify-content-center">
+            </Link>
 
-                    {/* ESPECIALIDADES */}
-                    <div className="col-md-6 col-lg-3 scroll-reveal">
-
-                        <Link
-                            to="/especialidades"
-                            className="home-service-card text-decoration-none"
-                        >
-
-                            <div className="home-service-icon">
-                                🩺
-                            </div>
-
-                            <h5 className="text-white fw-bold mt-4">
-                                Especialidades
-                            </h5>
-
-                            <p className="text-white-50 mb-0">
-                                Conoce las principales áreas de atención médica.
-                            </p>
-
-                            <span className="home-arrow">
-                                →
-                            </span>
-
-                        </Link>
-
-                    </div>
+        </div>
 
 
-                    {/* DIAGNÓSTICO */}
-                    <div className="col-md-6 col-lg-3 scroll-reveal">
+        {/* TECNOLOGÍA */}
+        <div className="col-md-6 col-lg-4 scroll-reveal">
 
-                        <Link
-                            to="/diagnostico"
-                            className="home-service-card text-decoration-none"
-                        >
+            <Link
+                to="/diagnostico"
+                className="home-service-card home-service-card-blue text-decoration-none"
+            >
 
-                            <div className="home-service-icon">
-                                🔬
-                            </div>
+                <div className="home-service-content">
 
-                            <h5 className="text-white fw-bold mt-4">
-                                Diagnóstico
-                            </h5>
+                    <h5 className="text-white fw-bold mb-3">
+                        Tecnología
+                    </h5>
 
-                            <p className="text-white-50 mb-0">
-                                Tecnología y recursos para el diagnóstico sanitario.
-                            </p>
-
-                            <span className="home-arrow">
-                                →
-                            </span>
-
-                        </Link>
-
-                    </div>
-
-
-                    {/* SALUD PÚBLICA */}
-                    <div className="col-md-6 col-lg-3 scroll-reveal">
-
-                        <Link
-                            to="/salud-publica"
-                            className="home-service-card text-decoration-none"
-                        >
-
-                            <div className="home-service-icon">
-                                🌐
-                            </div>
-
-                            <h5 className="text-white fw-bold mt-4">
-                                Salud Pública
-                            </h5>
-
-                            <p className="text-white-50 mb-0">
-                                Información y recursos para cuidar de tu salud.
-                            </p>
-
-                            <span className="home-arrow">
-                                →
-                            </span>
-
-                        </Link>
-
-                    </div>
+                    <p className="text-white-50 mb-0">
+                        Descubre las herramientas y soluciones digitales
+                        que facilitan una atención sanitaria más conectada.
+                    </p>
 
                 </div>
 
-            </section>
+                <span className="home-arrow">
+                    DIRIGIRSE →
+                </span>
+
+            </Link>
+
+        </div>
+
+
+        {/* CONTACTO */}
+        <div className="col-md-6 col-lg-4 scroll-reveal">
+
+            <Link
+                to="/contacto"
+                className="home-service-card home-service-card-blue text-decoration-none"
+            >
+
+                <div className="home-service-content">
+
+                    <h5 className="text-white fw-bold mb-3">
+                        Contacto
+                    </h5>
+
+                    <p className="text-white-50 mb-0">
+                        Encuentra información para contactar con el sistema
+                        y resolver tus dudas o consultas.
+                    </p>
+
+                </div>
+
+                <span className="home-arrow">
+                    DIRIGIRSE →
+                </span>
+
+            </Link>
+
+        </div>
+
+    </div>
+
+</section>
+
 
 
             {/* ========================================

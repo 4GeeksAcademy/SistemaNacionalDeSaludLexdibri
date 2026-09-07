@@ -1389,7 +1389,6 @@ body {
    ======================================== */
 
 @media (max-width: 991px) {
-
   /* HEROES */
 
   .diagnostico-hero,
@@ -1450,7 +1449,6 @@ body {
    ======================================== */
 
 @media (max-width: 767px) {
-
   /* HEROES */
 
   .diagnostico-hero,
@@ -1596,7 +1594,6 @@ body {
   pointer-events: none;
 }
 
-
 /* HISTORIA */
 
 .sistema-story {
@@ -1670,7 +1667,6 @@ body {
   margin-top: 0.5rem;
 }
 
-
 /* TECNOLOGÍA */
 
 .sistema-heading {
@@ -1730,7 +1726,6 @@ body {
   font-size: 0.9rem;
 }
 
-
 /* FINAL */
 
 .sistema-final {
@@ -1758,11 +1753,9 @@ body {
   line-height: 1.8;
 }
 
-
 /* RESPONSIVE */
 
 @media (max-width: 991px) {
-
   .sistema-hero {
     padding: 4.5rem 0 4rem;
   }
@@ -1777,7 +1770,6 @@ body {
 }
 
 @media (max-width: 767px) {
-
   .sistema-hero {
     padding: 3.5rem 0 3rem;
   }
@@ -1824,7 +1816,6 @@ body {
   color: rgba(255, 255, 255, 0.9);
 }
 
-
 /* PÁGINA ACTUAL */
 
 .navbar-link.active {
@@ -1842,7 +1833,6 @@ body {
   background: #0dcaf0;
   border-radius: 999px;
 }
-
 
 /* URGENCIAS */
 
@@ -2554,3 +2544,96 @@ body {
   z-index: 3;
   padding-top: 4rem;
 }
+
+.password-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-input-wrapper .register-input {
+  padding-right: 3.2rem;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  top: 50%;
+  right: 0.75rem;
+  transform: translateY(-50%);
+
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+  border: 0;
+  background: transparent;
+
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 1rem;
+
+  cursor: pointer;
+  z-index: 2;
+  transition: color 0.2s ease;
+}
+
+.password-toggle-btn:hover {
+  color: #0dcaf0;
+}
+
+.password-toggle-btn:focus {
+  outline: none;
+}
+
+
+/* ========================================
+   TARJETAS DE SERVICIOS - HOME
+======================================== */
+
+.home-service-card-blue {
+    background: rgba(13, 71, 120, 0.45);
+    border: 1px solid rgba(80, 180, 230, 0.22);
+    min-height: 220px;
+    padding: 2rem;
+    border-radius: 18px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    transition:
+        transform 0.3s ease,
+        background 0.3s ease,
+        border-color 0.3s ease,
+        box-shadow 0.3s ease;
+}
+
+.home-service-card-blue:hover {
+    transform: translateY(-6px);
+    background: rgba(15, 82, 135, 0.62);
+    border-color: rgba(80, 200, 240, 0.45);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+}
+
+.home-service-card-blue h5 {
+    font-size: 1.25rem;
+}
+
+.home-service-card-blue p {
+    line-height: 1.7;
+}
+
+.home-service-card-blue .home-arrow {
+    align-self: flex-end;
+    margin-top: 1.5rem;
+    font-size: 1.4rem;
+    color: #5ed7ff;
+    transition: transform 0.3s ease;
+}
+
+.home-service-card-blue:hover .home-arrow {
+    transform: translateX(5px);
+}
+

@@ -1,4 +1,42 @@
-export const registrarUsuario = async (payload) => {
+export const registrarUsuario = async (formData) => {
+  const {
+    role,
+    firstName,
+    lastName,
+    dni,
+    email,
+    password,
+    phone,
+    dateOfBirth,
+    sex,
+    cip,
+    bloodType,
+    medicalLicense,
+    specialtyId,
+    yearsExperience,
+  } = formData;
+
+  const payload = {
+    email,
+    password,
+    first_name: firstName,
+    last_name: lastName,
+    dni,
+    phone,
+    date_of_birth: dateOfBirth,
+    sex,
+    role,
+  };
+
+  if (role === "patient") {
+    payload.cip = cip;
+    payload.blood_type = bloodType;
+  } else {
+    payload.medical_license = medicalLicense;
+    payload.specialty_id = Number(specialtyId);
+    payload.years_experience = Number(yearsExperience);
+  }
+
   const response = await fetch(
     `${import.meta.env.VITE_BACKEND_URL}api/register`,
     {
@@ -19,27 +57,51 @@ export const registrarUsuario = async (payload) => {
   return data;
 };
 
-export const iniciarSesion = async (payload) => {
+export const iniciarSesion = async ({ email, password, tipoUsuario }) => {
   const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}api/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ email, password }),
   });
+
   const data = await response.json();
+
   if (!response.ok) {
     throw new Error(data.error || "Error al iniciar sesión");
   }
+
+  // Guardamos el token temporalmente para poder consultar el dashboard
   localStorage.setItem("access_token", data.access_token);
-  return data;
-};
-export const getDashboard = async (token) => {
-  const response = await fetch(
-    `${import.meta.env.VITE_BACKEND_URL}api/dashboard`,
-    { method: "GET", headers: { Authorization: `Bearer ${token}` } },
-  );
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.error || "Error al acceder al dashboard");
+
+  try {
+    const dashboardResponse = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}api/dashboard`,
+      {
+        method: "GET",
+        headers: { Authorization: `Bearer ${data.access_token}` },
+      }
+    );
+
+    const dashboardData = await dashboardResponse.json();
+
+    if (!dashboardResponse.ok) {
+      throw new Error(dashboardData.error || "Error al acceder al dashboard");
+    }
+
+    const rolEsperado = tipoUsuario === "medico" ? "doctor" : "patient";
+
+    if (dashboardData.dashboard !== rolEsperado) {
+      localStorage.removeItem("access_token"); // 🔴 limpiamos el token inválido para ese rol
+      throw new Error(
+        tipoUsuario === "medico"
+          ? "Esta cuenta no corresponde a un médico"
+          : "Esta cuenta no corresponde a un paciente"
+      );
+    }
+
+    return { ...data, dashboard: dashboardData.dashboard };
+  } catch (error) {
+    localStorage.removeItem("access_token"); // 🔴 por si falla cualquier paso intermedio
+    throw error;
   }
-  return data;
 };

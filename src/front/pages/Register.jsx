@@ -30,6 +30,10 @@ export const Register = () => {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
+    // Visibilidad de contraseñas
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
     useEffect(() => {
         const elements = document.querySelectorAll(".scroll-reveal");
 
@@ -107,29 +111,23 @@ export const Register = () => {
         setError("");
         setLoading(true);
 
-        const payload = {
-            email,
-            password,
-            first_name: firstName,
-            last_name: lastName,
-            dni,
-            phone,
-            date_of_birth: dateOfBirth,
-            sex,
-            role,
-        };
-
-        if (role === "patient") {
-            payload.cip = cip;
-            payload.blood_type = bloodType;
-        } else {
-            payload.medical_license = medicalLicense;
-            payload.specialty_id = Number(specialtyId);
-            payload.years_experience = Number(yearsExperience);
-        }
-
         try {
-            await registrarUsuario(payload);
+            await registrarUsuario({
+                role,
+                firstName,
+                lastName,
+                dni,
+                email,
+                password,
+                phone,
+                dateOfBirth,
+                sex,
+                cip,
+                bloodType,
+                medicalLicense,
+                specialtyId,
+                yearsExperience,
+            });
 
             alert("Registro realizado correctamente");
             navigate("/");
@@ -480,20 +478,37 @@ export const Register = () => {
                                     Contraseña
                                 </label>
 
-                                <input
-                                    id="register-password"
-                                    type="password"
-                                    className="register-input"
-                                    placeholder="Contraseña"
-                                    value={password}
-                                    onChange={(e) => {
-                                        setPassword(e.target.value);
-                                        validarContrasenas(
-                                            e.target.value,
-                                            confirmPassword
-                                        );
-                                    }}
-                                />
+                                <div className="password-input-wrapper">
+                                    <input
+                                        id="register-password"
+                                        type={showPassword ? "text" : "password"}
+                                        className="register-input"
+                                        placeholder="Contraseña"
+                                        value={password}
+                                        onChange={(e) => {
+                                            setPassword(e.target.value);
+                                            validarContrasenas(
+                                                e.target.value,
+                                                confirmPassword
+                                            );
+                                        }}
+                                    />
+
+                                    <button
+                                        type="button"
+                                        className="password-toggle-btn"
+                                        onClick={() =>
+                                            setShowPassword(!showPassword)
+                                        }
+                                        aria-label={
+                                            showPassword
+                                                ? "Ocultar contraseña"
+                                                : "Mostrar contraseña"
+                                        }
+                                    >
+                                        {showPassword ? "🙈" : "👁️"}
+                                    </button>
+                                </div>
                             </div>
 
                             {/* CONFIRMAR CONTRASEÑA */}
@@ -502,20 +517,45 @@ export const Register = () => {
                                     Repite la contraseña
                                 </label>
 
-                                <input
-                                    id="register-confirm-password"
-                                    type="password"
-                                    className="register-input"
-                                    placeholder="Repite tu contraseña"
-                                    value={confirmPassword}
-                                    onChange={(e) => {
-                                        setConfirmPassword(e.target.value);
-                                        validarContrasenas(
-                                            password,
-                                            e.target.value
-                                        );
-                                    }}
-                                />
+                                <div className="password-input-wrapper">
+                                    <input
+                                        id="register-confirm-password"
+                                        type={
+                                            showConfirmPassword
+                                                ? "text"
+                                                : "password"
+                                        }
+                                        className="register-input"
+                                        placeholder="Repite tu contraseña"
+                                        value={confirmPassword}
+                                        onChange={(e) => {
+                                            setConfirmPassword(
+                                                e.target.value
+                                            );
+                                            validarContrasenas(
+                                                password,
+                                                e.target.value
+                                            );
+                                        }}
+                                    />
+
+                                    <button
+                                        type="button"
+                                        className="password-toggle-btn"
+                                        onClick={() =>
+                                            setShowConfirmPassword(
+                                                !showConfirmPassword
+                                            )
+                                        }
+                                        aria-label={
+                                            showConfirmPassword
+                                                ? "Ocultar contraseña"
+                                                : "Mostrar contraseña"
+                                        }
+                                    >
+                                        {showConfirmPassword ? "🙈" : "👁️"}
+                                    </button>
+                                </div>
                             </div>
 
                             {/* ERROR */}
