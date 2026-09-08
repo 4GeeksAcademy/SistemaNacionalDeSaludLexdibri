@@ -20,6 +20,8 @@ import { ElSistema } from "./pages/ElSistema";
 import { Contacto } from "./pages/Contacto";
 import { Urgencias } from "./pages/Urgencias";
 import { Home } from "./pages/Home";
+import { DashboardMedico } from "./pages/DashboardMedico";
+
 
 export const router = createBrowserRouter(
     createRoutesFromElements(
@@ -31,8 +33,10 @@ export const router = createBrowserRouter(
 
             <Route index element={<Home/>}/>
             <Route path="/login" element={<Login />} />
+        
 
             <Route path="dashboard/paciente" element={<DashboardPaciente />} />
+            <Route path="dashboard/medico" element={<DashboardMedico/>}/>
             <Route path="registro" element={<Register />} />
             <Route path="demo" element={<Demo />} />
             <Route path="single/:theId" element={<Single />} />
