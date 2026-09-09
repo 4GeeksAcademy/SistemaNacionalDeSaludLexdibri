@@ -1,22 +1,26 @@
-/* ========================================
-   ESTILOS GLOBALES
-   ======================================== */
+:root {
+  --sns-bg: #090d16;
+  --sns-surface: rgba(255, 255, 255, 0.08);
+  --sns-surface-strong: rgba(255, 255, 255, 0.12);
+  --sns-border: rgba(255, 255, 255, 0.16);
+  --sns-muted: rgba(255, 255, 255, 0.65);
+  --sns-cyan: #0dcaf0;
+  --sns-blue: #0284c7;
+  --sns-danger: #dc3545;
+}
 
 html,
 body,
 #root {
   min-height: 100%;
   margin: 0;
-  padding: 0;
 }
 
 body {
+  background: var(--sns-bg);
+  color: #fff;
   font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
-
-/* ========================================
-   FONDO GENERAL DE LA APLICACIÓN
-   ======================================== */
 
 .app-background {
   min-height: 100vh;
@@ -24,93 +28,92 @@ body {
     ellipse at top,
     #1e3a8a 0%,
     #0f172a 70%,
-    #090d16 100%
+    var(--sns-bg) 100%
   );
-  color: white;
 }
-
-/* ========================================
-   CONTENIDO PRINCIPAL
-   ======================================== */
 
 .app-content {
   min-height: calc(100vh - 120px);
 }
 
-/* ========================================
-   TARJETAS TRANSPARENTES
-   ======================================== */
-
-.glass-card {
-  background: rgba(255, 255, 255, 0.1);
+/* Bootstrap handles layout, spacing, grids and controls. */
+.glass-card,
+.contacto-card,
+.contacto-info-card,
+.especialidad-card,
+.sistema-tech-card,
+.login-card,
+.register-card,
+.dashboard-paciente-card,
+.dashboard-paciente-widget,
+.dashboard-medico-card {
+  background: var(--sns-surface);
+  border: 1px solid var(--sns-border);
+  border-radius: 1rem;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 1rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
 }
 
-/* ========================================
-   TEXTOS
-   ======================================== */
-
+.glass-card {
+  padding: 1.5rem;
+}
 .text-muted-light {
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--sns-muted);
 }
-
-/* ========================================
-   BOTONES PRINCIPALES
-   ======================================== */
-
 .btn-primary-custom {
-  background: #0284c7;
-  border: none;
-  color: white;
+  border: 0;
+  color: #fff;
+  background: var(--sns-blue);
 }
-
 .btn-primary-custom:hover {
+  color: #fff;
   background: #0369a1;
-  color: white;
 }
-
-/* ========================================
-   INPUTS
-   ======================================== */
-
 .form-control-custom {
   background: rgba(255, 255, 255, 0.95);
-  border: none;
+  border: 0;
 }
-
 .form-control-custom:focus {
-  border-color: #0284c7;
+  border-color: var(--sns-blue);
   box-shadow: 0 0 0 0.2rem rgba(2, 132, 199, 0.25);
 }
 
-/* ========================================
-   NAVBAR
-   ======================================== */
-
 .navbar-sns {
-  width: 100%;
-  padding: 0.5rem 1rem;
-  color: white;
-  background: #212529;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   position: relative;
   z-index: 1000;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  color: #fff;
+  background: #212529;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-@media (min-width: 768px) {
-  .navbar-sns {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-  }
+.navbar-link {
+  color: rgba(255, 255, 255, 0.72);
+  transition: color 0.2s ease;
 }
-
-/* ========================================
-   SCROLL REVEAL GLOBAL
-   ======================================== */
+.navbar-link:hover,
+.navbar-link.active {
+  color: #fff;
+}
+.navbar-link.active::after {
+  background: var(--sns-cyan);
+}
+.navbar-link-emergency {
+  color: var(--sns-danger);
+}
+.navbar-brand-sns {
+  color: #fff;
+}
+.navbar-brand-sns:hover {
+  color: var(--sns-cyan);
+}
+.navbar-brand-plus,
+.navbar-brand-lexdibri,
+.text-info {
+  color: var(--sns-cyan) !important;
+}
 
 .scroll-reveal {
   opacity: 0;
@@ -119,2954 +122,253 @@ body {
     opacity 1.2s ease,
     transform 1.2s ease;
 }
-
 .scroll-reveal.visible {
   opacity: 1;
   transform: translateY(0);
 }
 
-/* ========================================
-   DIAGNÓSTICO
-   ======================================== */
-
-.diagnostico-page {
-  overflow: hidden;
-}
-
-/* ========================================
-   HERO DIAGNÓSTICO
-   ======================================== */
-
-.diagnostico-hero {
-  position: relative;
-  padding: 6rem 0 5rem;
-  overflow: hidden;
-}
-
-.diagnostico-hero-content {
-  position: relative;
-  z-index: 2;
-  max-width: 800px;
-  margin: 0 auto;
-  text-align: center;
-}
-
-.diagnostico-hero-title {
-  letter-spacing: -0.045em;
-}
-
-.diagnostico-hero-text {
-  line-height: 1.8;
-}
-
-/* ========================================
-   BRILLO DEL HERO
-   ======================================== */
-
-.diagnostico-hero-glow {
-  position: absolute;
-  width: 600px;
-  height: 600px;
-  top: -350px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(13, 202, 240, 0.1);
-  filter: blur(100px);
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-/* ========================================
-   INTRODUCCIÓN
-   ======================================== */
-
-.diagnostico-intro {
-  max-width: 850px;
-  margin: 0 auto;
-  padding: 2rem 0;
-  text-align: center;
-}
-
-.diagnostico-intro h2 {
-  font-size: 2rem;
-}
-
-/* ========================================
-   BLOQUES DE TECNOLOGÍA
-   ======================================== */
-
-.diagnostico-feature {
-  min-height: 520px;
-}
-
-/* ========================================
-   COLUMNAS DE IMAGEN
-   ======================================== */
-
-.diagnostico-image-column {
-  width: 100%;
-}
-
-/* ========================================
-   CONTENEDOR DE IMAGEN
-   ======================================== */
-
-.diagnostico-image {
-  position: relative;
-  height: 480px;
-  overflow: hidden;
-  border-radius: 1.5rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
-
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    black 12%,
-    black 85%,
-    transparent 100%
-  );
-
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    black 12%,
-    black 85%,
-    transparent 100%
-  );
-}
-
-/* ========================================
-   IMAGEN INTERNA
-   ======================================== */
-
-.diagnostico-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform 6s ease;
-}
-
-/* ========================================
-   ZOOM DE IMAGEN
-   ======================================== */
-
-.diagnostico-image:hover img {
-  transform: scale(1.15);
-}
-
-/* ========================================
-   OVERLAY DE IMAGEN
-   ======================================== */
-
-.diagnostico-image-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to top,
-    rgba(5, 10, 20, 0.8),
-    rgba(5, 10, 20, 0.05) 60%
-  );
-  pointer-events: none;
-}
-
-/* ========================================
-   ETIQUETA DE IMAGEN
-   ======================================== */
-
-.diagnostico-image-label {
-  position: absolute;
-  left: 1.5rem;
-  bottom: 1.5rem;
-  z-index: 2;
-
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-
-  padding: 0.6rem 1rem;
-
-  color: white;
-  background: rgba(15, 23, 42, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 999px;
-
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-
-  font-size: 0.85rem;
-}
-
-.diagnostico-image-label span {
-  color: #0dcaf0;
-  font-weight: 700;
-}
-
-/* ========================================
-   COLUMNAS DE TEXTO
-   ======================================== */
-
-.diagnostico-text-column {
-  width: 100%;
-}
-
-/* ========================================
-   CONTENIDO DE TEXTO
-   ======================================== */
-
-.diagnostico-content {
-  max-width: 560px;
-}
-
-/* ========================================
-   TÍTULO DEL CONTENIDO
-   ======================================== */
-
-.diagnostico-content h2 {
-  font-size: clamp(2rem, 3vw, 3rem);
-  line-height: 1.1;
-  letter-spacing: -0.03em;
-}
-
-/* ========================================
-   PÁRRAFOS
-   ======================================== */
-
-.diagnostico-content p {
-  line-height: 1.8;
-}
-
-/* ========================================
-   HIGHLIGHT
-   ======================================== */
-
-.diagnostico-highlight {
-  margin-top: 2rem;
-  padding: 1.25rem 1.5rem;
-  border-left: 3px solid #0dcaf0;
-  background: rgba(13, 202, 240, 0.06);
-  border-radius: 0 0.75rem 0.75rem 0;
-}
-
-/* ========================================
-   TAGS
-   ======================================== */
-
-.diagnostico-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  margin-top: 2rem;
-}
-
-.diagnostico-tags span {
-  padding: 0.5rem 0.85rem;
-  color: rgba(255, 255, 255, 0.75);
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
-  font-size: 0.8rem;
-}
-
-/* ========================================
-   SECCIÓN FINAL
-   ======================================== */
-
-.diagnostico-future {
-  position: relative;
-  margin: 4rem 0 2rem;
-  padding: 5rem 2rem;
-  background: radial-gradient(
-    circle at center,
-    rgba(13, 202, 240, 0.1),
-    transparent 65%
-  );
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  overflow: hidden;
-}
-
-.diagnostico-future h2 {
-  letter-spacing: -0.03em;
-}
-
-/* ========================================
-   LÍNEA CENTRAL
-   ======================================== */
-
-.diagnostico-future-line {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: 1px;
-  height: 100%;
-  background: linear-gradient(
-    to bottom,
-    transparent,
-    rgba(13, 202, 240, 0.35),
-    transparent
-  );
-}
-
-/* ========================================
-   ESPECIALIDADES
-   ======================================== */
-
-.especialidades-page {
-  overflow: hidden;
-  padding-bottom: 4rem;
-}
-
-/* ========================================
-   HERO ESPECIALIDADES
-   ======================================== */
-
-.especialidades-hero {
-  position: relative;
-  padding: 6rem 0 5rem;
-  overflow: hidden;
-}
-
-.especialidades-hero-glow {
-  position: absolute;
-  width: 650px;
-  height: 650px;
-  top: -420px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(13, 202, 240, 0.09);
-  filter: blur(110px);
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.especialidades-hero-content {
-  position: relative;
-  z-index: 2;
-  max-width: 800px;
-  margin: 0 auto;
-  text-align: center;
-}
-
-.especialidades-hero h1 {
-  letter-spacing: -0.045em;
-}
-
-.especialidades-hero h1 span {
-  color: #0dcaf0;
-}
-
-.especialidades-hero p {
-  max-width: 650px;
-  margin-left: auto;
-  margin-right: auto;
-  line-height: 1.8;
-}
-
-/* ========================================
-   BADGE
-   ======================================== */
-
-.especialidades-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-
-  padding: 0.5rem 0.9rem;
-
-  color: rgba(255, 255, 255, 0.8);
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 999px;
-
-  font-size: 0.8rem;
-  font-weight: 600;
-
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-.especialidades-badge span {
-  color: #0dcaf0;
-}
-
-/* ========================================
-   CONTENIDO
-   ======================================== */
-
-.especialidades-content {
-  position: relative;
-  z-index: 2;
-}
-
-/* ========================================
-   CABECERA DEL CATÁLOGO
-   ======================================== */
-
-.especialidades-heading {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 2rem;
-  margin-bottom: 2.5rem;
-}
-
-.especialidades-heading h2 {
-  letter-spacing: -0.03em;
-}
-
-.especialidades-heading p {
-  line-height: 1.7;
-}
-
-/* ========================================
-   CONTADOR
-   ======================================== */
-
-.especialidades-counter {
-  flex-shrink: 0;
-
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-
-  padding: 0.7rem 1rem;
-
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 0.9rem;
-
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-.especialidades-counter strong {
-  color: #0dcaf0;
-  font-size: 1.4rem;
-  line-height: 1;
-}
-
-.especialidades-counter span {
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 0.75rem;
-}
-
-/* ========================================
-   TARJETA DE ESPECIALIDAD
-   ======================================== */
-
-.especialidad-card {
-  position: relative;
-
-  display: flex;
-  flex-direction: column;
-
-  padding: 1.5rem;
-
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  border-radius: 1.25rem;
-
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.16);
-
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-
-  overflow: hidden;
-
-  transition:
-    transform 0.35s ease,
-    background 0.35s ease,
-    border-color 0.35s ease,
-    box-shadow 0.35s ease;
-}
-
-.especialidad-card::before {
-  content: "";
-
-  position: absolute;
-  width: 180px;
-  height: 180px;
-
-  top: -100px;
-  right: -100px;
-
-  background: rgba(13, 202, 240, 0.08);
-  filter: blur(45px);
-  border-radius: 50%;
-
-  pointer-events: none;
-}
-
-.especialidad-card:hover {
-  transform: translateY(-7px);
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(13, 202, 240, 0.35);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
-}
-
-/* ========================================
-   PARTE SUPERIOR
-   ======================================== */
-
-.especialidad-card-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1.5rem;
-}
-
-/* ========================================
-   ICONO
-   ======================================== */
-
-.especialidad-icon {
-  width: 52px;
-  height: 52px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  background: rgba(13, 202, 240, 0.1);
-  border: 1px solid rgba(13, 202, 240, 0.2);
-  border-radius: 0.9rem;
-
-  font-size: 1.5rem;
-
-  transition:
-    transform 0.35s ease,
-    background 0.35s ease;
-}
-
-.especialidad-card:hover .especialidad-icon {
-  transform: scale(1.08);
-  background: rgba(13, 202, 240, 0.16);
-}
-
-/* ========================================
-   NÚMERO
-   ======================================== */
-
-.especialidad-number {
-  color: rgba(255, 255, 255, 0.25);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-}
-
-/* ========================================
-   TÍTULO
-   ======================================== */
-
-.especialidad-card h3 {
-  position: relative;
-  margin-bottom: 0.75rem;
-
-  color: white;
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-/* ========================================
-   DESCRIPCIÓN
-   ======================================== */
-
-.especialidad-card p {
-  position: relative;
-  margin-bottom: 1.5rem;
-
-  color: rgba(255, 255, 255, 0.58);
-  font-size: 0.9rem;
-  line-height: 1.7;
-}
-
-/* ========================================
-   BOTÓN
-   ======================================== */
-
-.especialidad-button {
-  position: relative;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  width: 100%;
-  margin-top: auto;
-  padding: 0.7rem 0.9rem;
-
-  color: rgba(255, 255, 255, 0.85);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 0.7rem;
-
-  font-size: 0.82rem;
-  font-weight: 600;
-
-  transition:
-    background 0.3s ease,
-    border-color 0.3s ease,
-    color 0.3s ease;
-}
-
-.especialidad-button span {
-  color: #0dcaf0;
-  font-size: 1.1rem;
-  transition: transform 0.3s ease;
-}
-
-.especialidad-button:hover {
-  color: white;
-  background: rgba(13, 202, 240, 0.1);
-  border-color: rgba(13, 202, 240, 0.3);
-}
-
-.especialidad-button:hover span {
-  transform: translateX(4px);
-}
-
-/* ========================================
-   INFORMACIÓN FINAL
-   ======================================== */
-
-.especialidades-info {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-
-  margin-top: 4rem;
-  padding: 1.5rem;
-
-  background: rgba(13, 202, 240, 0.05);
-  border: 1px solid rgba(13, 202, 240, 0.16);
-  border-radius: 1rem;
-
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-.especialidades-info-icon {
-  flex-shrink: 0;
-
-  width: 42px;
-  height: 42px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  color: #0dcaf0;
-  background: rgba(13, 202, 240, 0.1);
-  border: 1px solid rgba(13, 202, 240, 0.2);
-  border-radius: 50%;
-
-  font-weight: 700;
-}
-
-.especialidades-info h3 {
-  margin-bottom: 0.4rem;
-  color: white;
-  font-size: 1rem;
-  font-weight: 700;
-}
-
-.especialidades-info p {
-  margin: 0;
-  color: rgba(255, 255, 255, 0.58);
-  font-size: 0.85rem;
-  line-height: 1.7;
-}
-
-/* ========================================
-   CONTACTO
-   ======================================== */
-
-.contacto-page {
-  overflow: hidden;
-}
-
-/* ========================================
-   HERO CONTACTO
-   ======================================== */
-
-.contacto-hero {
-  position: relative;
-  padding: 6rem 0 5rem;
-  overflow: hidden;
-}
-
-.contacto-hero-content {
-  position: relative;
-  z-index: 2;
-
-  max-width: 800px;
-  margin: 0 auto;
-
-  text-align: center;
-}
-
-.contacto-hero h1 {
-  letter-spacing: -0.045em;
-}
-
-.contacto-hero p {
-  max-width: 650px;
-  margin-left: auto;
-  margin-right: auto;
-  line-height: 1.8;
-}
-
-/* ========================================
-   BRILLO HERO
-   ======================================== */
-
-.contacto-hero-glow {
-  position: absolute;
-
-  width: 650px;
-  height: 650px;
-
-  top: -420px;
-  left: 50%;
-
-  transform: translateX(-50%);
-
-  background: rgba(13, 202, 240, 0.09);
-  filter: blur(110px);
-  border-radius: 50%;
-
-  pointer-events: none;
-}
-
-/* ========================================
-   CABECERA CONTACTO
-   ======================================== */
-
-.contacto-heading {
-  max-width: 750px;
-}
-
-.contacto-heading h2 {
-  letter-spacing: -0.03em;
-}
-
-.contacto-heading p {
-  line-height: 1.7;
-}
-
-/* ========================================
-   TARJETA PRINCIPAL
-   ======================================== */
-
-.contacto-card {
-  height: 100%;
-  padding: 2rem;
-
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  border-radius: 1.25rem;
-
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.16);
-
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-/* ========================================
-   CABECERA DE TARJETA
-   ======================================== */
-
-.contacto-card-header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.contacto-icon {
-  width: 52px;
-  height: 52px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  flex-shrink: 0;
-
-  color: #0dcaf0;
-  background: rgba(13, 202, 240, 0.1);
-  border: 1px solid rgba(13, 202, 240, 0.2);
-  border-radius: 0.9rem;
-
-  font-size: 1.4rem;
-}
-
-/* ========================================
-   INPUTS CONTACTO
-   ======================================== */
-
-.contacto-input {
-  color: white !important;
-  background: rgba(255, 255, 255, 0.06) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  border-radius: 0.75rem;
-  padding: 0.75rem 1rem;
-}
-
-.contacto-input::placeholder {
-  color: rgba(255, 255, 255, 0.35);
-}
-
-.contacto-input:focus {
-  color: white;
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-color: rgba(13, 202, 240, 0.5) !important;
-  box-shadow: 0 0 0 0.2rem rgba(13, 202, 240, 0.1);
-}
-
-/* ========================================
-   BOTÓN FORMULARIO
-   ======================================== */
-
-.contacto-submit {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  padding: 0.8rem 1rem;
-
-  border: none;
-  border-radius: 0.75rem;
-
-  transition:
-    transform 0.3s ease,
-    box-shadow 0.3s ease;
-}
-
-.contacto-submit span {
-  font-size: 1.2rem;
-  transition: transform 0.3s ease;
-}
-
-.contacto-submit:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(13, 202, 240, 0.2);
-}
-
-.contacto-submit:hover span {
-  transform: translateX(4px);
-}
-
-/* ========================================
-   TARJETAS DE INFORMACIÓN
-   ======================================== */
-
-.contacto-info-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-
-  height: 100%;
-  padding: 1.5rem;
-
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  border-radius: 1.25rem;
-
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.16);
-
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-
-  transition:
-    transform 0.35s ease,
-    background 0.35s ease,
-    border-color 0.35s ease;
-}
-
-.contacto-info-card:hover {
-  transform: translateY(-5px);
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(13, 202, 240, 0.3);
-}
-
-.contacto-info-icon {
-  width: 44px;
-  height: 44px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  flex-shrink: 0;
-
-  color: #0dcaf0;
-  background: rgba(13, 202, 240, 0.1);
-  border: 1px solid rgba(13, 202, 240, 0.2);
-  border-radius: 0.8rem;
-
-  font-weight: 700;
-}
-
-.contacto-info-card h3 {
-  font-size: 1.1rem;
-}
-
-.contacto-info-card p {
-  line-height: 1.7;
-  font-size: 0.9rem;
-}
-
-.contacto-phone {
-  color: white;
-  font-size: 1.1rem;
-}
-
-.contacto-phone strong {
-  color: #0dcaf0;
-}
-
-.contacto-email {
-  color: #0dcaf0;
-  font-size: 0.9rem;
-}
-
-/* ========================================
-   SECCIÓN FINAL CONTACTO
-   ======================================== */
-
-.contacto-final {
-  position: relative;
-
-  margin: 3rem 0 2rem;
-  padding: 5rem 2rem;
-
-  text-align: center;
-
-  background: radial-gradient(
-    circle at center,
-    rgba(13, 202, 240, 0.1),
-    transparent 65%
-  );
-
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.contacto-final h2 {
-  letter-spacing: -0.03em;
-}
-
-.contacto-final p {
-  max-width: 700px;
-  margin-left: auto;
-  margin-right: auto;
-  line-height: 1.8;
-}
-
-/* ========================================
-   URGENCIAS
-   ======================================== */
-
-.urgencias-page {
-  overflow: hidden;
-  padding-bottom: 4rem;
-}
-
-/* ========================================
-   HERO URGENCIAS
-   ======================================== */
-
-.urgencias-hero {
-  position: relative;
-  padding: 6rem 0 5rem;
-  overflow: hidden;
-}
-
-.urgencias-hero-content {
-  position: relative;
-  z-index: 2;
-
-  max-width: 800px;
-  margin: 0 auto;
-
-  text-align: center;
-}
-
-.urgencias-hero h1 {
-  letter-spacing: -0.045em;
-}
-
-.urgencias-hero p {
-  max-width: 650px;
-  margin-left: auto;
-  margin-right: auto;
-  line-height: 1.8;
-}
-
-/* ========================================
-   BRILLO HERO URGENCIAS
-   ======================================== */
-
-.urgencias-hero-glow {
-  position: absolute;
-
-  width: 650px;
-  height: 650px;
-
-  top: -420px;
-  left: 50%;
-
-  transform: translateX(-50%);
-
-  background: rgba(220, 53, 69, 0.08);
-  filter: blur(110px);
-  border-radius: 50%;
-
-  pointer-events: none;
-}
-
-/* ========================================
-   EMERGENCIA
-   ======================================== */
-
-.urgencias-emergency {
-  position: relative;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  gap: 3rem;
-  padding: 2.5rem;
-
-  background: rgba(220, 53, 69, 0.08);
-  border: 1px solid rgba(220, 53, 69, 0.3);
-  border-radius: 1.5rem;
-
-  overflow: hidden;
-}
-
-.urgencias-emergency::before {
-  content: "";
-
-  position: absolute;
-
-  width: 250px;
-  height: 250px;
-
-  top: -150px;
-  right: -80px;
-
-  background: rgba(220, 53, 69, 0.12);
-  filter: blur(60px);
-  border-radius: 50%;
-
-  pointer-events: none;
-}
-
-.urgencias-emergency-content {
-  position: relative;
-  z-index: 2;
-  max-width: 750px;
-}
-
-.urgencias-emergency-label {
-  color: #dc3545;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-}
-
-.urgencias-emergency h2 {
-  font-size: clamp(1.8rem, 3vw, 2.6rem);
-  letter-spacing: -0.03em;
-}
-
-.urgencias-emergency p {
-  line-height: 1.8;
-}
-
-/* ========================================
-   BOTONES URGENCIAS
-   ======================================== */
-
-.urgencias-main-button {
-  border: none;
-
-  transition:
-    transform 0.3s ease,
-    box-shadow 0.3s ease;
-}
-
-.urgencias-main-button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 35px rgba(220, 53, 69, 0.3);
-}
-
-.urgencias-secondary-button {
-  transition:
-    transform 0.3s ease,
-    background 0.3s ease;
-}
-
-.urgencias-secondary-button:hover {
-  transform: translateY(-3px);
-}
-
-/* ========================================
-   NÚMERO 112
-   ======================================== */
-
-.urgencias-emergency-number {
-  position: relative;
-  z-index: 2;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  flex-shrink: 0;
-  min-width: 150px;
-}
-
-.urgencias-emergency-number span {
-  color: rgba(220, 53, 69, 0.85);
-
-  font-size: 6rem;
-  font-weight: 800;
-  line-height: 0.9;
-  letter-spacing: -0.08em;
-}
-
-.urgencias-emergency-number small {
-  margin-top: 0.75rem;
-
-  color: rgba(255, 255, 255, 0.45);
-
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-}
-
-/* ========================================
-   MAPA URGENCIAS
-   ======================================== */
-
-.urgencias-map-section {
-  padding: 3rem 0;
-}
-
-.urgencias-map-section h2 {
-  font-size: clamp(2rem, 3vw, 3rem);
-  line-height: 1.1;
-  letter-spacing: -0.03em;
-}
-
-.urgencias-map-section p {
-  line-height: 1.8;
-  max-width: 480px;
-}
-
-/* ========================================
-   BOTÓN UBICACIÓN
-   ======================================== */
-
-.urgencias-location-button {
-  padding: 0.75rem 1.1rem;
-
-  border: none;
-  border-radius: 0.75rem;
-
-  font-weight: 600;
-
-  transition:
-    transform 0.3s ease,
-    box-shadow 0.3s ease;
-}
-
-.urgencias-location-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(13, 202, 240, 0.2);
-}
-
-/* ========================================
-   INFORMACIÓN DEL MAPA
-   ======================================== */
-
-.urgencias-map-info {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-}
-
-.urgencias-map-info-icon {
-  width: 42px;
-  height: 42px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  flex-shrink: 0;
-
-  color: #0dcaf0;
-  background: rgba(13, 202, 240, 0.1);
-  border: 1px solid rgba(13, 202, 240, 0.2);
-  border-radius: 50%;
-
-  font-weight: 700;
-}
-
-.urgencias-map-info strong {
-  font-size: 1rem;
-}
-
-.urgencias-map-info p {
-  font-size: 0.85rem;
-}
-
-/* ========================================
-   CONTENEDOR MAPA
-   ======================================== */
-
-.urgencias-map {
-  position: relative;
-
-  height: 420px;
-
-  overflow: hidden;
-
-  border-radius: 1.5rem;
-
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.13);
-
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
-}
-
-.urgencias-map iframe {
-  width: 100%;
-  height: 100%;
-
-  display: block;
-
-  border: 0;
-
-  filter: saturate(0.75);
-}
-
-/* ========================================
-   OVERLAY MAPA
-   ======================================== */
-
-.urgencias-map-overlay {
-  position: absolute;
-
-  left: 1rem;
-  bottom: 1rem;
-
-  padding: 0.6rem 0.9rem;
-
-  color: white;
-
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 999px;
-
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-
-  font-size: 0.8rem;
-}
-
-/* ========================================
-   RESPONSIVE - TABLET
-   ======================================== */
-
-@media (max-width: 991px) {
-  /* HEROES */
-
-  .diagnostico-hero,
-  .especialidades-hero,
-  .urgencias-hero,
-  .contacto-hero {
-    padding: 4.5rem 0 4rem;
-  }
-
-  /* DIAGNÓSTICO */
-
-  .diagnostico-feature {
-    min-height: auto;
-  }
-
-  .diagnostico-image {
-    height: 400px;
-  }
-
-  .diagnostico-content {
-    max-width: none;
-  }
-
-  /* ESPECIALIDADES */
-
-  .especialidades-heading {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .especialidades-counter {
-    align-self: flex-start;
-  }
-
-  /* URGENCIAS */
-
-  .urgencias-emergency {
-    align-items: flex-start;
-  }
-
-  .urgencias-emergency-number {
-    display: none;
-  }
-
-  .urgencias-map {
-    height: 400px;
-  }
-
-  /* CONTACTO */
-
-  .contacto-map {
-    height: 400px;
-  }
-}
-
-/* ========================================
-   RESPONSIVE - MÓVIL
-   ======================================== */
-
-@media (max-width: 767px) {
-  /* HEROES */
-
-  .diagnostico-hero,
-  .especialidades-hero,
-  .urgencias-hero,
-  .contacto-hero {
-    padding: 3.5rem 0 3rem;
-  }
-
-  /* DIAGNÓSTICO */
-
-  .diagnostico-hero h1 {
-    font-size: 2.8rem;
-  }
-
-  .diagnostico-image {
-    height: 320px;
-    border-radius: 1rem;
-  }
-
-  .diagnostico-content h2 {
-    font-size: 2rem;
-  }
-
-  .diagnostico-future {
-    padding: 3rem 1rem;
-  }
-
-  .diagnostico-future-line {
-    display: none;
-  }
-
-  /* ESPECIALIDADES */
-
-  .especialidades-hero h1 {
-    font-size: 2.6rem;
-  }
-
-  .especialidades-hero p {
-    font-size: 1rem;
-  }
-
-  .especialidad-card {
-    padding: 1.25rem;
-  }
-
-  .especialidades-info {
-    align-items: flex-start;
-  }
-
-  /* URGENCIAS */
-
-  .urgencias-hero h1 {
-    font-size: 2.8rem;
-  }
-
-  .urgencias-hero p {
-    font-size: 1rem;
-  }
-
-  .urgencias-emergency {
-    padding: 1.5rem;
-    border-radius: 1rem;
-  }
-
-  .urgencias-emergency h2 {
-    font-size: 1.8rem;
-  }
-
-  .urgencias-main-button,
-  .urgencias-secondary-button {
-    width: 100%;
-  }
-
-  .urgencias-map {
-    height: 320px;
-    border-radius: 1rem;
-  }
-
-  /* CONTACTO */
-
-  .contacto-hero h1 {
-    font-size: 2.8rem;
-  }
-
-  .contacto-hero p {
-    font-size: 1rem;
-  }
-
-  .contacto-card {
-    padding: 1.25rem;
-  }
-
-  .contacto-info-card {
-    padding: 1.25rem;
-  }
-
-  .contacto-final {
-    padding: 3rem 1rem;
-  }
-}
-
-.sistema-page {
-  overflow: hidden;
-  padding-bottom: 4rem;
-}
-
-.sistema-hero {
-  position: relative;
-  padding: 6rem 0 5rem;
-  overflow: hidden;
-}
-
-.sistema-hero-content {
-  position: relative;
-  z-index: 2;
-  max-width: 800px;
-  margin: 0 auto;
-  text-align: center;
-}
-
-.sistema-hero h1 {
-  letter-spacing: -0.045em;
-}
-
-.sistema-hero p {
-  max-width: 680px;
-  margin-left: auto;
-  margin-right: auto;
-  line-height: 1.8;
-}
-
-.sistema-hero-glow {
-  position: absolute;
-  width: 650px;
-  height: 650px;
-  top: -420px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(13, 202, 240, 0.09);
-  filter: blur(110px);
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-/* HISTORIA */
-
-.sistema-story {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 3rem;
-  padding: 3rem;
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  border-radius: 1.5rem;
-  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.18);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  overflow: hidden;
-}
-
-.sistema-story::before {
-  content: "";
-  position: absolute;
-  width: 300px;
-  height: 300px;
-  top: -180px;
-  right: -100px;
-  background: rgba(13, 202, 240, 0.08);
-  filter: blur(70px);
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.sistema-story-content {
-  position: relative;
-  z-index: 2;
-  max-width: 800px;
-}
-
-.sistema-story-content h2 {
-  font-size: clamp(2rem, 3vw, 3rem);
-  letter-spacing: -0.03em;
-}
-
-.sistema-story-content p {
-  line-height: 1.8;
-  max-width: 760px;
-}
-
-.sistema-story-number {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex-shrink: 0;
-  min-width: 150px;
-}
-
-.sistema-story-number span {
-  color: rgba(13, 202, 240, 0.8);
-  font-size: 7rem;
-  font-weight: 800;
-  line-height: 0.9;
-  letter-spacing: -0.08em;
-}
-
-.sistema-story-number small {
-  color: rgba(255, 255, 255, 0.45);
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  margin-top: 0.5rem;
-}
-
-/* TECNOLOGÍA */
-
-.sistema-heading {
-  max-width: 750px;
-}
-
-.sistema-heading h2 {
-  letter-spacing: -0.03em;
-}
-
-.sistema-heading p {
-  line-height: 1.7;
-}
-
-.sistema-tech-card {
-  height: 100%;
-  padding: 2rem;
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  border-radius: 1.25rem;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.16);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  transition:
-    transform 0.35s ease,
-    background 0.35s ease,
-    border-color 0.35s ease;
-}
-
-.sistema-tech-card:hover {
-  transform: translateY(-6px);
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(13, 202, 240, 0.3);
-}
-
-.sistema-tech-icon {
-  width: 52px;
-  height: 52px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1.5rem;
-  color: #0dcaf0;
-  background: rgba(13, 202, 240, 0.1);
-  border: 1px solid rgba(13, 202, 240, 0.2);
-  border-radius: 0.9rem;
-  font-size: 0.95rem;
-  font-weight: 800;
-}
-
-.sistema-tech-card h3 {
-  font-size: 1.25rem;
-}
-
-.sistema-tech-card p {
-  line-height: 1.7;
-  font-size: 0.9rem;
-}
-
-/* FINAL */
-
-.sistema-final {
-  position: relative;
-  margin: 3rem 0 2rem;
-  padding: 5rem 2rem;
-  text-align: center;
-  background: radial-gradient(
-    circle at center,
-    rgba(13, 202, 240, 0.1),
-    transparent 65%
-  );
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.sistema-final h2 {
-  letter-spacing: -0.03em;
-}
-
-.sistema-final p {
-  max-width: 700px;
-  margin-left: auto;
-  margin-right: auto;
-  line-height: 1.8;
-}
-
-/* RESPONSIVE */
-
-@media (max-width: 991px) {
-  .sistema-hero {
-    padding: 4.5rem 0 4rem;
-  }
-
-  .sistema-story {
-    align-items: flex-start;
-  }
-
-  .sistema-story-number {
-    display: none;
-  }
-}
-
-@media (max-width: 767px) {
-  .sistema-hero {
-    padding: 3.5rem 0 3rem;
-  }
-
-  .sistema-hero h1 {
-    font-size: 2.8rem;
-  }
-
-  .sistema-hero p {
-    font-size: 1rem;
-  }
-
-  .sistema-story {
-    padding: 1.5rem;
-    border-radius: 1rem;
-  }
-
-  .sistema-story-content h2 {
-    font-size: 1.9rem;
-  }
-
-  .sistema-tech-card {
-    padding: 1.5rem;
-  }
-
-  .sistema-final {
-    padding: 3rem 1rem;
-  }
-}
-
-.navbar-link {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  padding: 0.45rem 0;
-  color: rgba(255, 255, 255, 0.5);
-  text-decoration: none;
-  transition:
-    color 0.3s ease,
-    transform 0.3s ease;
-}
-
-.navbar-link:hover {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-/* PÁGINA ACTUAL */
-
-.navbar-link.active {
-  color: #0dcaf0;
-  font-weight: 600;
-}
-
-.navbar-link.active::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 2px;
-  background: #0dcaf0;
-  border-radius: 999px;
-}
-
-/* URGENCIAS */
-
-.navbar-link-emergency {
-  color: #dc3545;
-  font-weight: 700;
-}
-
-.navbar-link-emergency:hover {
-  color: #ff6b7a;
-}
-
-.navbar-link-emergency.active {
-  color: #dc3545;
-}
-
-.navbar-link-emergency.active::after {
-  background: #dc3545;
-}
-
-.navbar-brand-sns {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  min-width: 420px;
-  transform: scale(1);
-  transform-origin: left center;
-  transition:
-    transform 0.3s ease,
-    text-shadow 0.3s ease;
-}
-
-.navbar-brand-sns:hover {
-  transform: scale(1.08);
-  text-shadow: 0 0 20px rgba(13, 202, 240, 0.25);
-}
-
-.navbar-brand-plus {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #0dcaf0;
-  font-size: 2rem;
-  font-weight: 900;
-  line-height: 1;
-  height: 100%;
-}
-
-.navbar-brand-text {
-  font-size: 1.25rem;
-  font-weight: 900;
-  letter-spacing: 0.035em;
-  line-height: 1;
-  white-space: nowrap;
-}
-
-.navbar-brand-lexdibri {
-  color: #0dcaf0;
-  font-weight: 900;
-  letter-spacing: 0.06em;
-}
-
-.navbar-profile-image {
-  width: 40px;
-  height: 40px;
-  min-width: 40px;
-  min-height: 40px;
-  object-fit: cover;
-  border-radius: 8px;
-  display: block;
-  border: 2px solid rgba(255, 255, 255, 0.7);
-}
-
-.navbar-profile-button {
-  height: 52px;
-  min-width: 190px;
-  padding: 0.4rem 0.75rem !important;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.65rem;
-  border-radius: 8px !important;
-}
-
-.navbar-profile-name {
-  white-space: nowrap;
-}
-
-.login-page {
-  min-height: 100vh;
-  overflow: hidden;
-  padding-bottom: 4rem;
-}
-
+.diagnostico-hero,
+.especialidades-hero,
+.contacto-hero,
+.urgencias-hero,
+.sistema-hero,
 .login-hero {
   position: relative;
-  padding: 5rem 0 3rem;
   overflow: hidden;
+  padding: 6rem 0 5rem;
 }
 
+.diagnostico-hero-content,
+.especialidades-hero-content,
+.contacto-hero-content,
+.urgencias-hero-content,
+.sistema-hero-content,
 .login-hero-content {
   position: relative;
-  z-index: 2;
-  max-width: 800px;
-  margin: 0 auto;
-  text-align: center;
+  z-index: 1;
 }
 
-.login-hero h1 {
-  margin-bottom: 1.25rem;
-  font-size: clamp(2.5rem, 5vw, 4rem);
-  font-weight: 700;
-  letter-spacing: -0.045em;
-}
-
-.login-hero h1 span {
-  color: #0dcaf0;
-}
-
-.login-hero p {
-  max-width: 650px;
-  margin-left: auto;
-  margin-right: auto;
-  line-height: 1.8;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 1.05rem;
-}
-
+.diagnostico-hero-glow,
+.especialidades-hero-glow,
+.contacto-hero-glow,
+.urgencias-hero-glow,
+.sistema-hero-glow,
 .login-hero-glow {
   position: absolute;
-  width: 650px;
-  height: 650px;
   top: -420px;
   left: 50%;
+  width: 650px;
+  height: 650px;
+  pointer-events: none;
   transform: translateX(-50%);
   background: rgba(13, 202, 240, 0.09);
   filter: blur(110px);
   border-radius: 50%;
-  pointer-events: none;
 }
 
+.especialidades-badge,
 .login-badge {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.9rem;
-  margin-bottom: 1.5rem;
   color: rgba(255, 255, 255, 0.8);
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  background: var(--sns-surface);
+  border: 1px solid var(--sns-border);
+  border-radius: 50rem;
   backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
 }
 
-.login-badge span {
-  color: #0dcaf0;
-  font-size: 1.1rem;
-  font-weight: 700;
-}
-
-.login-section {
+.diagnostico-image,
+.urgencias-map {
   position: relative;
-  z-index: 3;
-}
-
-.login-card {
-  width: 100%;
-  max-width: 500px;
-  margin: 0 auto;
-  padding: 2.5rem;
-  border-radius: 1.5rem;
-}
-
-.login-card-header {
-  margin-bottom: 2rem;
-}
-
-.login-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 58px;
-  height: 58px;
-  margin: 0 auto 1rem;
-  border-radius: 1rem;
-  color: #0dcaf0;
-  background: rgba(13, 202, 240, 0.1);
-  border: 1px solid rgba(13, 202, 240, 0.25);
-  font-size: 1.8rem;
-  font-weight: 700;
-}
-
-.login-card-header h2 {
-  margin-bottom: 0.4rem;
-  font-size: 2rem;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-}
-
-.login-card-header p {
-  margin-bottom: 0;
-  color: rgba(255, 255, 255, 0.55);
-}
-
-/* SELECTOR */
-
-.login-user-selector {
-  display: flex;
-  gap: 0.4rem;
-  padding: 0.35rem;
-  margin-bottom: 2rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 0.9rem;
+  height: 480px;
+  overflow: hidden;
   background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--sns-border);
+  border-radius: 1.5rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
 }
 
-.login-user-option {
-  flex: 1;
-  padding: 0.7rem 1rem;
-  border: 0;
-  border-radius: 0.65rem;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.65);
-  font-weight: 600;
-  transition: all 0.25s ease;
-}
-
-.login-user-option span {
-  margin-right: 0.4rem;
-}
-
-.login-user-option:hover {
-  color: white;
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.login-user-option.active {
-  color: #06111f;
-  background: #0dcaf0;
-  box-shadow: 0 4px 15px rgba(13, 202, 240, 0.15);
-}
-
-/* FORMULARIO */
-
-.login-form-group {
-  margin-bottom: 1.25rem;
-}
-
-.login-form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
-.login-input {
+.diagnostico-image img {
   width: 100%;
-  min-height: 52px;
-  padding: 0.75rem 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 0.75rem;
-  outline: none;
-  background: rgba(255, 255, 255, 0.06);
-  color: white;
-  transition:
-    border-color 0.25s ease,
-    background 0.25s ease,
-    box-shadow 0.25s ease;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 6s ease;
 }
-
-.login-input::placeholder {
-  color: rgba(255, 255, 255, 0.35);
+.diagnostico-image:hover img {
+  transform: scale(1.15);
 }
-
-.login-input:focus {
-  border-color: rgba(13, 202, 240, 0.65);
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 0 0 3px rgba(13, 202, 240, 0.1);
-}
-
-.login-error {
-  margin-bottom: 1.25rem;
-  padding: 0.8rem 1rem;
-  border: 1px solid rgba(220, 53, 69, 0.3);
-  border-radius: 0.75rem;
-  background: rgba(220, 53, 69, 0.12);
-  color: #ff9da7;
-  font-size: 0.9rem;
-}
-
-/* BOTÓN */
-
-.login-submit {
-  width: 100%;
-  min-height: 52px;
-  border: 0;
-  border-radius: 0.75rem;
-  background: #0dcaf0;
-  color: #06111f;
-  font-weight: 700;
-  font-size: 1rem;
-  transition:
-    transform 0.25s ease,
-    box-shadow 0.25s ease,
-    background 0.25s ease;
-}
-
-.login-submit:hover {
-  background: #31d2f2;
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(13, 202, 240, 0.18);
-}
-
-.login-submit:active {
-  transform: translateY(0);
-}
-
-/* ENLACES */
-
-.login-forgot {
-  margin-top: 1.25rem;
-  text-align: center;
-}
-
-.login-forgot button {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.65);
-  font-size: 0.9rem;
-}
-
-.login-forgot button:hover {
-  color: #0dcaf0;
-}
-
-.login-register {
-  margin-top: 1rem;
-  text-align: center;
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 0.9rem;
-}
-
-.login-register a {
-  color: #0dcaf0;
-  font-weight: 700;
-  text-decoration: none;
-}
-
-.login-register a:hover {
-  text-decoration: underline;
-}
-
-/* SEGURIDAD */
-
-.login-security {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  margin-top: 1.75rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 0.8rem;
-}
-
-.login-security span {
-  color: #0dcaf0;
-}
-
-/* RESPONSIVE */
-
-@media (max-width: 767px) {
-  .login-hero {
-    padding: 3.5rem 0 2.5rem;
-  }
-
-  .login-hero h1 {
-    font-size: 2.7rem;
-  }
-
-  .login-card {
-    padding: 1.5rem;
-    border-radius: 1.2rem;
-  }
-
-  .login-user-option {
-    padding: 0.65rem 0.5rem;
-    font-size: 0.9rem;
-  }
-}
-
-.register-page {
-  min-height: 100vh;
-  overflow: hidden;
-  padding-bottom: 4rem;
-}
-
-.register-hero {
-  position: relative;
-  padding: 5rem 0 3rem;
-  overflow: hidden;
-}
-
-.register-hero-content {
-  position: relative;
-  z-index: 2;
-  max-width: 800px;
-  margin: 0 auto;
-  text-align: center;
-}
-
-.register-hero h1 {
-  margin-bottom: 1.25rem;
-  font-size: clamp(2.5rem, 5vw, 4rem);
-  font-weight: 700;
-  letter-spacing: -0.045em;
-}
-
-.register-hero h1 span {
-  color: #0dcaf0;
-}
-
-.register-hero p {
-  max-width: 650px;
-  margin-left: auto;
-  margin-right: auto;
-  line-height: 1.8;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 1.05rem;
-}
-
-.register-hero-glow {
+.diagnostico-image-overlay {
   position: absolute;
-  width: 650px;
-  height: 650px;
-  top: -420px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(13, 202, 240, 0.09);
-  filter: blur(110px);
-  border-radius: 50%;
+  inset: 0;
   pointer-events: none;
+  background: linear-gradient(to top, rgba(5, 10, 20, 0.8), transparent 60%);
 }
-
-.register-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.9rem;
-  margin-bottom: 1.5rem;
-  color: rgba(255, 255, 255, 0.8);
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 600;
+.diagnostico-image-label,
+.urgencias-map-overlay {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  z-index: 1;
+  padding: 0.6rem 1rem;
+  color: #fff;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid var(--sns-border);
+  border-radius: 50rem;
   backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
 }
-
-.register-badge span {
-  color: #0dcaf0;
-  font-size: 1.1rem;
-  font-weight: 700;
+.diagnostico-highlight {
+  padding: 1.25rem 1.5rem;
+  background: rgba(13, 202, 240, 0.06);
+  border-left: 3px solid var(--sns-cyan);
+  border-radius: 0 0.75rem 0.75rem 0;
 }
-
-.register-section {
-  position: relative;
-  z-index: 3;
-}
-
-.register-card {
-  width: 100%;
-  max-width: 620px;
-  margin: 0 auto;
-  padding: 2.5rem;
-  border-radius: 1.5rem;
-}
-
-.register-card-header {
-  margin-bottom: 2rem;
-}
-
-.register-icon {
+.diagnostico-tags {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 58px;
-  height: 58px;
-  margin: 0 auto 1rem;
-  border-radius: 1rem;
-  color: #0dcaf0;
-  background: rgba(13, 202, 240, 0.1);
-  border: 1px solid rgba(13, 202, 240, 0.25);
-  font-size: 1.8rem;
-  font-weight: 700;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+.diagnostico-tags span {
+  padding: 0.5rem 0.85rem;
+  color: var(--sns-muted);
+  background: var(--sns-surface);
+  border: 1px solid var(--sns-border);
+  border-radius: 50rem;
 }
 
-.register-card-header h2 {
-  margin-bottom: 0.4rem;
-  font-size: 2rem;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-}
-
-.register-card-header p {
-  margin-bottom: 0;
-  color: rgba(255, 255, 255, 0.55);
-}
-
-/* SELECTOR DE ROL */
-
-.register-user-selector {
-  display: flex;
-  gap: 0.4rem;
-  padding: 0.35rem;
-  margin-bottom: 2rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 0.9rem;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.register-user-option {
-  flex: 1;
-  padding: 0.7rem 1rem;
-  border: 0;
-  border-radius: 0.65rem;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.65);
-  font-weight: 600;
-  transition: all 0.25s ease;
-}
-
-.register-user-option span {
-  margin-right: 0.4rem;
-}
-
-.register-user-option:hover {
-  color: white;
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.register-user-option.active {
-  color: #06111f;
-  background: #0dcaf0;
-  box-shadow: 0 4px 15px rgba(13, 202, 240, 0.15);
-}
-
-/* FORMULARIO */
-
-.register-form-group {
-  margin-bottom: 1.25rem;
-}
-
-.register-form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
-.register-input {
-  width: 100%;
-  min-height: 52px;
-  padding: 0.75rem 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 0.75rem;
-  outline: none;
-  background: rgba(255, 255, 255, 0.06);
-  color: white;
+.especialidad-card,
+.sistema-tech-card,
+.contacto-info-card {
   transition:
-    border-color 0.25s ease,
-    background 0.25s ease,
-    box-shadow 0.25s ease;
+    transform 0.3s ease,
+    background 0.3s ease,
+    border-color 0.3s ease;
+}
+.especialidad-card:hover,
+.sistema-tech-card:hover,
+.contacto-info-card:hover {
+  transform: translateY(-5px);
+  background: var(--sns-surface-strong);
+  border-color: rgba(13, 202, 240, 0.35);
+}
+.especialidad-icon,
+.contacto-icon,
+.contacto-info-icon,
+.especialidades-info-icon,
+.login-icon,
+.register-icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  color: var(--sns-cyan);
+  background: rgba(13, 202, 240, 0.1);
+  border: 1px solid rgba(13, 202, 240, 0.2);
+  border-radius: 0.9rem;
+}
+.especialidad-button {
+  color: rgba(255, 255, 255, 0.85);
+  background: var(--sns-surface);
+  border: 1px solid var(--sns-border);
+}
+.especialidad-button:hover {
+  color: #fff;
+  background: rgba(13, 202, 240, 0.1);
+  border-color: rgba(13, 202, 240, 0.3);
 }
 
+.contacto-input,
+.login-input,
+.register-input {
+  color: #fff !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid var(--sns-border) !important;
+}
+.contacto-input:focus,
+.login-input:focus,
+.register-input:focus {
+  border-color: rgba(13, 202, 240, 0.5) !important;
+  box-shadow: 0 0 0 0.2rem rgba(13, 202, 240, 0.1);
+}
+.contacto-input::placeholder,
+.login-input::placeholder,
 .register-input::placeholder {
   color: rgba(255, 255, 255, 0.35);
 }
 
-.register-input:focus {
-  border-color: rgba(13, 202, 240, 0.65);
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 0 0 3px rgba(13, 202, 240, 0.1);
-}
-
-.register-input option {
-  background: #1e293b;
-  color: white;
-}
-
-/* ERROR */
-
-.register-error {
-  margin-bottom: 1.25rem;
-  padding: 0.8rem 1rem;
-  border: 1px solid rgba(220, 53, 69, 0.3);
-  border-radius: 0.75rem;
-  background: rgba(220, 53, 69, 0.12);
-  color: #ff9da7;
-  font-size: 0.9rem;
-}
-
-/* BOTÓN */
-
-.register-submit {
-  width: 100%;
-  min-height: 52px;
-  border: 0;
-  border-radius: 0.75rem;
-  background: #0dcaf0;
-  color: #06111f;
-  font-weight: 700;
-  font-size: 1rem;
-  transition:
-    transform 0.25s ease,
-    box-shadow 0.25s ease,
-    background 0.25s ease;
-}
-
-.register-submit:hover:not(:disabled) {
-  background: #31d2f2;
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(13, 202, 240, 0.18);
-}
-
-.register-submit:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.register-submit:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* LOGIN */
-
-.register-login {
-  margin-top: 1.25rem;
-  text-align: center;
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 0.9rem;
-}
-
-.register-login a {
-  color: #0dcaf0;
-  font-weight: 700;
-  text-decoration: none;
-}
-
-.register-login a:hover {
-  text-decoration: underline;
-}
-
-/* SEGURIDAD */
-
-.register-security {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  margin-top: 1.75rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 0.8rem;
-}
-
-.register-security span {
-  color: #0dcaf0;
-}
-
-/* RESPONSIVE */
-
-@media (max-width: 767px) {
-  .register-hero {
-    padding: 3.5rem 0 2.5rem;
-  }
-
-  .register-hero h1 {
-    font-size: 2.7rem;
-  }
-
-  .register-card {
-    padding: 1.5rem;
-    border-radius: 1.2rem;
-  }
-
-  .register-user-option {
-    padding: 0.65rem 0.5rem;
-    font-size: 0.9rem;
-  }
-}
-
-.login-section {
+.urgencias-emergency {
   position: relative;
-  z-index: 3;
-  padding-top: 4rem;
-}
-
-.register-section {
-  position: relative;
-  z-index: 3;
-  padding-top: 4rem;
-}
-
-.password-input-wrapper {
-  position: relative;
-  width: 100%;
-}
-
-.password-input-wrapper .register-input {
-  padding-right: 3.2rem;
-}
-
-.password-toggle-btn {
-  position: absolute;
-  top: 50%;
-  right: 0.75rem;
-  transform: translateY(-50%);
-
-  width: 36px;
-  height: 36px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 0;
-  border: 0;
-  background: transparent;
-
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 1rem;
-
-  cursor: pointer;
-  z-index: 2;
-  transition: color 0.2s ease;
-}
-
-.password-toggle-btn:hover {
-  color: #0dcaf0;
-}
-
-.password-toggle-btn:focus {
-  outline: none;
-}
-
-
-/* ========================================
-   TARJETAS DE SERVICIOS - HOME
-======================================== */
-
-.home-service-card-blue {
-    background: rgba(13, 71, 120, 0.45);
-    border: 1px solid rgba(80, 180, 230, 0.22);
-    min-height: 220px;
-    padding: 2rem;
-    border-radius: 18px;
-
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-
-    transition:
-        transform 0.3s ease,
-        background 0.3s ease,
-        border-color 0.3s ease,
-        box-shadow 0.3s ease;
-}
-
-.home-service-card-blue:hover {
-    transform: translateY(-6px);
-    background: rgba(15, 82, 135, 0.62);
-    border-color: rgba(80, 200, 240, 0.45);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
-}
-
-.home-service-card-blue h5 {
-    font-size: 1.25rem;
-}
-
-.home-service-card-blue p {
-    line-height: 1.7;
-}
-
-.home-service-card-blue .home-arrow {
-    align-self: flex-end;
-    margin-top: 1.5rem;
-    font-size: 1.4rem;
-    color: #5ed7ff;
-    transition: transform 0.3s ease;
-}
-
-.home-service-card-blue:hover .home-arrow {
-    transform: translateX(5px);
-}
-
-.dashboard-paciente-page {
-  min-height: 100vh;
   overflow: hidden;
-  padding-bottom: 4rem;
+  background: rgba(220, 53, 69, 0.08);
+  border: 1px solid rgba(220, 53, 69, 0.3);
+  border-radius: 1.5rem;
 }
-
-/* =========================
-   SECCIÓN PRINCIPAL
-========================= */
-
-.dashboard-paciente-section {
-  position: relative;
-  z-index: 3;
-  padding-top: 4rem;
+.urgencias-emergency-label {
+  color: var(--sns-danger);
 }
-
-/* =========================
-   BIENVENIDA
-========================= */
-
-.dashboard-paciente-welcome {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 2rem;
-
-  padding: 1.75rem 2rem;
-  margin-bottom: 2rem;
-
-  border-radius: 1.25rem;
+.urgencias-emergency-number span {
+  color: rgba(220, 53, 69, 0.85);
+  font-size: 6rem;
+  font-weight: 800;
 }
-
-.dashboard-paciente-eyebrow {
+.urgencias-map iframe {
   display: block;
-  margin-bottom: 0.4rem;
-
-  color: #0dcaf0;
-
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.dashboard-paciente-welcome h2 {
-  margin-bottom: 0.35rem;
-
-  font-size: 1.7rem;
-  font-weight: 700;
-
-  letter-spacing: -0.03em;
-}
-
-.dashboard-paciente-welcome p {
-  margin-bottom: 0;
-
-  color: rgba(255, 255, 255, 0.55);
-}
-
-.dashboard-paciente-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-
-  padding: 0.5rem 0.8rem;
-
-  border: 1px solid rgba(25, 135, 84, 0.3);
-  border-radius: 999px;
-
-  background: rgba(25, 135, 84, 0.1);
-
-  color: rgba(255, 255, 255, 0.7);
-
-  font-size: 0.8rem;
-  font-weight: 600;
-
-  white-space: nowrap;
-}
-
-.dashboard-paciente-status span {
-  width: 7px;
-  height: 7px;
-
-  border-radius: 50%;
-
-  background: #20c997;
-}
-
-/* =========================
-   TARJETAS PRINCIPALES
-========================= */
-
-.dashboard-paciente-card {
-  height: 100%;
-  padding: 1.5rem;
-
-  border-radius: 1.25rem;
-
-  transition:
-    transform 0.3s ease,
-    border-color 0.3s ease,
-    background 0.3s ease;
-}
-
-.dashboard-paciente-card:hover {
-  transform: translateY(-4px);
-
-  border-color: rgba(13, 202, 240, 0.3);
-
-  background: rgba(255, 255, 255, 0.09);
-}
-
-.dashboard-paciente-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  margin-bottom: 1.25rem;
-}
-
-.dashboard-paciente-card-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  width: 50px;
-  height: 50px;
-
-  border-radius: 0.9rem;
-
-  background: rgba(13, 202, 240, 0.1);
-  border: 1px solid rgba(13, 202, 240, 0.2);
-
-  font-size: 1.5rem;
-}
-
-.dashboard-paciente-card-label {
-  color: rgba(255, 255, 255, 0.4);
-
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.dashboard-paciente-card h3 {
-  margin-bottom: 0.5rem;
-
-  font-size: 1.25rem;
-  font-weight: 700;
-
-  letter-spacing: -0.02em;
-}
-
-.dashboard-paciente-card p {
-  min-height: 44px;
-  margin-bottom: 1.5rem;
-
-  color: rgba(255, 255, 255, 0.55);
-
-  font-size: 0.9rem;
-  line-height: 1.6;
-}
-
-/* =========================
-   BOTONES
-========================= */
-
-.dashboard-paciente-button {
   width: 100%;
-  min-height: 44px;
-
-  padding: 0.65rem 1rem;
-
+  height: 100%;
   border: 0;
-  border-radius: 0.7rem;
-
-  background: #0dcaf0;
-  color: #06111f;
-
-  font-size: 0.9rem;
-  font-weight: 700;
-
-  transition:
-    transform 0.25s ease,
-    background 0.25s ease,
-    box-shadow 0.25s ease;
+  filter: saturate(0.75);
 }
 
-.dashboard-paciente-button:hover {
-  background: #31d2f2;
-
-  transform: translateY(-2px);
-
-  box-shadow: 0 8px 20px rgba(13, 202, 240, 0.15);
-}
-
-.dashboard-paciente-button:active {
-  transform: translateY(0);
-}
-
-/* =========================
-   SIDEBAR
-========================= */
-
-.dashboard-paciente-sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.dashboard-paciente-widget {
-  padding: 1.5rem;
-
-  border-radius: 1.25rem;
-}
-
-.dashboard-paciente-widget-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  margin-bottom: 1.25rem;
-}
-
-.dashboard-paciente-widget-header h3 {
-  margin: 0;
-
-  font-size: 1rem;
-  font-weight: 700;
-}
-
-.dashboard-paciente-widget-header span {
-  color: rgba(255, 255, 255, 0.5);
-}
-
-/* =========================
-   MI SALUD
-========================= */
-
-.dashboard-paciente-health-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
-}
-
-.dashboard-paciente-health-list div {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-
-  padding-bottom: 0.85rem;
-
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-}
-
-.dashboard-paciente-health-list div:last-child {
-  padding-bottom: 0;
-  border-bottom: 0;
-}
-
-.dashboard-paciente-health-list span {
-  color: rgba(255, 255, 255, 0.45);
-
-  font-size: 0.8rem;
-}
-
-.dashboard-paciente-health-list strong {
-  color: rgba(255, 255, 255, 0.85);
-
-  font-size: 0.8rem;
-}
-
-/* =========================
-   NOTIFICACIONES
-========================= */
-
-.dashboard-paciente-notifications {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.dashboard-paciente-notifications div {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-}
-
-.dashboard-paciente-notifications span {
-  font-size: 1rem;
-}
-
-.dashboard-paciente-notifications p {
-  margin: 0;
-
-  color: rgba(255, 255, 255, 0.65);
-
-  font-size: 0.82rem;
-  line-height: 1.5;
-}
-
-/* =========================
-   MENSAJES
-========================= */
-
-.dashboard-paciente-message {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-
-  margin-bottom: 1.25rem;
-}
-
-.dashboard-paciente-message-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  width: 42px;
-  height: 42px;
-
-  flex-shrink: 0;
-
-  border-radius: 50%;
-
-  background: rgba(13, 202, 240, 0.1);
-  border: 1px solid rgba(13, 202, 240, 0.15);
-}
-
-.dashboard-paciente-message strong {
-  display: block;
-
-  margin-bottom: 0.2rem;
-
-  font-size: 0.85rem;
-}
-
-.dashboard-paciente-message p {
-  margin: 0;
-
-  color: rgba(255, 255, 255, 0.45);
-
-  font-size: 0.78rem;
-}
-
-/* =========================
-   SEGURIDAD
-========================= */
-
-.dashboard-paciente-security {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-
-  margin-top: 3rem;
-  padding-top: 1.25rem;
-
+.diagnostico-future,
+.contacto-final,
+.sistema-final {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-
-  color: rgba(255, 255, 255, 0.35);
-
-  font-size: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: radial-gradient(
+    circle at center,
+    rgba(13, 202, 240, 0.1),
+    transparent 65%
+  );
 }
-
-.dashboard-paciente-security span {
-  color: #0dcaf0;
-}
-
-/* =========================
-   SCROLL REVEAL
-========================= */
-
-.scroll-reveal {
-  opacity: 0;
-  transform: translateY(40px);
-
-  transition:
-    opacity 1.2s ease,
-    transform 1.2s ease;
-}
-
-.scroll-reveal.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* =========================
-   RESPONSIVE
-========================= */
 
 @media (max-width: 991px) {
-  .dashboard-paciente-section {
-    padding-top: 3.5rem;
+  .diagnostico-hero,
+  .especialidades-hero,
+  .contacto-hero,
+  .urgencias-hero,
+  .sistema-hero,
+  .login-hero {
+    padding: 4.5rem 0 4rem;
   }
-
-  .dashboard-paciente-welcome {
-    align-items: flex-start;
+  .diagnostico-image,
+  .urgencias-map {
+    height: 400px;
+  }
+  .urgencias-emergency-number {
+    display: none;
   }
 }
 
 @media (max-width: 767px) {
-  .dashboard-paciente-section {
-    padding-top: 2.5rem;
+  .diagnostico-hero,
+  .especialidades-hero,
+  .contacto-hero,
+  .urgencias-hero,
+  .sistema-hero,
+  .login-hero {
+    padding: 3.5rem 0 3rem;
   }
-
-  .dashboard-paciente-welcome {
-    flex-direction: column;
-    align-items: flex-start;
-
-    padding: 1.5rem;
+  .diagnostico-image,
+  .urgencias-map {
+    height: 320px;
+    border-radius: 1rem;
   }
-
-  .dashboard-paciente-status {
-    align-self: flex-start;
+  .urgencias-emergency {
+    border-radius: 1rem;
   }
-
-  .dashboard-paciente-card,
-  .dashboard-paciente-widget {
-    padding: 1.25rem;
-  }
-
-  .dashboard-paciente-card-icon {
-    width: 46px;
-    height: 46px;
-  }
-
-  .dashboard-paciente-security {
-    text-align: center;
-    line-height: 1.5;
+  .urgencias-main-button,
+  .urgencias-secondary-button {
+    width: 100%;
   }
 }
-
