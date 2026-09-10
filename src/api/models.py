@@ -159,6 +159,11 @@ class Patient(db.Model):
         back_populates="patient",
     )
 
+    doctors: Mapped[list["DoctorPatient"]] = relationship(
+    back_populates="patient",
+    cascade="all, delete-orphan",
+)
+
     def serialize(self):
         return {
             "id": self.id,
@@ -166,6 +171,7 @@ class Patient(db.Model):
             "cip": self.cip,
             "blood_type": self.blood_type,
             "created_at": self.created_at.isoformat() if self.created_at else None,
+            "doctors": self.doctors,
         }
 
 
@@ -322,6 +328,11 @@ class Doctor(db.Model):
         back_populates="doctor",
     )
 
+    patients: Mapped[list["DoctorPatient"]] = relationship(
+    back_populates="doctor",
+    cascade="all, delete-orphan",
+)
+
     def serialize(self):
         return {
             "id": self.id,
@@ -330,6 +341,7 @@ class Doctor(db.Model):
             "specialty_id": self.specialty_id,
             "years_experience": self.years_experience,
             "created_at": self.created_at.isoformat() if self.created_at else None,
+            "patients": self.patients,
         }
 
 
@@ -1014,3 +1026,34 @@ class MedicalRecordAccessLog(db.Model):
                 if self.accessed_at else None
             ),
         }
+class DoctorPatient(db.Model):
+
+    doctor_id: Mapped[int] = mapped_column(
+        ForeignKey("doctor.id"),
+        primary_key=True,
+    )
+
+    patient_id: Mapped[int] = mapped_column(
+        ForeignKey("patient.id"),
+        primary_key=True,
+    )
+
+    assigned_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+    )
+
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
+        nullable=False,
+    )
+
+    doctor: Mapped["Doctor"] = relationship(
+        back_populates="patients",
+    )
+
+    patient: Mapped["Patient"] = relationship(
+        back_populates="doctors",
+    )

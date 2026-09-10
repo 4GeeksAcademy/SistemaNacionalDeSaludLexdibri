@@ -3,7 +3,7 @@ This module takes care of starting the API Server, Loading the DB and Adding the
 """
 
 from flask import Flask, request, jsonify, url_for, Blueprint
-from api.models import db, User, Patient, Doctor, Specialty, UserRole, Disease
+from api.models import db, User, Patient, Doctor, Specialty, UserRole, Disease,DoctorPatient
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from datetime import datetime
@@ -458,4 +458,204 @@ def obtener_enfermedades():
             disease.serialize()
             for disease in diseases
         ]
+    }), 200
+
+@api.route("/medico/pacientes/buscar", methods=["GET"])
+@jwt_required()
+def buscar_pacientes():
+
+    # Obtener usuario autenticado
+    user_id = get_jwt_identity()
+    user = db.session.get(User, int(user_id))
+
+    if not user:
+        return jsonify({
+            "error": "Usuario no encontrado"
+        }), 404
+
+    # Comprobar que es médico
+    if user.role != UserRole.DOCTOR:
+        return jsonify({
+            "error": "No tienes permisos para buscar pacientes"
+        }), 403
+
+    # Obtener búsqueda
+    query = request.args.get("q", "").strip()
+
+    if not query:
+        return jsonify({
+            "error": "Debes introducir un término de búsqueda"
+        }), 400
+
+    # Buscar pacientes y sus datos de usuario
+    pacientes = db.session.execute(
+        db.select(Patient)
+        .join(User, Patient.user_id == User.id)
+        .where(
+            db.or_(
+                User.first_name.ilike(f"%{query}%"),
+                User.last_name.ilike(f"%{query}%"),
+                User.dni.ilike(f"%{query}%"),
+                User.email.ilike(f"%{query}%"),
+                Patient.cip.ilike(f"%{query}%")
+            )
+        )
+        .order_by(User.last_name, User.first_name)
+    ).scalars().all()
+
+    return jsonify({
+        "pacientes": [
+            {
+                "id": paciente.id,
+                "user_id": paciente.user_id,
+                "nombre": paciente.user.first_name,
+                "apellidos": paciente.user.last_name,
+                "dni": paciente.user.dni,
+                "email": paciente.user.email,
+                "telefono": paciente.user.phone,
+                "cip": paciente.cip,
+                "fecha_nacimiento": (
+                    paciente.user.date_of_birth.isoformat()
+                    if paciente.user.date_of_birth
+                    else None
+                ),
+                "sexo": paciente.user.sex,
+                "grupo_sanguineo": paciente.blood_type
+            }
+            for paciente in pacientes
+        ],
+        "total": len(pacientes)
+    }), 200
+
+@api.route("/medico/pacientes/<int:patient_id>", methods=["POST"])
+@jwt_required()
+def agregar_paciente(patient_id):
+
+    user_id = get_jwt_identity()
+    user = db.session.get(User, int(user_id))
+
+    if not user:
+        return jsonify({"error": "Usuario no encontrado"}), 404
+
+    if user.role != UserRole.DOCTOR:
+        return jsonify({
+            "error": "No tienes permisos para agregar pacientes"
+        }), 403
+
+    doctor = user.doctor
+
+    if not doctor:
+        return jsonify({
+            "error": "El usuario no tiene un perfil de médico"
+        }), 404
+
+    patient = db.session.get(Patient, patient_id)
+
+    if not patient:
+        return jsonify({
+            "error": "Paciente no encontrado"
+        }), 404
+
+    existing_relation = db.session.execute(
+        db.select(DoctorPatient).where(
+            DoctorPatient.doctor_id == doctor.id,
+            DoctorPatient.patient_id == patient.id
+        )
+    ).scalar_one_or_none()
+
+    if existing_relation:
+
+        if existing_relation.is_active:
+            return jsonify({
+                "error": "El paciente ya está en tu lista"
+            }), 409
+
+        existing_relation.is_active = True
+        db.session.commit()
+
+        return jsonify({
+            "message": "Paciente agregado nuevamente"
+        }), 200
+
+    relation = DoctorPatient(
+        doctor_id=doctor.id,
+        patient_id=patient.id,
+        is_active=True
+    )
+
+    db.session.add(relation)
+    db.session.commit()
+
+    return jsonify({
+        "message": "Paciente agregado correctamente"
+    }), 201
+
+
+@api.route("/medico/pacientes", methods=["GET"])
+@jwt_required()
+def obtener_mis_pacientes():
+
+    user_id = get_jwt_identity()
+    user = db.session.get(User, int(user_id))
+
+    if not user:
+        return jsonify({
+            "error": "Usuario no encontrado"
+        }), 404
+
+    if user.role != UserRole.DOCTOR:
+        return jsonify({
+            "error": "No tienes permisos"
+        }), 403
+
+    doctor = user.doctor
+
+    if not doctor:
+        return jsonify({
+            "error": "Perfil médico no encontrado"
+        }), 404
+
+    relaciones = db.session.execute(
+        db.select(DoctorPatient)
+        .join(Patient, DoctorPatient.patient_id == Patient.id)
+        .join(User, Patient.user_id == User.id)
+        .where(
+            DoctorPatient.doctor_id == doctor.id,
+            DoctorPatient.is_active.is_(True)
+        )
+        .order_by(User.last_name, User.first_name)
+    ).scalars().all()
+
+    pacientes = []
+
+    for relacion in relaciones:
+        patient = relacion.patient
+        patient_user = patient.user
+
+        pacientes.append({
+            "id": patient.id,
+            "user_id": patient.user_id,
+            "nombre": patient_user.first_name,
+            "apellidos": patient_user.last_name,
+            "dni": patient_user.dni,
+            "email": patient_user.email,
+            "telefono": patient_user.phone,
+            "cip": patient.cip,
+            "fecha_nacimiento": (
+                patient_user.date_of_birth.isoformat()
+                if patient_user.date_of_birth
+                else None
+            ),
+            "sexo": patient_user.sex,
+            "grupo_sanguineo": patient.blood_type,
+            "assigned_at": (
+                relacion.assigned_at.isoformat()
+                if relacion.assigned_at
+                else None
+            )
+        })
+
+    return jsonify({
+        "pacientes": pacientes,
+        "total": len(pacientes)
     }), 200
