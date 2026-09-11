@@ -14,51 +14,69 @@ export const Navbar = () => {
     });
   };
 
-  return (
-    <header className="navbar-sns">
+  // URL pública directa y estable para el avatar por defecto
+  const defaultAvatar = "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=300&q=80";
 
+  return (
+    <header
+      className="navbar-sns shadow-lg text-white p-3"
+      style={{
+        background: `linear-gradient(rgba(15, 23, 42, 0.88), rgba(15, 23, 42, 0.95)), url('https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1600&q=80')`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
       {/* BARRA SUPERIOR PRINCIPAL */}
       <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
-
-        {/* LOGO */}
+        {/* LOGO CON CARTEL OFICIAL */}
         <Link
           to="/"
-          className="navbar-brand-sns text-decoration-none text-white"
+          className="navbar-brand-sns text-decoration-none text-white d-flex align-items-center gap-2"
         >
-          <span className="navbar-brand-plus">+</span>
-
-          <span className="navbar-brand-text">
-            SISTEMA NACIONAL DE SALUD
-            <span className="navbar-brand-lexdibri">
-              {" "}LEXDIBRI
-            </span>
+          <span
+            className="navbar-brand-plus bg-info text-dark rounded-circle d-flex align-items-center justify-content-center fw-bold"
+            style={{ width: "32px", height: "32px", fontSize: "1.2rem" }}
+          >
+            +
           </span>
+
+          <div
+            className="border border-info border-opacity-50 rounded px-2 py-1 bg-dark bg-opacity-50"
+            style={{ backdropFilter: "blur(4px)" }}
+          >
+            <span className="fw-bold tracking-wide" style={{ fontSize: "0.95rem" }}>
+              SISTEMA NACIONAL DE SALUD{" "}
+              <span className="text-info fw-extrabold">LEXDIBRI</span>
+            </span>
+          </div>
         </Link>
 
         {/* PERFIL */}
-        <div
-          className="dropdown position-relative"
-          style={{ zIndex: 1050 }}
-        >
+        <div className="dropdown position-relative" style={{ zIndex: 1050 }}>
           <button
-            className={`btn border-0 dropdown-toggle navbar-profile-button ${
+            className={`btn border-0 dropdown-toggle d-flex align-items-center gap-2 px-3 py-1 rounded-pill ${
               isLoggedIn
-                ? "bg-info text-dark"
+                ? "bg-info text-dark fw-semibold"
                 : "bg-white bg-opacity-10 text-white"
             }`}
             type="button"
             data-bs-toggle="dropdown"
             aria-expanded="false"
           >
+            {/* Avatar compacto con URL pública accesible */}
             <img
-              src={
-                user?.profile_image || "../../public/rigo-baby.jpg"
-              }
-              alt="Foto de perfil"
-              className="navbar-profile-image"
+              src={user?.profile_image || defaultAvatar}
+              alt="Avatar perfil médico"
+              className="rounded-circle border border-2 border-white shadow-sm"
+              style={{
+                width: "40px",
+                height: "40px",
+                objectFit: "cover",
+                flexShrink: 0,
+              }}
             />
 
-            <span className="navbar-profile-name">
+            <span className="navbar-profile-name small">
               {isLoggedIn
                 ? `${user?.first_name || ""} ${user?.last_name || ""}`.trim()
                 : "Sesión no iniciada"}
@@ -67,7 +85,7 @@ export const Navbar = () => {
 
           {/* MENÚ DE PERFIL */}
           <ul
-            className="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow-lg border border-secondary"
+            className="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow-lg border border-secondary mt-2"
             style={{
               zIndex: 1060,
               backgroundColor: "#1e293b",
@@ -77,32 +95,20 @@ export const Navbar = () => {
             {!isLoggedIn ? (
               <>
                 <li>
-                  <Link
-                    className="dropdown-item py-2"
-                    to="/login"
-                  >
+                  <Link className="dropdown-item py-2" to="/login">
                     🔐 Iniciar sesión
                   </Link>
                 </li>
-
                 <li>
-                  <Link
-                    className="dropdown-item py-2"
-                    to="/registro"
-                  >
+                  <Link className="dropdown-item py-2" to="/registro">
                     ✨ Registrarse
                   </Link>
                 </li>
-
                 <li>
                   <hr className="dropdown-divider border-secondary" />
                 </li>
-
                 <li>
-                  <Link
-                    className="dropdown-item py-2"
-                    to="/contacto"
-                  >
+                  <Link className="dropdown-item py-2" to="/contacto">
                     ❓ Ayuda y soporte
                   </Link>
                 </li>
@@ -110,39 +116,26 @@ export const Navbar = () => {
             ) : (
               <>
                 <li>
-                  <Link
-                    className="dropdown-item py-2"
-                    to="/profile"
-                  >
+                  <Link className="dropdown-item py-2" to="/profile">
                     👤 Mi perfil
                   </Link>
                 </li>
-
                 <li>
-                  <Link
-                    className="dropdown-item py-2"
-                    to="/historial"
-                  >
+                  <Link className="dropdown-item py-2" to="/historial">
                     📋 Mi historial
                   </Link>
                 </li>
-
                 <li>
-                  <Link
-                    className="dropdown-item py-2"
-                    to="/ajustes"
-                  >
+                  <Link className="dropdown-item py-2" to="/ajustes">
                     ⚙️ Ajustes
                   </Link>
                 </li>
-
                 <li>
                   <hr className="dropdown-divider border-secondary" />
                 </li>
-
                 <li>
                   <button
-                    className="dropdown-item py-2 text-danger"
+                    className="dropdown-item py-2 text-danger fw-semibold"
                     onClick={handleLogout}
                   >
                     🚪 Cerrar sesión
@@ -156,11 +149,12 @@ export const Navbar = () => {
 
       {/* NAVEGACIÓN SECUNDARIA */}
       <nav className="d-flex gap-3 gap-md-4 small flex-wrap pt-2 border-top border-white border-opacity-10">
-
         <NavLink
           to="/especialidades"
           className={({ isActive }) =>
-            `navbar-link ${isActive ? "active" : ""}`
+            `navbar-link text-white text-decoration-none ${
+              isActive ? "active text-info fw-bold" : "opacity-75"
+            }`
           }
         >
           Especialidades
@@ -169,7 +163,9 @@ export const Navbar = () => {
         <NavLink
           to="/diagnostico"
           className={({ isActive }) =>
-            `navbar-link ${isActive ? "active" : ""}`
+            `navbar-link text-white text-decoration-none ${
+              isActive ? "active text-info fw-bold" : "opacity-75"
+            }`
           }
         >
           Diagnóstico y Tecnología
@@ -178,7 +174,9 @@ export const Navbar = () => {
         <NavLink
           to="/el-sistema"
           className={({ isActive }) =>
-            `navbar-link ${isActive ? "active" : ""}`
+            `navbar-link text-white text-decoration-none ${
+              isActive ? "active text-info fw-bold" : "opacity-75"
+            }`
           }
         >
           ¿Qué es Lexdibri?
@@ -187,7 +185,9 @@ export const Navbar = () => {
         <NavLink
           to="/contacto"
           className={({ isActive }) =>
-            `navbar-link ${isActive ? "active" : ""}`
+            `navbar-link text-white text-decoration-none ${
+              isActive ? "active text-info fw-bold" : "opacity-75"
+            }`
           }
         >
           Contacto
@@ -196,16 +196,14 @@ export const Navbar = () => {
         <NavLink
           to="/urgencias"
           className={({ isActive }) =>
-            `navbar-link navbar-link-emergency ${
+            `navbar-link navbar-link-emergency text-danger fw-bold text-decoration-none ${
               isActive ? "active" : ""
             }`
           }
         >
           Urgencias 🚨
         </NavLink>
-
       </nav>
-
     </header>
   );
 };
