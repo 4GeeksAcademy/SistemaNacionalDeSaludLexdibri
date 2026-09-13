@@ -21,6 +21,7 @@ import { Contacto } from "./pages/Contacto";
 import { Urgencias } from "./pages/Urgencias";
 import { Home } from "./pages/Home";
 import { DashboardMedico } from "./pages/DashboardMedico";
+import Teleconsulta from "./pages/Teleconsulta";
 
 
 export const router = createBrowserRouter(
@@ -34,7 +35,7 @@ export const router = createBrowserRouter(
             <Route index element={<Home/>}/>
             <Route path="/login" element={<Login />} />
         
-
+            <Route path="tele/consulta" element={<Teleconsulta />} />
             <Route path="dashboard/paciente" element={<DashboardPaciente />} />
             <Route path="dashboard/medico" element={<DashboardMedico/>}/>
             <Route path="registro" element={<Register />} />
