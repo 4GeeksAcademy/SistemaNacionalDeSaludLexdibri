@@ -55,9 +55,10 @@ body {
   -webkit-backdrop-filter: blur(12px);
 }
 
-.glass-card {
-  padding: 1.5rem;
-}
+/* ========================================
+   TEXTOS 
+   ======================================== */
+
 .text-muted-light {
   color: var(--sns-muted);
 }
