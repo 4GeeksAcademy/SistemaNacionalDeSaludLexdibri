@@ -11,13 +11,10 @@ export const Login = () => {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [tipoUsuario, setTipoUsuario] = useState("paciente");
-
-    // Visibilidad de contraseña
     const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
         const elements = document.querySelectorAll(".scroll-reveal");
-
         const observer = new IntersectionObserver(
             (entries) => {
                 entries.forEach((entry) => {
@@ -28,16 +25,11 @@ export const Login = () => {
                     }
                 });
             },
-            {
-                threshold: 0.2,
-            }
+            { threshold: 0.2 }
         );
 
         elements.forEach((element) => observer.observe(element));
-
-        return () => {
-            elements.forEach((element) => observer.unobserve(element));
-        };
+        return () => elements.forEach((element) => observer.unobserve(element));
     }, []);
 
     const handleLogin = async (e) => {
@@ -50,7 +42,6 @@ export const Login = () => {
 
         try {
             setError("");
-
             const data = await iniciarSesion({
                 email,
                 password,
@@ -73,169 +64,102 @@ export const Login = () => {
     };
 
     return (
-        <div className="login-page">
+        <div className="container min-vh-100 d-flex align-items-center justify-content-center py-5">
+            <div className="card shadow-lg border-0 glass-card p-4 p-md-5 scroll-reveal w-100 text-start" style={{ maxWidth: "450px" }}>
+                
+                {/* CABECERA */}
+                <div className="text-center mb-4">
+                    <div className="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded-3 p-2 mb-3" style={{ width: "40px", height: "40px" }}>
+                        ✚
+                    </div>
+                    <h2 className="fw-bold text-white">Iniciar sesión</h2>
+                    <p className="text-light opacity-75 small">Accede a tu cuenta de LEXDIBRI</p>
+                </div>
 
-            {/* LOGIN */}
-            <section className="login-section">
-                <div className="container">
+                {/* SELECTOR PACIENTE / MÉDICO */}
+                <div className="d-flex justify-content-center mb-4">
+                    <div className="btn-group w-100" role="group">
+                        <button
+                            type="button"
+                            onClick={() => setTipoUsuario("paciente")}
+                            className={`btn ${tipoUsuario === "paciente" ? "btn-light text-primary fw-bold" : "btn-outline-light"}`}
+                        >
+                            🔒 Paciente
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setTipoUsuario("medico")}
+                            className={`btn ${tipoUsuario === "medico" ? "btn-light text-primary fw-bold" : "btn-outline-light"}`}
+                        >
+                            👨‍⚕️ Médico
+                        </button>
+                    </div>
+                </div>
 
-                    <div className="login-card glass-card scroll-reveal">
-
-                        {/* CABECERA */}
-                        <div className="login-card-header text-center">
-
-                            <div className="login-icon">
-                                ✚
-                            </div>
-
-                            <h2>
-                                Iniciar sesión
-                            </h2>
-
-                            <p>
-                                Accede a tu cuenta de LEXDIBRI
-                            </p>
-
-                        </div>
-
-                        {/* SELECTOR PACIENTE / MÉDICO */}
-                        <div className="login-user-selector">
-
-                            <button
-                                type="button"
-                                onClick={() => setTipoUsuario("paciente")}
-                                className={
-                                    tipoUsuario === "paciente"
-                                        ? "login-user-option active"
-                                        : "login-user-option"
-                                }
-                            >
-                                <span>🔒</span>
-                                Paciente
-                            </button>
-
-                            <button
-                                type="button"
-                                onClick={() => setTipoUsuario("medico")}
-                                className={
-                                    tipoUsuario === "medico"
-                                        ? "login-user-option active"
-                                        : "login-user-option"
-                                }
-                            >
-                                <span>👨‍⚕️</span>
-                                Médico
-                            </button>
-
-                        </div>
-
-                        {/* FORMULARIO */}
-                        <form onSubmit={handleLogin}>
-
-                            {/* EMAIL */}
-                            <div className="login-form-group">
-                                <label htmlFor="login-email">
-                                    Email / CIP / DNI
-                                </label>
-
-                                <input
-                                    id="login-email"
-                                    type="text"
-                                    className="login-input"
-                                    placeholder="Ingrese su email, CIP o DNI"
-                                    value={email}
-                                    onChange={(e) =>
-                                        setEmail(e.target.value)
-                                    }
-                                />
-                            </div>
-
-                            {/* CONTRASEÑA */}
-                            <div className="login-form-group">
-                                <label htmlFor="login-password">
-                                    Contraseña
-                                </label>
-
-                                <div className="password-input-wrapper">
-                                    <input
-                                        id="login-password"
-                                        type={
-                                            showPassword
-                                                ? "text"
-                                                : "password"
-                                        }
-                                        className="login-input"
-                                        placeholder="Ingrese su contraseña"
-                                        value={password}
-                                        onChange={(e) =>
-                                            setPassword(e.target.value)
-                                        }
-                                    />
-
-                                    <button
-                                        type="button"
-                                        className="password-toggle-btn"
-                                        onClick={() =>
-                                            setShowPassword(!showPassword)
-                                        }
-                                        aria-label={
-                                            showPassword
-                                                ? "Ocultar contraseña"
-                                                : "Mostrar contraseña"
-                                        }
-                                    >
-                                        {showPassword ? "🙈" : "👁️"}
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* ERROR */}
-                            {error && (
-                                <div className="login-error">
-                                    {error}
-                                </div>
-                            )}
-
-                            {/* BOTÓN */}
-                            <button
-                                type="submit"
-                                className="login-submit"
-                            >
-                                Iniciar sesión
-                            </button>
-
-                        </form>
-
-                        {/* RECUPERAR CONTRASEÑA */}
-                        <div className="login-forgot">
-                            <button type="button">
-                                ¿Olvidó su contraseña?
-                            </button>
-                        </div>
-
-                        {/* REGISTRO */}
-                        <div className="login-register">
-                            <span>
-                                ¿No eres usuario?{" "}
-                            </span>
-
-                            <Link to="/registro">
-                                Regístrate aquí
-                            </Link>
-                        </div>
-
-                        {/* SEGURIDAD */}
-                        <div className="login-security">
-                            <span>🔒</span>
-                            Conexión segura y protegida
-                        </div>
-
+                {/* FORMULARIO */}
+                <form onSubmit={handleLogin}>
+                    <div className="mb-3">
+                        <label htmlFor="login-email" className="form-label text-white small">
+                            Email / CIP / DNI
+                        </label>
+                        <input
+                            id="login-email"
+                            type="text"
+                            className="form-control"
+                            placeholder="Ingrese su email, CIP o DNI"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                        />
                     </div>
 
-                </div>
-            </section>
+                    <div className="mb-3">
+                        <label htmlFor="login-password" className="form-label text-white small">
+                            Contraseña
+                        </label>
+                        <div className="input-group">
+                            <input
+                                id="login-password"
+                                type={showPassword ? "text" : "password"}
+                                className="form-control"
+                                placeholder="Ingrese su contraseña"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                            />
+                            <button
+                                type="button"
+                                className="btn btn-light"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? "🙈" : "👁️"}
+                            </button>
+                        </div>
+                    </div>
 
+                    {error && <div className="alert alert-danger py-2 small">{error}</div>}
+
+                    <button type="submit" className="btn btn-light text-primary fw-bold w-100 py-2 mt-2">
+                        Iniciar sesión
+                    </button>
+                </form>
+
+                {/* OPCIONES */}
+                <div className="text-center mt-3">
+                    <button type="button" className="btn btn-link p-0 text-info text-decoration-none small">
+                        ¿Olvidó su contraseña?
+                    </button>
+                </div>
+
+                <div className="text-center mt-3 small">
+                    <span className="text-white">¿No eres usuario? </span>
+                    <Link to="/register" className="text-info text-decoration-none fw-bold">
+                        Regístrate aquí
+                    </Link>
+                </div>
+
+                <div className="text-center mt-4 pt-3 border-top border-secondary small text-light opacity-75">
+                    🔒 Conexión segura y protegida
+                </div>
+            </div>
         </div>
     );
 };
-

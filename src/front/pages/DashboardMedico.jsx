@@ -1,700 +1,1385 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 import rigoImageUrl from "../assets/img/rigo-baby.jpg";
 
-// NOTA: Todo el estado (pacientes, recetas, mensajes) vive en memoria con useState.
-// No hay llamadas a backend todavía; cuando lo conectes, sustituye los setState
-// por tus fetch/axios y carga los datos iniciales desde la API.
-
 export const DashboardMedico = () => {
     const { store } = useGlobalReducer();
-    const user = store.user;
-    const profileImage = user?.profile_image || rigoImageUrl;
 
-    // ---------------- PACIENTES ----------------
-    const [patients, setPatients] = useState([
-        {
-            id: 1,
-            name: "Ana Torres",
-            weight: "68",
-            pressure: "118/76",
-            height: "165",
-            illness: "Asma",
-        },
-        {
-            id: 2,
-            name: "Luis Gómez",
-            weight: "82",
-            pressure: "130/85",
-            height: "178",
-            illness: "Hipertensión",
-        },
-    ]);
+    // =========================
+    // MIS PACIENTES
+    // =========================
 
-    const [newPatient, setNewPatient] = useState({
-        name: "",
-        weight: "",
-        pressure: "",
-        height: "",
-        illness: "",
-    });
+    const [patients, setPatients] = useState([]);
 
-    const handleNewPatientChange = (field, value) => {
-        setNewPatient((prev) => ({ ...prev, [field]: value }));
-    };
+    // =========================
+    // BÚSQUEDA DE PACIENTES
+    // =========================
 
-    const addPatient = () => {
-        if (!newPatient.name.trim()) return;
-        setPatients((prev) => [...prev, { id: Date.now(), ...newPatient }]);
-        setNewPatient({ name: "", weight: "", pressure: "", height: "", illness: "" });
-    };
+    const [searchResults, setSearchResults] = useState([]);
+    const [searchPatient, setSearchPatient] = useState("");
+    const [loadingPatients, setLoadingPatients] = useState(false);
+    const [loadingMyPatients, setLoadingMyPatients] = useState(false);
+    const [addingPatientId, setAddingPatientId] = useState(null);
+    const [patientError, setPatientError] = useState("");
+    const [searchDone, setSearchDone] = useState(false);
 
-    const removePatient = (id) => {
-        setPatients((prev) => prev.filter((p) => p.id !== id));
-    };
+    // =========================
+    // RECETAS
+    // =========================
 
-    const updatePatientField = (id, field, value) => {
-        setPatients((prev) =>
-            prev.map((p) => (p.id === id ? { ...p, [field]: value } : p))
-        );
-    };
-
-    // ---------------- RECETAS ----------------
     const [prescriptions, setPrescriptions] = useState([]);
+
     const [newPrescription, setNewPrescription] = useState({
         patientId: "",
         medication: "",
         dosage: "",
-        instructions: "",
+        instructions: ""
     });
 
-    const handleNewPrescriptionChange = (field, value) => {
-        setNewPrescription((prev) => ({ ...prev, [field]: value }));
+    // =========================
+    // MENSAJES
+    // =========================
+
+    const [messages] = useState([
+        {
+            id: 1,
+            sender: "Ana Torres",
+            message: "Buenos días doctor, quería consultar una duda.",
+            time: "10:30"
+        },
+        {
+            id: 2,
+            sender: "Luis Gómez",
+            message: "¿Podría revisar mi última analítica?",
+            time: "09:45"
+        }
+    ]);
+
+    // =========================
+    // TOKEN
+    // =========================
+
+    const getToken = () => {
+        return (
+            localStorage.getItem("access_token") ||
+            localStorage.getItem("token")
+        );
     };
 
-    const addPrescription = () => {
-        if (!newPrescription.patientId || !newPrescription.medication.trim()) return;
-        setPrescriptions((prev) => [...prev, { id: Date.now(), ...newPrescription }]);
-        setNewPrescription({ patientId: "", medication: "", dosage: "", instructions: "" });
+    // =========================
+    // CARGAR MIS PACIENTES
+    // =========================
+
+    const loadMyPatients = async () => {
+        setLoadingMyPatients(true);
+
+        try {
+            const token = getToken();
+
+            if (!token) {
+                setPatientError("No hay sesión iniciada.");
+                return;
+            }
+
+            const response = await fetch(
+                `${import.meta.env.VITE_BACKEND_URL}/api/medico/pacientes`,
+                {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    }
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                setPatientError(
+                    data.error ||
+                    "No se pudieron cargar tus pacientes."
+                );
+                return;
+            }
+
+            setPatients(data.pacientes || []);
+
+        } catch (error) {
+            console.error(
+                "Error cargando mis pacientes:",
+                error
+            );
+
+            setPatientError(
+                "Error de conexión con el servidor."
+            );
+        } finally {
+            setLoadingMyPatients(false);
+        }
+    };
+
+    // =========================
+    // CARGAR PACIENTES AL ENTRAR
+    // =========================
+
+    useEffect(() => {
+        loadMyPatients();
+    }, []);
+
+    // =========================
+    // BUSCAR PACIENTES
+    // =========================
+
+    const searchPatients = async () => {
+        if (!searchPatient.trim()) {
+            setPatientError(
+                "Introduce un nombre, DNI, CIP o email."
+            );
+            setSearchResults([]);
+            setSearchDone(false);
+            return;
+        }
+
+        setLoadingPatients(true);
+        setPatientError("");
+        setSearchDone(false);
+
+        try {
+            const token = getToken();
+
+            if (!token) {
+                setPatientError("No hay sesión iniciada.");
+                return;
+            }
+
+            const response = await fetch(
+                `${import.meta.env.VITE_BACKEND_URL}/api/medico/pacientes/buscar?q=${encodeURIComponent(
+                    searchPatient.trim()
+                )}`,
+                {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    }
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                setPatientError(
+                    data.error ||
+                    "No se pudieron buscar los pacientes."
+                );
+                setSearchResults([]);
+                return;
+            }
+
+            setSearchResults(data.pacientes || []);
+            setSearchDone(true);
+
+        } catch (error) {
+            console.error(
+                "Error buscando pacientes:",
+                error
+            );
+
+            setPatientError(
+                "Error de conexión con el servidor."
+            );
+
+            setSearchResults([]);
+
+        } finally {
+            setLoadingPatients(false);
+        }
+    };
+
+    // =========================
+    // COMPROBAR SI YA ES MI PACIENTE
+    // =========================
+
+    const isMyPatient = (patientId) => {
+        return patients.some(
+            (patient) => patient.id === patientId
+        );
+    };
+
+    // =========================
+    // AGREGAR PACIENTE
+    // =========================
+
+    const addPatient = async (patientId) => {
+        setAddingPatientId(patientId);
+        setPatientError("");
+
+        try {
+            const token = getToken();
+
+            if (!token) {
+                setPatientError("No hay sesión iniciada.");
+                return;
+            }
+
+            const response = await fetch(
+                `${import.meta.env.VITE_BACKEND_URL}/api/medico/pacientes/${patientId}`,
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    }
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                setPatientError(
+                    data.error ||
+                    "No se pudo agregar el paciente."
+                );
+                return;
+            }
+
+            // Volver a cargar desde la BD
+            await loadMyPatients();
+
+            // Actualizar también el buscador
+            setSearchResults((prevResults) =>
+                prevResults.map((patient) =>
+                    patient.id === patientId
+                        ? {
+                            ...patient,
+                            is_mine: true
+                        }
+                        : patient
+                )
+            );
+
+        } catch (error) {
+            console.error(
+                "Error agregando paciente:",
+                error
+            );
+
+            setPatientError(
+                "Error de conexión con el servidor."
+            );
+
+        } finally {
+            setAddingPatientId(null);
+        }
+    };
+
+    // =========================
+    // LIMPIAR BÚSQUEDA
+    // =========================
+
+    const clearPatients = () => {
+        setSearchPatient("");
+        setSearchResults([]);
+        setPatientError("");
+        setSearchDone(false);
+    };
+
+    // =========================
+    // RECETAS
+    // =========================
+
+    const handlePrescriptionChange = (e) => {
+        const { name, value } = e.target;
+
+        setNewPrescription({
+            ...newPrescription,
+            [name]: value
+        });
+    };
+
+    const addPrescription = (e) => {
+        e.preventDefault();
+
+        if (
+            !newPrescription.patientId ||
+            !newPrescription.medication ||
+            !newPrescription.dosage
+        ) {
+            return;
+        }
+
+        const patient = patients.find(
+            (p) =>
+                String(p.id) ===
+                String(newPrescription.patientId)
+        );
+
+        const prescription = {
+            id: Date.now(),
+            patientId: newPrescription.patientId,
+            patientName: patient
+                ? `${patient.nombre} ${patient.apellidos}`
+                : "Paciente",
+            medication: newPrescription.medication,
+            dosage: newPrescription.dosage,
+            instructions: newPrescription.instructions
+        };
+
+        setPrescriptions([
+            ...prescriptions,
+            prescription
+        ]);
+
+        setNewPrescription({
+            patientId: "",
+            medication: "",
+            dosage: "",
+            instructions: ""
+        });
     };
 
     const removePrescription = (id) => {
-        setPrescriptions((prev) => prev.filter((p) => p.id !== id));
+        setPrescriptions(
+            prescriptions.filter(
+                (prescription) =>
+                    prescription.id !== id
+            )
+        );
     };
 
-    const getPatientName = (id) => {
-        const found = patients.find((p) => String(p.id) === String(id));
-        return found ? found.name : "Paciente eliminado";
-    };
+    // =========================
+    // DATOS DEL MÉDICO
+    // =========================
 
-    // ---------------- MENSAJES ----------------
-    const [messageTab, setMessageTab] = useState("todos");
+    const doctorName =
+        store?.user?.first_name || "Médico";
 
-    const messages = [
-        { id: 1, from: "Ana Torres", type: "paciente", text: "¿Puedo tomar el ibuprofeno con el desayuno?" },
-        { id: 2, from: "Dra. Martínez", type: "colega", text: "¿Revisamos juntos el caso de Luis Gómez?" },
-        { id: 3, from: "Luis Gómez", type: "paciente", text: "Ya agendé la cita de control, gracias." },
-        { id: 4, from: "Dr. Salinas", type: "colega", text: "Te paso el resultado de la interconsulta." },
-    ];
-
-    const filteredMessages = messages.filter((m) => {
-        if (messageTab === "todos") return true;
-        if (messageTab === "pacientes") return m.type === "paciente";
-        return m.type === "colega";
-    });
+    const doctorLastName =
+        store?.user?.last_name || "";
 
     return (
-        <div className="dashboard-medico-page">
+        <div className="container-fluid py-4">
 
-            {/* ESTILOS */}
-            <style>{`
-        .dashboard-paciente-profile-image {
-          width: 64px;
-          height: 64px;
-          min-width: 64px;
-          min-height: 64px;
-          object-fit: cover;
-          object-position: center;
-          border-radius: 50%;
-          display: block;
-        }
+            {/* ========================= */}
+            {/* CABECERA */}
+            {/* ========================= */}
 
-        .dashboard-paciente-main-row {
-          align-items: stretch;
-        }
+            <div className="row mb-4">
+                <div className="col-12">
+                    <div className="card shadow-sm border-0">
+                        <div className="card-body">
 
-        .col-12.col-lg-8 {
-          display: flex;
-        }
+                            <div className="d-flex align-items-center">
 
-        .dashboard-paciente-cards-row {
-          width: 100%;
-          align-content: space-between;
-        }
+                                <img
+                                    src={rigoImageUrl}
+                                    alt="Perfil médico"
+                                    className="rounded-circle me-3"
+                                    style={{
+                                        width: "70px",
+                                        height: "70px",
+                                        objectFit: "cover"
+                                    }}
+                                />
 
-        .dashboard-medico-card {
-          padding: 1.5rem;
-        }
+                                <div>
 
-        .dashboard-medico-patient-list {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-          margin: 1rem 0;
-        }
+                                    <h2 className="mb-1">
+                                        Bienvenido, Dr.{" "}
+                                        {doctorName}{" "}
+                                        {doctorLastName}
+                                    </h2>
 
-        .dashboard-medico-patient-row {
-          background: rgba(255, 255, 255, 0.04);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 12px;
-          padding: 1rem;
-          display: flex;
-          flex-wrap: wrap;
-          align-items: center;
-          gap: 1rem;
-        }
+                                    <p className="text-muted mb-0">
+                                        Panel de gestión médica
+                                    </p>
 
-        .dashboard-medico-patient-name {
-          display: flex;
-          flex-direction: column;
-          min-width: 140px;
-        }
+                                </div>
 
-        .dashboard-medico-patient-name span {
-          font-size: 0.8rem;
-          color: rgba(255, 255, 255, 0.6);
-        }
-
-        .dashboard-medico-patient-fields {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.75rem;
-          flex: 1;
-        }
-
-        .dashboard-medico-patient-fields label {
-          display: flex;
-          flex-direction: column;
-          font-size: 0.75rem;
-          color: rgba(255, 255, 255, 0.6);
-          gap: 0.25rem;
-        }
-
-        .dashboard-medico-patient-fields input {
-          background: rgba(255, 255, 255, 0.06);
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          border-radius: 8px;
-          padding: 0.4rem 0.6rem;
-          color: #fff;
-          width: 100px;
-          font-size: 0.85rem;
-        }
-
-        .dashboard-medico-remove-button {
-          background: rgba(244, 63, 94, 0.15);
-          color: #f43f5e;
-          border: 1px solid rgba(244, 63, 94, 0.4);
-          border-radius: 8px;
-          padding: 0.4rem 0.9rem;
-          font-size: 0.8rem;
-          cursor: pointer;
-          white-space: nowrap;
-        }
-
-        .dashboard-medico-remove-button:hover {
-          background: rgba(244, 63, 94, 0.3);
-        }
-
-        .dashboard-medico-add-form {
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
-          padding-top: 1rem;
-          margin-top: 0.5rem;
-        }
-
-        .dashboard-medico-add-form h4 {
-          margin-bottom: 0.75rem;
-          font-size: 0.95rem;
-        }
-
-        .dashboard-medico-form-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-          gap: 0.75rem;
-          margin-bottom: 1rem;
-        }
-
-        .dashboard-medico-form-grid input,
-        .dashboard-medico-form-grid select {
-          background: rgba(255, 255, 255, 0.06);
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          border-radius: 8px;
-          padding: 0.6rem 0.8rem;
-          color: #fff;
-          font-size: 0.85rem;
-        }
-
-        .dashboard-medico-form-grid select option {
-          color: #000;
-        }
-
-        .dashboard-medico-prescription-list {
-          display: flex;
-          flex-direction: column;
-          gap: 0.75rem;
-        }
-
-        .dashboard-medico-prescription-item {
-          background: rgba(255, 255, 255, 0.04);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 12px;
-          padding: 0.85rem 1rem;
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          gap: 1rem;
-        }
-
-        .dashboard-medico-prescription-item p {
-          margin: 0.25rem 0 0;
-          font-size: 0.85rem;
-          color: rgba(255, 255, 255, 0.7);
-        }
-
-        .dashboard-medico-instructions {
-          font-style: italic;
-        }
-
-        .dashboard-medico-empty {
-          color: rgba(255, 255, 255, 0.5);
-          font-size: 0.9rem;
-        }
-
-        .dashboard-medico-message-tabs {
-          display: flex;
-          gap: 0.5rem;
-          margin-bottom: 0.75rem;
-        }
-
-        .dashboard-medico-message-tabs button {
-          background: rgba(255, 255, 255, 0.06);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          color: rgba(255, 255, 255, 0.7);
-          border-radius: 999px;
-          padding: 0.3rem 0.8rem;
-          font-size: 0.75rem;
-          cursor: pointer;
-        }
-
-        .dashboard-medico-message-tabs button.active {
-          background: #22d3ee;
-          color: #04202a;
-          border-color: #22d3ee;
-          font-weight: 600;
-        }
-
-        .dashboard-medico-message-list {
-          display: flex;
-          flex-direction: column;
-          gap: 0.75rem;
-          margin-bottom: 1rem;
-          max-height: 220px;
-          overflow-y: auto;
-        }
-      `}</style>
-
-            {/* DASHBOARD */}
-            <section className="dashboard-paciente-section">
-                <div className="container">
-
-                    {/* BIENVENIDA */}
-                    <div className="dashboard-paciente-welcome glass-card">
-
-                        <div className="dashboard-paciente-user">
-
-                            <img
-                                src={profileImage}
-                                alt="Foto de perfil"
-                                className="dashboard-paciente-profile-image"
-                            />
-
-                            <div>
-                                <span className="dashboard-paciente-eyebrow">
-                                    Área médica
-                                </span>
-
-                                <h2>
-                                    Hola, Dr(a). {user?.first_name || "Doctor"} 👋
-                                </h2>
-
-                                <p>
-                                    Gestiona tus pacientes, recetas y mensajes desde un solo lugar.
-                                </p>
                             </div>
 
                         </div>
-
-                        <div className="dashboard-paciente-status">
-                            <span></span>
-                            Cuenta activa
-                        </div>
-
                     </div>
+                </div>
+            </div>
 
-                    <div className="row g-4 dashboard-paciente-main-row">
+            {/* ========================= */}
+            {/* RESUMEN */}
+            {/* ========================= */}
 
-                        {/* COLUMNA PRINCIPAL */}
-                        <div className="col-12 col-lg-8">
+            <div className="row mb-4">
 
-                            <div className="row g-4 dashboard-paciente-cards-row">
+                <div className="col-md-4 mb-3">
+                    <div className="card shadow-sm border-0 h-100">
+                        <div className="card-body">
 
-                                {/* MIS PACIENTES */}
-                                <div className="col-12">
-                                    <div className="dashboard-medico-card glass-card">
+                            <h6 className="text-muted">
+                                Mis pacientes
+                            </h6>
 
-                                        <div className="dashboard-paciente-card-header">
-                                            <div className="dashboard-paciente-card-icon">
-                                                🩺
-                                            </div>
-                                            <span className="dashboard-paciente-card-label">
-                                                Gestión
-                                            </span>
-                                        </div>
-
-                                        <h3>Mis pacientes</h3>
-
-                                        <div className="dashboard-medico-patient-list">
-
-                                            {patients.length === 0 && (
-                                                <p className="dashboard-medico-empty">
-                                                    Aún no tienes pacientes asignados.
-                                                </p>
-                                            )}
-
-                                            {patients.map((p) => (
-                                                <div className="dashboard-medico-patient-row" key={p.id}>
-
-                                                    <div className="dashboard-medico-patient-name">
-                                                        <strong>{p.name}</strong>
-                                                        <span>{p.illness || "Sin diagnóstico"}</span>
-                                                    </div>
-
-                                                    <div className="dashboard-medico-patient-fields">
-                                                        <label>
-                                                            Peso (kg)
-                                                            <input
-                                                                type="text"
-                                                                value={p.weight}
-                                                                onChange={(e) => updatePatientField(p.id, "weight", e.target.value)}
-                                                            />
-                                                        </label>
-
-                                                        <label>
-                                                            Presión
-                                                            <input
-                                                                type="text"
-                                                                value={p.pressure}
-                                                                onChange={(e) => updatePatientField(p.id, "pressure", e.target.value)}
-                                                            />
-                                                        </label>
-
-                                                        <label>
-                                                            Estatura (cm)
-                                                            <input
-                                                                type="text"
-                                                                value={p.height}
-                                                                onChange={(e) => updatePatientField(p.id, "height", e.target.value)}
-                                                            />
-                                                        </label>
-
-                                                        <label>
-                                                            Enfermedad
-                                                            <input
-                                                                type="text"
-                                                                value={p.illness}
-                                                                onChange={(e) => updatePatientField(p.id, "illness", e.target.value)}
-                                                            />
-                                                        </label>
-                                                    </div>
-
-                                                    <button
-                                                        className="dashboard-medico-remove-button"
-                                                        onClick={() => removePatient(p.id)}
-                                                    >
-                                                        Quitar
-                                                    </button>
-
-                                                </div>
-                                            ))}
-
-                                        </div>
-
-                                        {/* AGREGAR PACIENTE */}
-                                        <div className="dashboard-medico-add-form">
-                                            <h4>Agregar paciente</h4>
-
-                                            <div className="dashboard-medico-form-grid">
-                                                <input
-                                                    placeholder="Nombre"
-                                                    value={newPatient.name}
-                                                    onChange={(e) => handleNewPatientChange("name", e.target.value)}
-                                                />
-                                                <input
-                                                    placeholder="Peso (kg)"
-                                                    value={newPatient.weight}
-                                                    onChange={(e) => handleNewPatientChange("weight", e.target.value)}
-                                                />
-                                                <input
-                                                    placeholder="Presión arterial"
-                                                    value={newPatient.pressure}
-                                                    onChange={(e) => handleNewPatientChange("pressure", e.target.value)}
-                                                />
-                                                <input
-                                                    placeholder="Estatura (cm)"
-                                                    value={newPatient.height}
-                                                    onChange={(e) => handleNewPatientChange("height", e.target.value)}
-                                                />
-                                                <input
-                                                    placeholder="Enfermedad"
-                                                    value={newPatient.illness}
-                                                    onChange={(e) => handleNewPatientChange("illness", e.target.value)}
-                                                />
-                                            </div>
-
-                                            <button className="dashboard-paciente-button" onClick={addPatient}>
-                                                Agregar paciente
-                                            </button>
-                                        </div>
-
-                                    </div>
-                                </div>
-
-                                {/* CREAR RECETA */}
-                                <div className="col-12 col-md-6">
-                                    <div className="dashboard-medico-card glass-card">
-
-                                        <div className="dashboard-paciente-card-header">
-                                            <div className="dashboard-paciente-card-icon">
-                                                📝
-                                            </div>
-                                            <span className="dashboard-paciente-card-label">
-                                                Tratamiento
-                                            </span>
-                                        </div>
-
-                                        <h3>Crear receta</h3>
-
-                                        <div className="dashboard-medico-form-grid">
-                                            <select
-                                                value={newPrescription.patientId}
-                                                onChange={(e) => handleNewPrescriptionChange("patientId", e.target.value)}
-                                            >
-                                                <option value="">Selecciona paciente</option>
-                                                {patients.map((p) => (
-                                                    <option key={p.id} value={p.id}>{p.name}</option>
-                                                ))}
-                                            </select>
-
-                                            <input
-                                                placeholder="Medicamento"
-                                                value={newPrescription.medication}
-                                                onChange={(e) => handleNewPrescriptionChange("medication", e.target.value)}
-                                            />
-                                            <input
-                                                placeholder="Dosis"
-                                                value={newPrescription.dosage}
-                                                onChange={(e) => handleNewPrescriptionChange("dosage", e.target.value)}
-                                            />
-                                            <input
-                                                placeholder="Indicaciones"
-                                                value={newPrescription.instructions}
-                                                onChange={(e) => handleNewPrescriptionChange("instructions", e.target.value)}
-                                            />
-                                        </div>
-
-                                        <button className="dashboard-paciente-button" onClick={addPrescription}>
-                                            Crear receta
-                                        </button>
-
-                                    </div>
-                                </div>
-
-                                {/* RECETAS EMITIDAS */}
-                                <div className="col-12 col-md-6">
-                                    <div className="dashboard-medico-card glass-card">
-
-                                        <div className="dashboard-paciente-card-header">
-                                            <div className="dashboard-paciente-card-icon">
-                                                📋
-                                            </div>
-                                            <span className="dashboard-paciente-card-label">
-                                                Historial
-                                            </span>
-                                        </div>
-
-                                        <h3>Recetas emitidas</h3>
-
-                                        <div className="dashboard-medico-prescription-list">
-
-                                            {prescriptions.length === 0 && (
-                                                <p className="dashboard-medico-empty">
-                                                    Todavía no has creado recetas.
-                                                </p>
-                                            )}
-
-                                            {prescriptions.map((rx) => (
-                                                <div className="dashboard-medico-prescription-item" key={rx.id}>
-                                                    <div>
-                                                        <strong>{rx.medication}</strong>
-                                                        <span> · {getPatientName(rx.patientId)}</span>
-                                                        {rx.dosage && <p>{rx.dosage}</p>}
-                                                        {rx.instructions && (
-                                                            <p className="dashboard-medico-instructions">{rx.instructions}</p>
-                                                        )}
-                                                    </div>
-
-                                                    <button
-                                                        className="dashboard-medico-remove-button"
-                                                        onClick={() => removePrescription(rx.id)}
-                                                    >
-                                                        Eliminar
-                                                    </button>
-                                                </div>
-                                            ))}
-
-                                        </div>
-
-                                    </div>
-                                </div>
-
-                            </div>
+                            <h2 className="mb-0">
+                                {patients.length}
+                            </h2>
 
                         </div>
-
-                        {/* COLUMNA LATERAL */}
-                        <div className="col-12 col-lg-4">
-
-                            <div className="dashboard-paciente-sidebar">
-
-                                {/* RESUMEN */}
-                                <div className="dashboard-paciente-widget glass-card">
-
-                                    <div className="dashboard-paciente-widget-header">
-                                        <h3>Resumen</h3>
-                                        <span>📊</span>
-                                    </div>
-
-                                    <div className="dashboard-paciente-health-list">
-
-                                        <div>
-                                            <span>Pacientes activos</span>
-                                            <strong>{patients.length}</strong>
-                                        </div>
-
-                                        <div>
-                                            <span>Recetas emitidas</span>
-                                            <strong>{prescriptions.length}</strong>
-                                        </div>
-
-                                        <div>
-                                            <span>Citas de hoy</span>
-                                            <strong>3</strong>
-                                        </div>
-
-                                    </div>
-
-                                </div>
-
-                                {/* NOTIFICACIONES */}
-                                <div className="dashboard-paciente-widget glass-card">
-
-                                    <div className="dashboard-paciente-widget-header">
-                                        <h3>Notificaciones</h3>
-                                        <span>🔔</span>
-                                    </div>
-
-                                    <div className="dashboard-paciente-notifications">
-
-                                        <div>
-                                            <span>📅</span>
-                                            <p>
-                                                Cita con Ana Torres en 30 min
-                                            </p>
-                                        </div>
-
-                                        <div>
-                                            <span>🧪</span>
-                                            <p>
-                                                Resultado de laboratorio disponible
-                                            </p>
-                                        </div>
-
-                                    </div>
-
-                                </div>
-
-                                {/* MENSAJES (pacientes + colegas médicos) */}
-                                <div className="dashboard-paciente-widget glass-card">
-
-                                    <div className="dashboard-paciente-widget-header">
-                                        <h3>Mensajes</h3>
-                                        <span>💬</span>
-                                    </div>
-
-                                    <div className="dashboard-medico-message-tabs">
-                                        <button
-                                            className={messageTab === "todos" ? "active" : ""}
-                                            onClick={() => setMessageTab("todos")}
-                                        >
-                                            Todos
-                                        </button>
-                                        <button
-                                            className={messageTab === "pacientes" ? "active" : ""}
-                                            onClick={() => setMessageTab("pacientes")}
-                                        >
-                                            Pacientes
-                                        </button>
-                                        <button
-                                            className={messageTab === "colegas" ? "active" : ""}
-                                            onClick={() => setMessageTab("colegas")}
-                                        >
-                                            Colegas
-                                        </button>
-                                    </div>
-
-                                    <div className="dashboard-medico-message-list">
-                                        {filteredMessages.map((m) => (
-                                            <div className="dashboard-paciente-message" key={m.id}>
-                                                <div className="dashboard-paciente-message-icon">
-                                                    {m.type === "paciente" ? "🧑" : "👨‍⚕️"}
-                                                </div>
-                                                <div>
-                                                    <strong>{m.from}</strong>
-                                                    <p>"{m.text}"</p>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    <button className="dashboard-paciente-button">
-                                        Ver mensajes
-                                    </button>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
                     </div>
+                </div>
 
-                    {/* SEGURIDAD */}
-                    <div className="dashboard-paciente-security">
-                        <span>🔒</span>
-                        Conexión cifrada SSL · Información sanitaria protegida
+                <div className="col-md-4 mb-3">
+                    <div className="card shadow-sm border-0 h-100">
+                        <div className="card-body">
+
+                            <h6 className="text-muted">
+                                Recetas creadas
+                            </h6>
+
+                            <h2 className="mb-0">
+                                {prescriptions.length}
+                            </h2>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div className="col-md-4 mb-3">
+                    <div className="card shadow-sm border-0 h-100">
+                        <div className="card-body">
+
+                            <h6 className="text-muted">
+                                Mensajes
+                            </h6>
+
+                            <h2 className="mb-0">
+                                {messages.length}
+                            </h2>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            {/* ========================= */}
+            {/* BUSCADOR DE PACIENTES */}
+            {/* ========================= */}
+
+            <div className="row mb-4">
+                <div className="col-12">
+
+                    <div className="card shadow-sm border-0">
+                        <div className="card-body">
+
+                            <h3 className="mb-3">
+                                Buscar pacientes
+                            </h3>
+
+                            <div className="row g-2">
+
+                                <div className="col-md-9">
+
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        placeholder="Buscar por nombre, apellidos, DNI, CIP o email..."
+                                        value={searchPatient}
+                                        onChange={(e) =>
+                                            setSearchPatient(
+                                                e.target.value
+                                            )
+                                        }
+                                        onKeyDown={(e) => {
+                                            if (
+                                                e.key ===
+                                                "Enter"
+                                            ) {
+                                                searchPatients();
+                                            }
+                                        }}
+                                    />
+
+                                </div>
+
+                                <div className="col-md-3">
+
+                                    <div className="d-flex gap-2">
+
+                                        <button
+                                            type="button"
+                                            className="btn btn-primary w-100"
+                                            onClick={
+                                                searchPatients
+                                            }
+                                            disabled={
+                                                loadingPatients
+                                            }
+                                        >
+                                            {loadingPatients
+                                                ? "Buscando..."
+                                                : "Buscar"}
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            className="btn btn-outline-secondary"
+                                            onClick={
+                                                clearPatients
+                                            }
+                                        >
+                                            Limpiar
+                                        </button>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            {patientError && (
+                                <div className="alert alert-danger mt-3 mb-0">
+                                    {patientError}
+                                </div>
+                            )}
+
+                        </div>
                     </div>
 
                 </div>
-            </section>
+            </div>
+
+            {/* ========================= */}
+            {/* RESULTADOS DE BÚSQUEDA */}
+            {/* ========================= */}
+
+            {(searchDone ||
+                loadingPatients) && (
+
+                <div className="row mb-5">
+
+                    <div className="col-12">
+
+                        <div className="card shadow-sm border-0">
+
+                            <div className="card-body">
+
+                                <h3 className="mb-4">
+                                    Resultados de búsqueda
+                                </h3>
+
+                                {loadingPatients && (
+                                    <div className="text-center py-5">
+
+                                        <div
+                                            className="spinner-border text-primary"
+                                            role="status"
+                                        >
+                                            <span className="visually-hidden">
+                                                Buscando...
+                                            </span>
+                                        </div>
+
+                                        <p className="text-muted mt-2">
+                                            Buscando pacientes...
+                                        </p>
+
+                                    </div>
+                                )}
+
+                                {!loadingPatients &&
+                                    searchResults.length === 0 && (
+                                        <div className="text-center text-muted py-5">
+
+                                            <h5>
+                                                No se encontraron pacientes
+                                            </h5>
+
+                                            <p className="mb-0">
+                                                Prueba con otro nombre, DNI,
+                                                CIP o email.
+                                            </p>
+
+                                        </div>
+                                    )}
+
+                                {!loadingPatients && (
+                                    <div className="row">
+
+                                        {searchResults.map(
+                                            (patient) => {
+
+                                                const alreadyMine =
+                                                    isMyPatient(
+                                                        patient.id
+                                                    );
+
+                                                const adding =
+                                                    addingPatientId ===
+                                                    patient.id;
+
+                                                return (
+                                                    <div
+                                                        className="col-lg-6 mb-4"
+                                                        key={
+                                                            patient.id
+                                                        }
+                                                    >
+
+                                                        <div className="card border h-100">
+
+                                                            <div className="card-body">
+
+                                                                <div className="d-flex justify-content-between align-items-start mb-3">
+
+                                                                    <div>
+
+                                                                        <h5 className="mb-1">
+                                                                            {
+                                                                                patient.nombre
+                                                                            }{" "}
+                                                                            {
+                                                                                patient.apellidos
+                                                                            }
+                                                                        </h5>
+
+                                                                        <small className="text-muted">
+                                                                            Paciente #
+                                                                            {
+                                                                                patient.id
+                                                                            }
+                                                                        </small>
+
+                                                                    </div>
+
+                                                                    {alreadyMine ? (
+                                                                        <span className="badge bg-success">
+                                                                            Mi paciente
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span className="badge bg-secondary">
+                                                                            Disponible
+                                                                        </span>
+                                                                    )}
+
+                                                                </div>
+
+                                                                <hr />
+
+                                                                <div className="row">
+
+                                                                    <div className="col-md-6 mb-3">
+
+                                                                        <strong>
+                                                                            DNI
+                                                                        </strong>
+
+                                                                        <div className="text-muted">
+                                                                            {patient.dni ||
+                                                                                "No disponible"}
+                                                                        </div>
+
+                                                                    </div>
+
+                                                                    <div className="col-md-6 mb-3">
+
+                                                                        <strong>
+                                                                            CIP
+                                                                        </strong>
+
+                                                                        <div className="text-muted">
+                                                                            {patient.cip ||
+                                                                                "No disponible"}
+                                                                        </div>
+
+                                                                    </div>
+
+                                                                    <div className="col-md-6 mb-3">
+
+                                                                        <strong>
+                                                                            Email
+                                                                        </strong>
+
+                                                                        <div className="text-muted text-break">
+                                                                            {patient.email ||
+                                                                                "No disponible"}
+                                                                        </div>
+
+                                                                    </div>
+
+                                                                    <div className="col-md-6 mb-3">
+
+                                                                        <strong>
+                                                                            Teléfono
+                                                                        </strong>
+
+                                                                        <div className="text-muted">
+                                                                            {patient.telefono ||
+                                                                                "No disponible"}
+                                                                        </div>
+
+                                                                    </div>
+
+                                                                    <div className="col-md-6 mb-3">
+
+                                                                        <strong>
+                                                                            Fecha de nacimiento
+                                                                        </strong>
+
+                                                                        <div className="text-muted">
+                                                                            {patient.fecha_nacimiento
+                                                                                ? new Date(
+                                                                                    patient.fecha_nacimiento
+                                                                                ).toLocaleDateString(
+                                                                                    "es-ES"
+                                                                                )
+                                                                                : "No disponible"}
+                                                                        </div>
+
+                                                                    </div>
+
+                                                                    <div className="col-md-6 mb-3">
+
+                                                                        <strong>
+                                                                            Sexo
+                                                                        </strong>
+
+                                                                        <div className="text-muted">
+                                                                            {patient.sexo ||
+                                                                                "No disponible"}
+                                                                        </div>
+
+                                                                    </div>
+
+                                                                    <div className="col-md-6 mb-3">
+
+                                                                        <strong>
+                                                                            Grupo sanguíneo
+                                                                        </strong>
+
+                                                                        <div className="text-muted">
+                                                                            {patient.grupo_sanguineo ||
+                                                                                "No disponible"}
+                                                                        </div>
+
+                                                                    </div>
+
+                                                                </div>
+
+                                                                <div className="mt-2">
+
+                                                                    {alreadyMine ? (
+
+                                                                        <button
+                                                                            type="button"
+                                                                            className="btn btn-success btn-sm"
+                                                                            disabled
+                                                                        >
+                                                                            ✓ Ya es mi paciente
+                                                                        </button>
+
+                                                                    ) : (
+
+                                                                        <button
+                                                                            type="button"
+                                                                            className="btn btn-primary btn-sm"
+                                                                            onClick={() =>
+                                                                                addPatient(
+                                                                                    patient.id
+                                                                                )
+                                                                            }
+                                                                            disabled={
+                                                                                adding
+                                                                            }
+                                                                        >
+                                                                            {adding
+                                                                                ? "Agregando..."
+                                                                                : "Agregar a mis pacientes"}
+                                                                        </button>
+
+                                                                    )}
+
+                                                                </div>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    </div>
+                                                );
+                                            }
+                                        )}
+
+                                    </div>
+                                )}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            )}
+
+            {/* ========================= */}
+            {/* MIS PACIENTES */}
+            {/* ========================= */}
+
+            <div className="row mb-5">
+
+                <div className="col-12">
+
+                    <div className="card shadow-sm border-0">
+
+                        <div className="card-body">
+
+                            <div className="d-flex justify-content-between align-items-center mb-4">
+
+                                <h3 className="mb-0">
+                                    Mis pacientes
+                                </h3>
+
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-primary btn-sm"
+                                    onClick={loadMyPatients}
+                                    disabled={
+                                        loadingMyPatients
+                                    }
+                                >
+                                    {loadingMyPatients
+                                        ? "Actualizando..."
+                                        : "Actualizar"}
+                                </button>
+
+                            </div>
+
+                            {loadingMyPatients &&
+                                patients.length === 0 && (
+                                    <div className="text-center py-5">
+
+                                        <div
+                                            className="spinner-border text-primary"
+                                            role="status"
+                                        >
+                                            <span className="visually-hidden">
+                                                Cargando...
+                                            </span>
+                                        </div>
+
+                                        <p className="text-muted mt-2">
+                                            Cargando tus pacientes...
+                                        </p>
+
+                                    </div>
+                                )}
+
+                            {!loadingMyPatients &&
+                                patients.length === 0 && (
+                                    <div className="text-center text-muted py-5">
+
+                                        <h5>
+                                            Todavía no tienes pacientes
+                                        </h5>
+
+                                        <p className="mb-0">
+                                            Utiliza el buscador para encontrar
+                                            un paciente y agregarlo a tu lista.
+                                        </p>
+
+                                    </div>
+                                )}
+
+                            <div className="row">
+
+                                {patients.map(
+                                    (patient) => (
+
+                                        <div
+                                            className="col-lg-6 mb-4"
+                                            key={patient.id}
+                                        >
+
+                                            <div className="card border h-100">
+
+                                                <div className="card-body">
+
+                                                    <div className="d-flex justify-content-between align-items-start mb-3">
+
+                                                        <div>
+
+                                                            <h5 className="mb-1">
+                                                                {
+                                                                    patient.nombre
+                                                                }{" "}
+                                                                {
+                                                                    patient.apellidos
+                                                                }
+                                                            </h5>
+
+                                                            <small className="text-muted">
+                                                                Paciente #
+                                                                {
+                                                                    patient.id
+                                                                }
+                                                            </small>
+
+                                                        </div>
+
+                                                        <span className="badge bg-success">
+                                                            Mi paciente
+                                                        </span>
+
+                                                    </div>
+
+                                                    <hr />
+
+                                                    <div className="row">
+
+                                                        <div className="col-md-6 mb-3">
+
+                                                            <strong>
+                                                                DNI
+                                                            </strong>
+
+                                                            <div className="text-muted">
+                                                                {patient.dni ||
+                                                                    "No disponible"}
+                                                            </div>
+
+                                                        </div>
+
+                                                        <div className="col-md-6 mb-3">
+
+                                                            <strong>
+                                                                CIP
+                                                            </strong>
+
+                                                            <div className="text-muted">
+                                                                {patient.cip ||
+                                                                    "No disponible"}
+                                                            </div>
+
+                                                        </div>
+
+                                                        <div className="col-md-6 mb-3">
+
+                                                            <strong>
+                                                                Email
+                                                            </strong>
+
+                                                            <div className="text-muted text-break">
+                                                                {patient.email ||
+                                                                    "No disponible"}
+                                                            </div>
+
+                                                        </div>
+
+                                                        <div className="col-md-6 mb-3">
+
+                                                            <strong>
+                                                                Teléfono
+                                                            </strong>
+
+                                                            <div className="text-muted">
+                                                                {patient.telefono ||
+                                                                    "No disponible"}
+                                                            </div>
+
+                                                        </div>
+
+                                                        <div className="col-md-6 mb-3">
+
+                                                            <strong>
+                                                                Fecha de nacimiento
+                                                            </strong>
+
+                                                            <div className="text-muted">
+                                                                {patient.fecha_nacimiento
+                                                                    ? new Date(
+                                                                        patient.fecha_nacimiento
+                                                                    ).toLocaleDateString(
+                                                                        "es-ES"
+                                                                    )
+                                                                    : "No disponible"}
+                                                            </div>
+
+                                                        </div>
+
+                                                        <div className="col-md-6 mb-3">
+
+                                                            <strong>
+                                                                Sexo
+                                                            </strong>
+
+                                                            <div className="text-muted">
+                                                                {patient.sexo ||
+                                                                    "No disponible"}
+                                                            </div>
+
+                                                        </div>
+
+                                                        <div className="col-md-6 mb-3">
+
+                                                            <strong>
+                                                                Grupo sanguíneo
+                                                            </strong>
+
+                                                            <div className="text-muted">
+                                                                {patient.grupo_sanguineo ||
+                                                                    "No disponible"}
+                                                            </div>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                    <div className="d-flex gap-2 mt-2">
+
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-outline-primary btn-sm"
+                                                        >
+                                                            Ver historial
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-outline-success btn-sm"
+                                                        >
+                                                            Nueva consulta
+                                                        </button>
+
+                                                    </div>
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                    )
+                                )}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            {/* ========================= */}
+            {/* RECETAS */}
+            {/* ========================= */}
+
+            <div className="row mb-5">
+
+                <div className="col-lg-6 mb-4">
+
+                    <div className="card shadow-sm border-0 h-100">
+
+                        <div className="card-body">
+
+                            <h3 className="mb-4">
+                                Crear receta
+                            </h3>
+
+                            <form onSubmit={addPrescription}>
+
+                                <div className="mb-3">
+
+                                    <label className="form-label">
+                                        Paciente
+                                    </label>
+
+                                    <select
+                                        className="form-select"
+                                        name="patientId"
+                                        value={
+                                            newPrescription.patientId
+                                        }
+                                        onChange={
+                                            handlePrescriptionChange
+                                        }
+                                    >
+
+                                        <option value="">
+                                            Selecciona un paciente
+                                        </option>
+
+                                        {patients.map(
+                                            (patient) => (
+
+                                                <option
+                                                    key={
+                                                        patient.id
+                                                    }
+                                                    value={
+                                                        patient.id
+                                                    }
+                                                >
+                                                    {
+                                                        patient.nombre
+                                                    }{" "}
+                                                    {
+                                                        patient.apellidos
+                                                    }
+                                                </option>
+
+                                            )
+                                        )}
+
+                                    </select>
+
+                                    {patients.length === 0 && (
+                                        <small className="text-muted">
+                                            Primero agrega un paciente a tu lista.
+                                        </small>
+                                    )}
+
+                                </div>
+
+                                <div className="mb-3">
+
+                                    <label className="form-label">
+                                        Medicamento
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        name="medication"
+                                        placeholder="Ej. Paracetamol"
+                                        value={
+                                            newPrescription.medication
+                                        }
+                                        onChange={
+                                            handlePrescriptionChange
+                                        }
+                                    />
+
+                                </div>
+
+                                <div className="mb-3">
+
+                                    <label className="form-label">
+                                        Dosis
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        name="dosage"
+                                        placeholder="Ej. 500 mg cada 8 horas"
+                                        value={
+                                            newPrescription.dosage
+                                        }
+                                        onChange={
+                                            handlePrescriptionChange
+                                        }
+                                    />
+
+                                </div>
+
+                                <div className="mb-3">
+
+                                    <label className="form-label">
+                                        Instrucciones
+                                    </label>
+
+                                    <textarea
+                                        className="form-control"
+                                        rows="3"
+                                        name="instructions"
+                                        placeholder="Indicaciones para el paciente..."
+                                        value={
+                                            newPrescription.instructions
+                                        }
+                                        onChange={
+                                            handlePrescriptionChange
+                                        }
+                                    />
+
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    className="btn btn-success"
+                                    disabled={
+                                        patients.length === 0
+                                    }
+                                >
+                                    Crear receta
+                                </button>
+
+                            </form>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {/* RECETAS CREADAS */}
+
+                <div className="col-lg-6 mb-4">
+
+                    <div className="card shadow-sm border-0 h-100">
+
+                        <div className="card-body">
+
+                            <h3 className="mb-4">
+                                Recetas
+                            </h3>
+
+                            {prescriptions.length === 0 ? (
+
+                                <div className="text-center text-muted py-5">
+
+                                    <p className="mb-0">
+                                        Todavía no has creado ninguna receta.
+                                    </p>
+
+                                </div>
+
+                            ) : (
+
+                                <div>
+
+                                    {prescriptions.map(
+                                        (prescription) => (
+
+                                            <div
+                                                key={
+                                                    prescription.id
+                                                }
+                                                className="border rounded p-3 mb-3"
+                                            >
+
+                                                <div className="d-flex justify-content-between">
+
+                                                    <div>
+
+                                                        <h6 className="mb-1">
+                                                            {
+                                                                prescription.patientName
+                                                            }
+                                                        </h6>
+
+                                                        <strong>
+                                                            {
+                                                                prescription.medication
+                                                            }
+                                                        </strong>
+
+                                                        <div className="text-muted">
+                                                            {
+                                                                prescription.dosage
+                                                            }
+                                                        </div>
+
+                                                        {prescription.instructions && (
+                                                            <small className="text-muted">
+                                                                {
+                                                                    prescription.instructions
+                                                                }
+                                                            </small>
+                                                        )}
+
+                                                    </div>
+
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-outline-danger"
+                                                        onClick={() =>
+                                                            removePrescription(
+                                                                prescription.id
+                                                            )
+                                                        }
+                                                    >
+                                                        Eliminar
+                                                    </button>
+
+                                                </div>
+
+                                            </div>
+
+                                        )
+                                    )}
+
+                                </div>
+
+                            )}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            {/* ========================= */}
+            {/* MENSAJES */}
+            {/* ========================= */}
+
+            <div className="row">
+
+                <div className="col-12">
+
+                    <div className="card shadow-sm border-0">
+
+                        <div className="card-body">
+
+                            <h3 className="mb-4">
+                                Mensajes recientes
+                            </h3>
+
+                            {messages.map(
+                                (message) => (
+
+                                    <div
+                                        key={
+                                            message.id
+                                        }
+                                        className="border-bottom py-3"
+                                    >
+
+                                        <div className="d-flex justify-content-between">
+
+                                            <strong>
+                                                {
+                                                    message.sender
+                                                }
+                                            </strong>
+
+                                            <small className="text-muted">
+                                                {
+                                                    message.time
+                                                }
+                                            </small>
+
+                                        </div>
+
+                                        <p className="mb-0 mt-1 text-muted">
+                                            {
+                                                message.message
+                                            }
+                                        </p>
+
+                                    </div>
+
+                                )
+                            )}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
 
         </div>
     );
