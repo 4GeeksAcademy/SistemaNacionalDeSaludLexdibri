@@ -15,7 +15,7 @@
     "role": "doctor"
   },
   {
-    "email": "",
+    "email": "juan.garcia@hospital.com",
     "password": "Doctor123!",
     "first_name": "Juan",
     "last_name": "García Fernández",

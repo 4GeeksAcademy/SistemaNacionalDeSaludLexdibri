@@ -22,6 +22,7 @@ import { Urgencias } from "./pages/Urgencias";
 import { Home } from "./pages/Home";
 import { DashboardMedico } from "./pages/DashboardMedico";
 import Teleconsulta from "./pages/Teleconsulta";
+import PrivateRoute from "./components/PrivateRoute";
 
 
 export const router = createBrowserRouter(
@@ -32,16 +33,34 @@ export const router = createBrowserRouter(
             errorElement={<h1>Not found!</h1>}
         >
 
-            <Route index element={<Home/>}/>
+            <Route index element={<Home />} />
             <Route path="/login" element={<Login />} />
-        
+
             <Route path="tele/consulta" element={<Teleconsulta />} />
-            <Route path="dashboard/paciente" element={<DashboardPaciente />} />
-            <Route path="dashboard/medico" element={<DashboardMedico/>}/>
+            ```jsx
+            <Route
+                path="dashboard/paciente"
+                element={
+                    <PrivateRoute>
+                        <DashboardPaciente />
+                    </PrivateRoute>
+                }
+            />
+
+            <Route
+                path="dashboard/medico"
+                element={
+                    <PrivateRoute>
+                        <DashboardMedico />
+                    </PrivateRoute>
+                }
+            />
+            
+
             <Route path="registro" element={<Register />} />
             <Route path="demo" element={<Demo />} />
             <Route path="single/:theId" element={<Single />} />
-            
+
 
 
             {/* Rutas vinculadas a sus páginas correspondientes */}

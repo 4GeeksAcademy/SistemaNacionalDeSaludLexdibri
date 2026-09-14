@@ -48,6 +48,8 @@ export const Login = () => {
                 tipoUsuario,
             });
 
+            localStorage.setItem("user", JSON.stringify(data.user));
+
             dispatch({
                 type: "login",
                 payload: {
@@ -56,7 +58,7 @@ export const Login = () => {
                 },
             });
 
-            navigate(data.dashboard === "doctor" ? "/" : "/dashboard/paciente");
+            navigate(data.dashboard === "doctor" ? "/dashboard/medico" : "/dashboard/paciente");
         } catch (error) {
             console.error(error);
             setError(error.message);
