@@ -28,7 +28,7 @@ export const ElSistema = () => {
   }, []);
 
   return (
-    <div className="sistema-page">
+    <div className="sistema-page pb-5">
 
       {/* HERO */}
       <section className="sistema-hero">
@@ -61,13 +61,13 @@ export const ElSistema = () => {
 
 
       {/* NUESTRA HISTORIA */}
-      <section className="container py-5">
+      <section className="container py-5 my-3">
 
-        <div className="sistema-story scroll-reveal">
+        <div className="sistema-story scroll-reveal p-4 p-md-5 rounded-4 bg-dark bg-opacity-50 border border-secondary border-opacity-20 shadow-lg">
 
           <div className="sistema-story-content">
 
-            <span className="text-info small fw-semibold text-uppercase">
+            <span className="text-info small fw-semibold text-uppercase tracking-wider">
               El origen del proyecto
             </span>
 
@@ -78,14 +78,14 @@ export const ElSistema = () => {
               </span>
             </h2>
 
-            <p className="text-white-50">
+            <p className="text-white-50 mb-3">
               Somos tres estudiantes de <strong className="text-white">
                 4Geeks Academy
               </strong> que quisimos llevar nuestros conocimientos de
               programación a un problema del mundo real.
             </p>
 
-            <p className="text-white-50">
+            <p className="text-white-50 mb-3">
               Durante el desarrollo del proyecto observamos que la
               información sanitaria puede encontrarse repartida entre
               diferentes servicios y comunidades autónomas, haciendo que
@@ -94,7 +94,7 @@ export const ElSistema = () => {
             </p>
 
             <p className="text-white-50 mb-0">
-              A partir de esta idea decidimos crear <strong className="text-info">
+              A partir de esta idea decidimos crear <strong className="text-info fw-bold">
                 LEXDIBRI
               </strong>: una plataforma pensada para centralizar,
               organizar y facilitar el acceso a diferentes servicios
@@ -103,10 +103,10 @@ export const ElSistema = () => {
 
           </div>
 
-          <div className="sistema-story-number">
+          <div className="sistema-story-number mt-4 mt-lg-0">
             <span>3</span>
-            <small>ESTUDIANTES</small>
-            <small>4GEEKS</small>
+            <small className="fw-semibold">ESTUDIANTES</small>
+            <small className="text-info fw-bold">4GEEKS</small>
           </div>
 
         </div>
@@ -115,18 +115,18 @@ export const ElSistema = () => {
 
 
       {/* TECNOLOGÍA */}
-      <section className="container py-5">
+      <section className="container py-5 my-3">
 
-        <div className="sistema-heading scroll-reveal">
+        <div className="sistema-heading scroll-reveal mb-4">
 
-          <span className="text-info small fw-semibold text-uppercase">
+          <span className="text-info small fw-semibold text-uppercase tracking-wider">
             Tecnología
           </span>
 
           <h2 className="text-white fw-bold mt-2 mb-3">
             Construido con las
             <span className="text-info">
-              {" "} mejores tecnologías.
+              {" "}mejores tecnologías.
             </span>
           </h2>
 
@@ -139,75 +139,81 @@ export const ElSistema = () => {
         </div>
 
 
-        <div className="row g-4 mt-4">
+        <div className="row g-4 mt-2">
 
-          <div className="col-md-4">
-            <div className="sistema-tech-card scroll-reveal">
+          <div className="col-12 col-md-4">
+            <div className="sistema-tech-card scroll-reveal h-100 p-4 rounded-3 border border-secondary border-opacity-20 bg-dark bg-opacity-50 shadow-sm d-flex flex-column justify-content-between">
 
-              <div className="sistema-tech-icon">
-                JS
+              <div>
+                <div className="sistema-tech-icon mb-3">
+                  JS
+                </div>
+
+                <span className="text-info small fw-semibold d-block mb-1">
+                  FRONTEND
+                </span>
+
+                <h3 className="text-white fw-bold mb-3">
+                  JavaScript
+                </h3>
+
+                <p className="text-white-50 mb-0">
+                  Utilizado para construir una interfaz dinámica,
+                  interactiva y fácil de utilizar.
+                </p>
               </div>
-
-              <span className="text-info small fw-semibold">
-                FRONTEND
-              </span>
-
-              <h3 className="text-white fw-bold mt-2">
-                JavaScript
-              </h3>
-
-              <p className="text-white-50 mb-0">
-                Utilizado para construir una interfaz dinámica,
-                interactiva y fácil de utilizar.
-              </p>
 
             </div>
           </div>
 
 
-          <div className="col-md-4">
-            <div className="sistema-tech-card scroll-reveal">
+          <div className="col-12 col-md-4">
+            <div className="sistema-tech-card scroll-reveal h-100 p-4 rounded-3 border border-secondary border-opacity-20 bg-dark bg-opacity-50 shadow-sm d-flex flex-column justify-content-between">
 
-              <div className="sistema-tech-icon">
-                PY
+              <div>
+                <div className="sistema-tech-icon mb-3">
+                  PY
+                </div>
+
+                <span className="text-info small fw-semibold d-block mb-1">
+                  BACKEND
+                </span>
+
+                <h3 className="text-white fw-bold mb-3">
+                  Python
+                </h3>
+
+                <p className="text-white-50 mb-0">
+                  Una de las tecnologías utilizadas para desarrollar
+                  la lógica y los servicios del sistema.
+                </p>
               </div>
-
-              <span className="text-info small fw-semibold">
-                BACKEND
-              </span>
-
-              <h3 className="text-white fw-bold mt-2">
-                Python
-              </h3>
-
-              <p className="text-white-50 mb-0">
-                Una de las tecnologías utilizadas para desarrollar
-                la lógica y los servicios del sistema.
-              </p>
 
             </div>
           </div>
 
 
-          <div className="col-md-4">
-            <div className="sistema-tech-card scroll-reveal">
+          <div className="col-12 col-md-4">
+            <div className="sistema-tech-card scroll-reveal h-100 p-4 rounded-3 border border-secondary border-opacity-20 bg-dark bg-opacity-50 shadow-sm d-flex flex-column justify-content-between">
 
-              <div className="sistema-tech-icon">
-                {"</>"}
+              <div>
+                <div className="sistema-tech-icon mb-3">
+                  {"</>"}
+                </div>
+
+                <span className="text-info small fw-semibold d-block mb-1">
+                  DESARROLLO
+                </span>
+
+                <h3 className="text-white fw-bold mb-3">
+                  Más tecnologías
+                </h3>
+
+                <p className="text-white-50 mb-0">
+                  El proyecto combina diferentes herramientas y
+                  tecnologías para crear una experiencia completa.
+                </p>
               </div>
-
-              <span className="text-info small fw-semibold">
-                DESARROLLO
-              </span>
-
-              <h3 className="text-white fw-bold mt-2">
-                Más tecnologías
-              </h3>
-
-              <p className="text-white-50 mb-0">
-                El proyecto combina diferentes herramientas y
-                tecnologías para crear una experiencia completa.
-              </p>
 
             </div>
           </div>
@@ -218,22 +224,22 @@ export const ElSistema = () => {
 
 
       {/* OBJETIVO */}
-      <section className="container py-5">
+      <section className="container py-5 my-4">
 
-        <div className="sistema-final scroll-reveal">
+        <div className="sistema-final scroll-reveal p-4 p-md-5 rounded-4 bg-dark bg-opacity-25 border border-secondary border-opacity-20 text-center">
 
-          <span className="text-info small fw-semibold text-uppercase">
+          <span className="text-info small fw-semibold text-uppercase tracking-wider">
             Nuestro objetivo
           </span>
 
-          <h2 className="display-6 text-white fw-bold mt-3 mb-4">
+          <h2 className="display-6 text-white fw-bold mt-2 mb-4">
             La tecnología al servicio de
             <span className="text-info">
               {" "}las personas.
             </span>
           </h2>
 
-          <p className="text-white-50 mb-0">
+          <p className="text-white-50 mb-0 mx-auto" style={{ maxWidth: "750px" }}>
             LEXDIBRI es nuestro intento de demostrar cómo la tecnología
             puede ayudar a hacer que la información sanitaria sea más
             accesible, clara y sencilla para los ciudadanos.

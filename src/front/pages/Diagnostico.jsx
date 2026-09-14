@@ -106,11 +106,6 @@ export const Diagnostico = () => {
 
                             <div className="diagnostico-image-overlay"></div>
 
-                            <div className="diagnostico-image-label">
-                                <span>01</span>
-                                Inteligencia artificial
-                            </div>
-
                         </div>
 
                     </div>
@@ -213,11 +208,6 @@ export const Diagnostico = () => {
 
                             <div className="diagnostico-image-overlay"></div>
 
-                            <div className="diagnostico-image-label">
-                                <span>02</span>
-                                Cirugía robótica
-                            </div>
-
                         </div>
 
                     </div>
@@ -242,11 +232,6 @@ export const Diagnostico = () => {
                             />
 
                             <div className="diagnostico-image-overlay"></div>
-
-                            <div className="diagnostico-image-label">
-                                <span>03</span>
-                                Protonterapia
-                            </div>
 
                         </div>
 
@@ -351,11 +336,6 @@ export const Diagnostico = () => {
 
                             <div className="diagnostico-image-overlay"></div>
 
-                            <div className="diagnostico-image-label">
-                                <span>04</span>
-                                Medicina de precisión
-                            </div>
-
                         </div>
 
                     </div>
@@ -375,16 +355,11 @@ export const Diagnostico = () => {
                         <div className="diagnostico-image scroll-reveal">
 
                             <img
-                                src="https://images.unsplash.com/photo-1581093458791-9d42e3c6d5f6?auto=format&fit=crop&w=1200&q=80"
-                                alt="Tecnología de impresión 3D aplicada a la medicina"
+                                src="https://casenrecordati.com/wp-content/uploads/shutterstock_313372355-624x416.jpg"
+                                alt="Bioimpresión 3D de tejidos y órganos"
                             />
 
                             <div className="diagnostico-image-overlay"></div>
-
-                            <div className="diagnostico-image-label">
-                                <span>05</span>
-                                Bioimpresión 3D
-                            </div>
 
                         </div>
 
