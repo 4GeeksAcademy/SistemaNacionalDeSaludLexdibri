@@ -75,7 +75,7 @@ export const Login = () => {
     };
 
     return (
-        <div className="bg-dark text-white min-vh-100 d-flex align-items-center">
+        <div className=" text-white min-vh-100 d-flex align-items-center">
 
             <section className="container py-5">
                 <div className="row justify-content-center">

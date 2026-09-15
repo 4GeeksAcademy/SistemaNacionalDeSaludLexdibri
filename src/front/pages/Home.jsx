@@ -28,7 +28,7 @@ export const Home = () => {
     }, []);
 
     return (
-        <div className="bg-dark text-white min-vh-100">
+        <div className=" text-white min-vh-100">
 
             {/* ========================================
                 HERO

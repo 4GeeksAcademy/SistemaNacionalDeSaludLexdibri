@@ -181,7 +181,6 @@ export const DashboardMedico = () => {
             const formattedPrescriptions = (
                 data.prescriptions || []
             ).map((prescription) => {
-
                 const medication =
                     prescription.medications?.[0];
 
@@ -232,7 +231,6 @@ export const DashboardMedico = () => {
             );
 
         } catch (error) {
-
             console.error(
                 "Error cargando recetas:",
                 error
@@ -314,7 +312,6 @@ export const DashboardMedico = () => {
             setSearchDone(true);
 
         } catch (error) {
-
             console.error(
                 "Error buscando pacientes:",
                 error
@@ -396,7 +393,6 @@ export const DashboardMedico = () => {
             );
 
         } catch (error) {
-
             console.error(
                 "Error agregando paciente:",
                 error
@@ -464,7 +460,6 @@ export const DashboardMedico = () => {
             );
 
         } catch (error) {
-
             console.error(
                 "Error eliminando paciente:",
                 error
@@ -498,10 +493,6 @@ export const DashboardMedico = () => {
         const { name, value } = e.target;
 
         setNewPrescription((prev) => {
-
-            // Si el médico modifica manualmente
-            // el medicamento, dejamos de considerarlo
-            // un medicamento seleccionado de CIMA.
             if (name === "medication") {
                 return {
                     ...prev,
@@ -611,16 +602,10 @@ export const DashboardMedico = () => {
                 return;
             }
 
-            console.log(
-                "Receta creada:",
-                data
-            );
-
             setPrescriptionSuccess(
                 "Receta creada correctamente."
             );
 
-            // Limpiar formulario
             setNewPrescription({
                 patientId: "",
                 medication: "",
@@ -631,17 +616,13 @@ export const DashboardMedico = () => {
                 instructions: ""
             });
 
-            // Limpiar buscador CIMA
             setMedicationResults([]);
             setMedicationSearchDone(false);
             setSearchingMedications(false);
 
-            // Volver a cargar las recetas
-            // desde la base de datos
             await loadPrescriptions();
 
         } catch (error) {
-
             console.error(
                 "Error creando receta:",
                 error
@@ -661,13 +642,11 @@ export const DashboardMedico = () => {
     // =========================
 
     const removePrescription = async (id) => {
-
         setRemovingPrescriptionId(id);
         setPrescriptionError("");
         setPrescriptionSuccess("");
 
         try {
-
             const token = getToken();
 
             if (!token) {
@@ -702,11 +681,9 @@ export const DashboardMedico = () => {
                 "Receta cancelada correctamente."
             );
 
-            // Recargar desde la BD
             await loadPrescriptions();
 
         } catch (error) {
-
             console.error(
                 "Error cancelando receta:",
                 error
@@ -723,17 +700,12 @@ export const DashboardMedico = () => {
 
     // =========================
     // BÚSQUEDA DE MEDICAMENTOS
-    // DEBOUNCE + CONTROL DE RESPUESTAS ANTIGUAS
     // =========================
 
     useEffect(() => {
-
         const query =
             newPrescription.medication.trim();
 
-        // Si el cambio viene de seleccionar
-        // un medicamento del desplegable,
-        // no hacemos otra búsqueda.
         if (medicationSelectionRef.current) {
             medicationSelectionRef.current = false;
             return;
@@ -756,12 +728,10 @@ export const DashboardMedico = () => {
         let cancelled = false;
 
         const timeoutId = setTimeout(async () => {
-
             setSearchingMedications(true);
             setMedicationSearchDone(false);
 
             try {
-
                 const response = await fetch(
                     `${import.meta.env.VITE_BACKEND_URL}/api/medicamentos?q=${encodeURIComponent(
                         query
@@ -775,7 +745,6 @@ export const DashboardMedico = () => {
                 }
 
                 if (!response.ok) {
-
                     console.error(
                         "Error buscando medicamentos:",
                         data.error
@@ -783,7 +752,6 @@ export const DashboardMedico = () => {
 
                     setMedicationResults([]);
                     setMedicationSearchDone(true);
-
                     return;
                 }
 
@@ -794,7 +762,6 @@ export const DashboardMedico = () => {
                 setMedicationSearchDone(true);
 
             } catch (error) {
-
                 if (cancelled) {
                     return;
                 }
@@ -808,7 +775,6 @@ export const DashboardMedico = () => {
                 setMedicationSearchDone(false);
 
             } finally {
-
                 if (!cancelled) {
                     setSearchingMedications(false);
                 }
@@ -834,92 +800,66 @@ export const DashboardMedico = () => {
         store?.user?.last_name || "";
 
     return (
-        <div className="container-fluid py-4">
+        <div className="text-white py-4">
+            <div className="container">
 
-            {/* ========================= */}
-            {/* CABECERA */}
-            {/* ========================= */}
+                {/* CABECERA */}
 
-            <div className="row mb-4">
-                <div className="col-12">
+                <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 mb-4">
+                    <div className="d-flex align-items-center gap-3">
 
-                    <div className="card shadow-sm border-0">
+                        <img
+                            src={rigoImageUrl}
+                            alt="Perfil médico"
+                            className="rounded-circle object-fit-cover flex-shrink-0"
+                            width="70"
+                            height="70"
+                        />
 
-                        <div className="card-body">
+                        <div>
+                            <span className="text-info text-uppercase small fw-semibold">
+                                Panel médico
+                            </span>
 
-                            <div className="d-flex align-items-center">
+                            <h1 className="h3 fw-bold mb-1 mt-1">
+                                Bienvenido, Dr. {doctorName}{" "}
+                                {doctorLastName}
+                            </h1>
 
-                                <img
-                                    src={rigoImageUrl}
-                                    alt="Perfil médico"
-                                    className="rounded-circle me-3"
-                                    style={{
-                                        width: "70px",
-                                        height: "70px",
-                                        objectFit: "cover"
-                                    }}
-                                />
-
-                                <div>
-
-                                    <h2 className="mb-1">
-                                        Bienvenido, Dr.{" "}
-                                        {doctorName}{" "}
-                                        {doctorLastName}
-                                    </h2>
-
-                                    <p className="text-muted mb-0">
-                                        Panel de gestión médica
-                                    </p>
-
-                                </div>
-
-                            </div>
-
+                            <p className="text-white-50 mb-0">
+                                Gestiona tus pacientes y recetas desde un mismo lugar.
+                            </p>
                         </div>
-
                     </div>
-
                 </div>
-            </div>
 
-            {/* ========================= */}
-            {/* RESUMEN */}
-            {/* ========================= */}
+                {/* RESUMEN */}
 
-            <div className="row mb-4">
+                <div className="row g-4 mb-4">
 
-                <div className="col-md-4 mb-3">
+                    <div className="col-12 col-md-4">
+                        <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
+                            <span className="fs-2">👥</span>
 
-                    <div className="card shadow-sm border-0 h-100">
-
-                        <div className="card-body">
-
-                            <h6 className="text-muted">
+                            <p className="text-info text-uppercase small fw-semibold mt-3 mb-1">
                                 Mis pacientes
-                            </h6>
+                            </p>
 
-                            <h2 className="mb-0">
+                            <h2 className="display-6 fw-bold mb-0">
                                 {patients.length}
                             </h2>
-
                         </div>
-
                     </div>
 
-                </div>
+                    <div className="col-12 col-md-4">
+                        <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
+                            <span className="fs-2">💊</span>
 
-                <div className="col-md-4 mb-3">
-
-                    <div className="card shadow-sm border-0 h-100">
-
-                        <div className="card-body">
-
-                            <h6 className="text-muted">
+                            <p className="text-info text-uppercase small fw-semibold mt-3 mb-1">
                                 Recetas creadas
-                            </h6>
+                            </p>
 
-                            <h2 className="mb-0">
+                            <h2 className="display-6 fw-bold mb-0">
                                 {
                                     prescriptions.filter(
                                         (prescription) =>
@@ -928,745 +868,574 @@ export const DashboardMedico = () => {
                                     ).length
                                 }
                             </h2>
-
                         </div>
-
                     </div>
 
-                </div>
+                    <div className="col-12 col-md-4">
+                        <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
+                            <span className="fs-2">💬</span>
 
-                <div className="col-md-4 mb-3">
-
-                    <div className="card shadow-sm border-0 h-100">
-
-                        <div className="card-body">
-
-                            <h6 className="text-muted">
+                            <p className="text-info text-uppercase small fw-semibold mt-3 mb-1">
                                 Mensajes
-                            </h6>
+                            </p>
 
-                            <h2 className="mb-0">
+                            <h2 className="display-6 fw-bold mb-0">
                                 {messages.length}
                             </h2>
-
                         </div>
-
                     </div>
 
                 </div>
 
-            </div>
+                {/* BUSCADOR DE PACIENTES */}
 
-            {/* ========================= */}
-            {/* BUSCADOR DE PACIENTES */}
-            {/* ========================= */}
+                <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 mb-4">
 
-            <div className="row mb-4">
+                    <div className="d-flex align-items-center gap-2 mb-3">
+                        <span className="fs-4">🔎</span>
 
-                <div className="col-12">
-
-                    <div className="card shadow-sm border-0">
-
-                        <div className="card-body">
-
-                            <h3 className="mb-3">
-                                Buscar pacientes
-                            </h3>
-
-                            <div className="row g-2">
-
-                                <div className="col-md-9">
-
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        placeholder="Buscar por nombre, apellidos, DNI, CIP o email..."
-                                        value={searchPatient}
-                                        onChange={(e) =>
-                                            setSearchPatient(
-                                                e.target.value
-                                            )
-                                        }
-                                        onKeyDown={(e) => {
-
-                                            if (
-                                                e.key ===
-                                                "Enter"
-                                            ) {
-                                                searchPatients();
-                                            }
-
-                                        }}
-                                    />
-
-                                </div>
-
-                                <div className="col-md-3">
-
-                                    <div className="d-flex gap-2">
-
-                                        <button
-                                            type="button"
-                                            className="btn btn-primary w-100"
-                                            onClick={
-                                                searchPatients
-                                            }
-                                            disabled={
-                                                loadingPatients
-                                            }
-                                        >
-                                            {loadingPatients
-                                                ? "Buscando..."
-                                                : "Buscar"}
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            className="btn btn-outline-secondary"
-                                            onClick={
-                                                clearPatients
-                                            }
-                                        >
-                                            Limpiar
-                                        </button>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            {patientError && (
-
-                                <div className="alert alert-danger mt-3 mb-0">
-                                    {patientError}
-                                </div>
-
-                            )}
-
-                        </div>
-
+                        <h2 className="h4 fw-bold mb-0">
+                            Buscar pacientes
+                        </h2>
                     </div>
 
-                </div>
-
-            </div>
-
-            {/* ========================= */}
-            {/* RESULTADOS DE BÚSQUEDA */}
-            {/* ========================= */}
-
-            {(searchDone ||
-                loadingPatients) && (
-
-                    <div className="row mb-5">
-
-                        <div className="col-12">
-
-                            <div className="card shadow-sm border-0">
-
-                                <div className="card-body">
-
-                                    <h3 className="mb-4">
-                                        Resultados de búsqueda
-                                    </h3>
-
-                                    {loadingPatients && (
-
-                                        <div className="text-center py-5">
-
-                                            <div
-                                                className="spinner-border text-primary"
-                                                role="status"
-                                            >
-                                                <span className="visually-hidden">
-                                                    Buscando...
-                                                </span>
-                                            </div>
-
-                                            <p className="text-muted mt-2">
-                                                Buscando pacientes...
-                                            </p>
-
-                                        </div>
-
-                                    )}
-
-                                    {!loadingPatients &&
-                                        searchResults.length === 0 && (
-
-                                            <div className="text-center text-muted py-5">
-
-                                                <h5>
-                                                    No se encontraron pacientes
-                                                </h5>
-
-                                                <p className="mb-0">
-                                                    Prueba con otro nombre, DNI,
-                                                    CIP o email.
-                                                </p>
-
-                                            </div>
-
-                                        )}
-
-                                    {!loadingPatients && (
-
-                                        <div className="row">
-
-                                            {searchResults.map(
-                                                (patient) => {
-
-                                                    const alreadyMine =
-                                                        isMyPatient(
-                                                            patient.id
-                                                        );
-
-                                                    const adding =
-                                                        addingPatientId ===
-                                                        patient.id;
-
-                                                    return (
-
-                                                        <div
-                                                            className="col-lg-6 mb-4"
-                                                            key={
-                                                                patient.id
-                                                            }
-                                                        >
-
-                                                            <div className="card border h-100">
-
-                                                                <div className="card-body">
-
-                                                                    <div className="d-flex justify-content-between align-items-start mb-3">
-
-                                                                        <div>
-
-                                                                            <h5 className="mb-1">
-                                                                                {
-                                                                                    patient.nombre
-                                                                                }{" "}
-                                                                                {
-                                                                                    patient.apellidos
-                                                                                }
-                                                                            </h5>
-
-                                                                            <small className="text-muted">
-                                                                                Paciente #
-                                                                                {
-                                                                                    patient.id
-                                                                                }
-                                                                            </small>
-
-                                                                        </div>
-
-                                                                        {alreadyMine ? (
-
-                                                                            <span className="badge bg-success">
-                                                                                Mi paciente
-                                                                            </span>
-
-                                                                        ) : (
-
-                                                                            <span className="badge bg-secondary">
-                                                                                Disponible
-                                                                            </span>
-
-                                                                        )}
-
-                                                                    </div>
-
-                                                                    <hr />
-
-                                                                    <div className="row">
-
-                                                                        <div className="col-md-6 mb-3">
-
-                                                                            <strong>
-                                                                                DNI
-                                                                            </strong>
-
-                                                                            <div className="text-muted">
-                                                                                {patient.dni ||
-                                                                                    "No disponible"}
-                                                                            </div>
-
-                                                                        </div>
-
-                                                                        <div className="col-md-6 mb-3">
-
-                                                                            <strong>
-                                                                                CIP
-                                                                            </strong>
-
-                                                                            <div className="text-muted">
-                                                                                {patient.cip ||
-                                                                                    "No disponible"}
-                                                                            </div>
-
-                                                                        </div>
-
-                                                                        <div className="col-md-6 mb-3">
-
-                                                                            <strong>
-                                                                                Email
-                                                                            </strong>
-
-                                                                            <div className="text-muted text-break">
-                                                                                {patient.email ||
-                                                                                    "No disponible"}
-                                                                            </div>
-
-                                                                        </div>
-
-                                                                        <div className="col-md-6 mb-3">
-
-                                                                            <strong>
-                                                                                Teléfono
-                                                                            </strong>
-
-                                                                            <div className="text-muted">
-                                                                                {patient.telefono ||
-                                                                                    "No disponible"}
-                                                                            </div>
-
-                                                                        </div>
-
-                                                                        <div className="col-md-6 mb-3">
-
-                                                                            <strong>
-                                                                                Fecha de nacimiento
-                                                                            </strong>
-
-                                                                            <div className="text-muted">
-                                                                                {patient.fecha_nacimiento
-                                                                                    ? new Date(
-                                                                                        patient.fecha_nacimiento
-                                                                                    ).toLocaleDateString(
-                                                                                        "es-ES"
-                                                                                    )
-                                                                                    : "No disponible"}
-                                                                            </div>
-
-                                                                        </div>
-
-                                                                        <div className="col-md-6 mb-3">
-
-                                                                            <strong>
-                                                                                Sexo
-                                                                            </strong>
-
-                                                                            <div className="text-muted">
-                                                                                {patient.sexo ||
-                                                                                    "No disponible"}
-                                                                            </div>
-
-                                                                        </div>
-
-                                                                        <div className="col-md-6 mb-3">
-
-                                                                            <strong>
-                                                                                Grupo sanguíneo
-                                                                            </strong>
-
-                                                                            <div className="text-muted">
-                                                                                {patient.grupo_sanguineo ||
-                                                                                    "No disponible"}
-                                                                            </div>
-
-                                                                        </div>
-
-                                                                    </div>
-
-                                                                    <div className="mt-2">
-
-                                                                        {alreadyMine ? (
-
-                                                                            <button
-                                                                                type="button"
-                                                                                className="btn btn-success btn-sm"
-                                                                                disabled
-                                                                            >
-                                                                                ✓ Ya es mi paciente
-                                                                            </button>
-
-                                                                        ) : (
-
-                                                                            <button
-                                                                                type="button"
-                                                                                className="btn btn-primary btn-sm"
-                                                                                onClick={() =>
-                                                                                    addPatient(
-                                                                                        patient.id
-                                                                                    )
-                                                                                }
-                                                                                disabled={
-                                                                                    adding
-                                                                                }
-                                                                            >
-                                                                                {adding
-                                                                                    ? "Agregando..."
-                                                                                    : "Agregar a mis pacientes"}
-                                                                            </button>
-
-                                                                        )}
-
-                                                                    </div>
-
-                                                                </div>
-
-                                                            </div>
-
-                                                        </div>
-
-                                                    );
-                                                }
-                                            )}
-
-                                        </div>
-
-                                    )}
-
-                                </div>
-
-                            </div>
-
+                    <div className="row g-3">
+
+                        <div className="col-12 col-lg-9">
+                            <input
+                                type="text"
+                                className="form-control bg-dark text-white border-secondary"
+                                placeholder="Buscar por nombre, apellidos, DNI, CIP o email..."
+                                value={searchPatient}
+                                onChange={(e) =>
+                                    setSearchPatient(
+                                        e.target.value
+                                    )
+                                }
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        searchPatients();
+                                    }
+                                }}
+                            />
                         </div>
 
-                    </div>
-
-                )}
-
-            {/* ========================= */}
-            {/* MIS PACIENTES */}
-            {/* ========================= */}
-
-            <div className="row mb-5">
-
-                <div className="col-12">
-
-                    <div className="card shadow-sm border-0">
-
-                        <div className="card-body">
-
-                            <div className="d-flex justify-content-between align-items-center mb-4">
-
-                                <h3 className="mb-0">
-                                    Mis pacientes
-                                </h3>
+                        <div className="col-12 col-lg-3">
+                            <div className="d-flex gap-2">
+                                <button
+                                    type="button"
+                                    className="btn btn-info rounded-pill fw-semibold flex-grow-1"
+                                    onClick={searchPatients}
+                                    disabled={loadingPatients}
+                                >
+                                    {loadingPatients
+                                        ? "Buscando..."
+                                        : "Buscar"}
+                                </button>
 
                                 <button
                                     type="button"
-                                    className="btn btn-outline-primary btn-sm"
-                                    onClick={
-                                        loadMyPatients
-                                    }
-                                    disabled={
-                                        loadingMyPatients
-                                    }
+                                    className="btn btn-outline-light rounded-pill"
+                                    onClick={clearPatients}
                                 >
-                                    {loadingMyPatients
-                                        ? "Actualizando..."
-                                        : "Actualizar"}
+                                    Limpiar
                                 </button>
-
                             </div>
+                        </div>
 
-                            {loadingMyPatients &&
-                                patients.length === 0 && (
+                    </div>
 
-                                    <div className="text-center py-5">
+                    {patientError && (
+                        <div className="alert alert-danger mt-3 mb-0">
+                            {patientError}
+                        </div>
+                    )}
 
-                                        <div
-                                            className="spinner-border text-primary"
-                                            role="status"
-                                        >
-                                            <span className="visually-hidden">
-                                                Cargando...
-                                            </span>
-                                        </div>
+                </div>
 
-                                        <p className="text-muted mt-2">
-                                            Cargando tus pacientes...
-                                        </p>
+                {/* RESULTADOS DE BÚSQUEDA */}
 
+                {(searchDone || loadingPatients) && (
+                    <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 mb-5">
+
+                        <h2 className="h4 fw-bold mb-4">
+                            Resultados de búsqueda
+                        </h2>
+
+                        {loadingPatients && (
+                            <div className="text-center py-5">
+                                <div
+                                    className="spinner-border text-info"
+                                    role="status"
+                                >
+                                    <span className="visually-hidden">
+                                        Buscando...
+                                    </span>
+                                </div>
+
+                                <p className="text-white-50 mt-3 mb-0">
+                                    Buscando pacientes...
+                                </p>
+                            </div>
+                        )}
+
+                        {!loadingPatients &&
+                            searchResults.length === 0 && (
+                                <div className="text-center py-5">
+                                    <div className="fs-1 mb-3">
+                                        🔎
                                     </div>
 
-                                )}
+                                    <h3 className="h5 fw-bold">
+                                        No se encontraron pacientes
+                                    </h3>
 
-                            {!loadingMyPatients &&
-                                patients.length === 0 && (
+                                    <p className="text-white-50 mb-0">
+                                        Prueba con otro nombre, DNI,
+                                        CIP o email.
+                                    </p>
+                                </div>
+                            )}
 
-                                    <div className="text-center text-muted py-5">
+                        {!loadingPatients && (
+                            <div className="row g-4">
 
-                                        <h5>
-                                            Todavía no tienes pacientes
-                                        </h5>
+                                {searchResults.map((patient) => {
+                                    const alreadyMine =
+                                        isMyPatient(patient.id);
 
-                                        <p className="mb-0">
-                                            Utiliza el buscador para encontrar
-                                            un paciente y agregarlo a tu lista.
-                                        </p>
+                                    const adding =
+                                        addingPatientId === patient.id;
 
-                                    </div>
-
-                                )}
-
-                            <div className="row">
-
-                                {patients.map(
-                                    (patient) => (
-
+                                    return (
                                         <div
-                                            className="col-lg-6 mb-4"
-                                            key={
-                                                patient.id
-                                            }
+                                            className="col-12 col-xl-6"
+                                            key={patient.id}
                                         >
+                                            <div className="bg-dark bg-opacity-50 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
 
-                                            <div className="card border h-100">
+                                                <div className="d-flex justify-content-between align-items-start gap-3 mb-3">
 
-                                                <div className="card-body">
+                                                    <div>
+                                                        <h3 className="h5 fw-bold mb-1">
+                                                            {patient.nombre}{" "}
+                                                            {patient.apellidos}
+                                                        </h3>
 
-                                                    <div className="d-flex justify-content-between align-items-start mb-3">
+                                                        <span className="text-white-50 small">
+                                                            Paciente #{patient.id}
+                                                        </span>
+                                                    </div>
 
-                                                        <div>
+                                                    <span
+                                                        className={`badge rounded-pill ${
+                                                            alreadyMine
+                                                                ? "bg-success"
+                                                                : "bg-secondary"
+                                                        }`}
+                                                    >
+                                                        {alreadyMine
+                                                            ? "Mi paciente"
+                                                            : "Disponible"}
+                                                    </span>
 
-                                                            <h5 className="mb-1">
-                                                                {
-                                                                    patient.nombre
-                                                                }{" "}
-                                                                {
-                                                                    patient.apellidos
-                                                                }
-                                                            </h5>
+                                                </div>
 
-                                                            <small className="text-muted">
-                                                                Paciente #
-                                                                {
-                                                                    patient.id
-                                                                }
-                                                            </small>
+                                                <hr className="border-secondary opacity-25" />
 
-                                                        </div>
+                                                <div className="row g-3">
 
-                                                        <span className="badge bg-success">
-                                                            Mi paciente
+                                                    <div className="col-12 col-md-6">
+                                                        <span className="text-info small d-block">
+                                                            DNI
                                                         </span>
 
+                                                        <span className="text-white-50 text-break">
+                                                            {patient.dni ||
+                                                                "No disponible"}
+                                                        </span>
                                                     </div>
 
-                                                    <hr />
+                                                    <div className="col-12 col-md-6">
+                                                        <span className="text-info small d-block">
+                                                            CIP
+                                                        </span>
 
-                                                    <div className="row">
-
-                                                        <div className="col-md-6 mb-3">
-
-                                                            <strong>
-                                                                DNI
-                                                            </strong>
-
-                                                            <div className="text-muted">
-                                                                {patient.dni ||
-                                                                    "No disponible"}
-                                                            </div>
-
-                                                        </div>
-
-                                                        <div className="col-md-6 mb-3">
-
-                                                            <strong>
-                                                                CIP
-                                                            </strong>
-
-                                                            <div className="text-muted">
-                                                                {patient.cip ||
-                                                                    "No disponible"}
-                                                            </div>
-
-                                                        </div>
-
-                                                        <div className="col-md-6 mb-3">
-
-                                                            <strong>
-                                                                Email
-                                                            </strong>
-
-                                                            <div className="text-muted text-break">
-                                                                {patient.email ||
-                                                                    "No disponible"}
-                                                            </div>
-
-                                                        </div>
-
-                                                        <div className="col-md-6 mb-3">
-
-                                                            <strong>
-                                                                Teléfono
-                                                            </strong>
-
-                                                            <div className="text-muted">
-                                                                {patient.telefono ||
-                                                                    "No disponible"}
-                                                            </div>
-
-                                                        </div>
-
-                                                        <div className="col-md-6 mb-3">
-
-                                                            <strong>
-                                                                Fecha de nacimiento
-                                                            </strong>
-
-                                                            <div className="text-muted">
-                                                                {patient.fecha_nacimiento
-                                                                    ? new Date(
-                                                                        patient.fecha_nacimiento
-                                                                    ).toLocaleDateString(
-                                                                        "es-ES"
-                                                                    )
-                                                                    : "No disponible"}
-                                                            </div>
-
-                                                        </div>
-
-                                                        <div className="col-md-6 mb-3">
-
-                                                            <strong>
-                                                                Sexo
-                                                            </strong>
-
-                                                            <div className="text-muted">
-                                                                {patient.sexo ||
-                                                                    "No disponible"}
-                                                            </div>
-
-                                                        </div>
-
-                                                        <div className="col-md-6 mb-3">
-
-                                                            <strong>
-                                                                Grupo sanguíneo
-                                                            </strong>
-
-                                                            <div className="text-muted">
-                                                                {patient.grupo_sanguineo ||
-                                                                    "No disponible"}
-                                                            </div>
-
-                                                        </div>
-
+                                                        <span className="text-white-50 text-break">
+                                                            {patient.cip ||
+                                                                "No disponible"}
+                                                        </span>
                                                     </div>
 
-                                                    <div className="d-flex gap-2 mt-2">
+                                                    <div className="col-12 col-md-6">
+                                                        <span className="text-info small d-block">
+                                                            Email
+                                                        </span>
 
-                                                        <button
-                                                            type="button"
-                                                            className="btn btn-outline-primary btn-sm"
-                                                        >
-                                                            Ver historial
-                                                        </button>
+                                                        <span className="text-white-50 text-break">
+                                                            {patient.email ||
+                                                                "No disponible"}
+                                                        </span>
+                                                    </div>
 
-                                                        <button
-                                                            type="button"
-                                                            className="btn btn-outline-success btn-sm"
-                                                        >
-                                                            Nueva consulta
-                                                        </button>
+                                                    <div className="col-12 col-md-6">
+                                                        <span className="text-info small d-block">
+                                                            Teléfono
+                                                        </span>
 
-                                                        <button
-                                                            type="button"
-                                                            className="btn btn-outline-danger btn-sm"
-                                                            onClick={() =>
-                                                                removePatient(
-                                                                    patient.id
+                                                        <span className="text-white-50">
+                                                            {patient.telefono ||
+                                                                "No disponible"}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="col-12 col-md-6">
+                                                        <span className="text-info small d-block">
+                                                            Fecha de nacimiento
+                                                        </span>
+
+                                                        <span className="text-white-50">
+                                                            {patient.fecha_nacimiento
+                                                                ? new Date(
+                                                                    patient.fecha_nacimiento
+                                                                ).toLocaleDateString(
+                                                                    "es-ES"
                                                                 )
-                                                            }
-                                                            disabled={
-                                                                removingPatientId ===
-                                                                patient.id
-                                                            }
-                                                        >
-                                                            {removingPatientId ===
-                                                            patient.id
-                                                                ? "Eliminando..."
-                                                                : "Eliminar"}
-                                                        </button>
+                                                                : "No disponible"}
+                                                        </span>
+                                                    </div>
 
+                                                    <div className="col-12 col-md-6">
+                                                        <span className="text-info small d-block">
+                                                            Sexo
+                                                        </span>
+
+                                                        <span className="text-white-50">
+                                                            {patient.sexo ||
+                                                                "No disponible"}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="col-12 col-md-6">
+                                                        <span className="text-info small d-block">
+                                                            Grupo sanguíneo
+                                                        </span>
+
+                                                        <span className="text-white-50">
+                                                            {patient.grupo_sanguineo ||
+                                                                "No disponible"}
+                                                        </span>
                                                     </div>
 
                                                 </div>
 
+                                                <div className="mt-4">
+
+                                                    {alreadyMine ? (
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-success rounded-pill btn-sm"
+                                                            disabled
+                                                        >
+                                                            ✓ Ya es mi paciente
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-info rounded-pill btn-sm fw-semibold"
+                                                            onClick={() =>
+                                                                addPatient(
+                                                                    patient.id
+                                                                )
+                                                            }
+                                                            disabled={adding}
+                                                        >
+                                                            {adding
+                                                                ? "Agregando..."
+                                                                : "Agregar a mis pacientes"}
+                                                        </button>
+                                                    )}
+
+                                                </div>
+
                                             </div>
-
                                         </div>
-
-                                    )
-                                )}
+                                    );
+                                })}
 
                             </div>
+                        )}
 
+                    </div>
+                )}
+
+                {/* MIS PACIENTES */}
+
+                <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 mb-5">
+
+                    <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+
+                        <div>
+                            <span className="text-info text-uppercase small fw-semibold">
+                                Gestión
+                            </span>
+
+                            <h2 className="h4 fw-bold mb-0 mt-1">
+                                Mis pacientes
+                            </h2>
                         </div>
+
+                        <button
+                            type="button"
+                            className="btn btn-outline-info rounded-pill btn-sm"
+                            onClick={loadMyPatients}
+                            disabled={loadingMyPatients}
+                        >
+                            {loadingMyPatients
+                                ? "Actualizando..."
+                                : "Actualizar"}
+                        </button>
+
+                    </div>
+
+                    {loadingMyPatients &&
+                        patients.length === 0 && (
+                            <div className="text-center py-5">
+                                <div
+                                    className="spinner-border text-info"
+                                    role="status"
+                                >
+                                    <span className="visually-hidden">
+                                        Cargando...
+                                    </span>
+                                </div>
+
+                                <p className="text-white-50 mt-3 mb-0">
+                                    Cargando tus pacientes...
+                                </p>
+                            </div>
+                        )}
+
+                    {!loadingMyPatients &&
+                        patients.length === 0 && (
+                            <div className="text-center py-5">
+                                <div className="fs-1 mb-3">
+                                    👥
+                                </div>
+
+                                <h3 className="h5 fw-bold">
+                                    Todavía no tienes pacientes
+                                </h3>
+
+                                <p className="text-white-50 mb-0">
+                                    Utiliza el buscador para encontrar
+                                    un paciente y agregarlo a tu lista.
+                                </p>
+                            </div>
+                        )}
+
+                    <div className="row g-4">
+
+                        {patients.map((patient) => (
+                            <div
+                                className="col-12 col-xl-6"
+                                key={patient.id}
+                            >
+                                <div className="bg-dark bg-opacity-50 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
+
+                                    <div className="d-flex justify-content-between align-items-start gap-3 mb-3">
+
+                                        <div>
+                                            <h3 className="h5 fw-bold mb-1">
+                                                {patient.nombre}{" "}
+                                                {patient.apellidos}
+                                            </h3>
+
+                                            <span className="text-white-50 small">
+                                                Paciente #{patient.id}
+                                            </span>
+                                        </div>
+
+                                        <span className="badge bg-success rounded-pill">
+                                            Mi paciente
+                                        </span>
+
+                                    </div>
+
+                                    <hr className="border-secondary opacity-25" />
+
+                                    <div className="row g-3">
+
+                                        <div className="col-12 col-md-6">
+                                            <span className="text-info small d-block">
+                                                DNI
+                                            </span>
+
+                                            <span className="text-white-50">
+                                                {patient.dni ||
+                                                    "No disponible"}
+                                            </span>
+                                        </div>
+
+                                        <div className="col-12 col-md-6">
+                                            <span className="text-info small d-block">
+                                                CIP
+                                            </span>
+
+                                            <span className="text-white-50">
+                                                {patient.cip ||
+                                                    "No disponible"}
+                                            </span>
+                                        </div>
+
+                                        <div className="col-12 col-md-6">
+                                            <span className="text-info small d-block">
+                                                Email
+                                            </span>
+
+                                            <span className="text-white-50 text-break">
+                                                {patient.email ||
+                                                    "No disponible"}
+                                            </span>
+                                        </div>
+
+                                        <div className="col-12 col-md-6">
+                                            <span className="text-info small d-block">
+                                                Teléfono
+                                            </span>
+
+                                            <span className="text-white-50">
+                                                {patient.telefono ||
+                                                    "No disponible"}
+                                            </span>
+                                        </div>
+
+                                        <div className="col-12 col-md-6">
+                                            <span className="text-info small d-block">
+                                                Fecha de nacimiento
+                                            </span>
+
+                                            <span className="text-white-50">
+                                                {patient.fecha_nacimiento
+                                                    ? new Date(
+                                                        patient.fecha_nacimiento
+                                                    ).toLocaleDateString(
+                                                        "es-ES"
+                                                    )
+                                                    : "No disponible"}
+                                            </span>
+                                        </div>
+
+                                        <div className="col-12 col-md-6">
+                                            <span className="text-info small d-block">
+                                                Sexo
+                                            </span>
+
+                                            <span className="text-white-50">
+                                                {patient.sexo ||
+                                                    "No disponible"}
+                                            </span>
+                                        </div>
+
+                                        <div className="col-12 col-md-6">
+                                            <span className="text-info small d-block">
+                                                Grupo sanguíneo
+                                            </span>
+
+                                            <span className="text-white-50">
+                                                {patient.grupo_sanguineo ||
+                                                    "No disponible"}
+                                            </span>
+                                        </div>
+
+                                    </div>
+
+                                    <div className="d-flex flex-wrap gap-2 mt-4">
+
+                                        <button
+                                            type="button"
+                                            className="btn btn-outline-info rounded-pill btn-sm"
+                                        >
+                                            Ver historial
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            className="btn btn-outline-success rounded-pill btn-sm"
+                                        >
+                                            Nueva consulta
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            className="btn btn-outline-danger rounded-pill btn-sm"
+                                            onClick={() =>
+                                                removePatient(
+                                                    patient.id
+                                                )
+                                            }
+                                            disabled={
+                                                removingPatientId ===
+                                                patient.id
+                                            }
+                                        >
+                                            {removingPatientId ===
+                                            patient.id
+                                                ? "Eliminando..."
+                                                : "Eliminar"}
+                                        </button>
+
+                                    </div>
+
+                                </div>
+                            </div>
+                        ))}
 
                     </div>
 
                 </div>
 
-            </div>
+                {/* RECETAS */}
 
-            {/* ========================= */}
-            {/* RECETAS */}
-            {/* ========================= */}
+                <div className="row g-4 mb-5">
 
-            <div className="row mb-5">
+                    {/* CREAR RECETA */}
 
-                {/* ========================= */}
-                {/* CREAR RECETA */}
-                {/* ========================= */}
+                    <div className="col-12 col-xl-6">
 
-                <div className="col-lg-6 mb-4">
+                        <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
 
-                    <div className="card shadow-sm border-0 h-100">
+                            <div className="mb-4">
+                                <span className="text-info text-uppercase small fw-semibold">
+                                    Tratamiento
+                                </span>
 
-                        <div className="card-body">
-
-                            <h3 className="mb-4">
-                                Crear receta
-                            </h3>
+                                <h2 className="h4 fw-bold mb-0 mt-1">
+                                    Crear receta
+                                </h2>
+                            </div>
 
                             {prescriptionError && (
-
                                 <div className="alert alert-danger">
                                     {prescriptionError}
                                 </div>
-
                             )}
 
                             {prescriptionSuccess && (
-
                                 <div className="alert alert-success">
                                     {prescriptionSuccess}
                                 </div>
-
                             )}
 
-                            <form
-                                onSubmit={
-                                    addPrescription
-                                }
-                            >
-
-                                {/* PACIENTE */}
+                            <form onSubmit={addPrescription}>
 
                                 <div className="mb-3">
-
                                     <label className="form-label">
                                         Paciente
                                     </label>
 
                                     <select
-                                        className="form-select"
+                                        className="form-select bg-dark text-white border-secondary"
                                         name="patientId"
                                         value={
                                             newPrescription.patientId
@@ -1675,53 +1444,31 @@ export const DashboardMedico = () => {
                                             handlePrescriptionChange
                                         }
                                     >
-
                                         <option value="">
                                             Selecciona un paciente
                                         </option>
 
-                                        {patients.map(
-                                            (patient) => (
-
-                                                <option
-                                                    key={
-                                                        patient.id
-                                                    }
-                                                    value={
-                                                        patient.id
-                                                    }
-                                                >
-                                                    {
-                                                        patient.nombre
-                                                    }{" "}
-                                                    {
-                                                        patient.apellidos
-                                                    }
-                                                </option>
-
-                                            )
-                                        )}
-
+                                        {patients.map((patient) => (
+                                            <option
+                                                key={patient.id}
+                                                value={patient.id}
+                                            >
+                                                {patient.nombre}{" "}
+                                                {patient.apellidos}
+                                            </option>
+                                        ))}
                                     </select>
 
                                     {patients.length === 0 && (
-
-                                        <small className="text-muted">
+                                        <div className="form-text text-white-50">
                                             Primero agrega un paciente a tu lista.
-                                        </small>
-
+                                        </div>
                                     )}
-
                                 </div>
 
                                 {/* MEDICAMENTO */}
 
-                                <div
-                                    className="mb-3 position-relative"
-                                    style={{
-                                        overflow: "visible"
-                                    }}
-                                >
+                                <div className="mb-3 position-relative">
 
                                     <label className="form-label">
                                         Medicamento
@@ -1729,7 +1476,7 @@ export const DashboardMedico = () => {
 
                                     <input
                                         type="text"
-                                        className="form-control"
+                                        className="form-control bg-dark text-white border-secondary"
                                         name="medication"
                                         placeholder="Ej. Paracetamol"
                                         value={
@@ -1742,42 +1489,32 @@ export const DashboardMedico = () => {
                                     />
 
                                     {searchingMedications && (
-
-                                        <div className="text-muted small mt-1">
+                                        <div className="text-white-50 small mt-2">
                                             Buscando medicamentos...
                                         </div>
-
                                     )}
 
                                     {!searchingMedications &&
                                         medicationSearchDone &&
                                         medicationResults.length === 0 && (
-
-                                            <div className="text-muted small mt-1">
+                                            <div className="text-white-50 small mt-2">
                                                 No se encontraron medicamentos.
                                                 Puedes introducir un medicamento manualmente.
                                             </div>
-
                                         )}
 
                                     {medicationResults.length > 0 && (
-
                                         <div
-                                            className="list-group position-absolute w-100 shadow-sm"
+                                            className="list-group position-absolute w-100 shadow"
                                             style={{
-                                                top: "calc(100% + 4px)",
-                                                left: 0,
-                                                right: 0,
+                                                top: "100%",
                                                 zIndex: 1000,
                                                 maxHeight: "300px",
-                                                overflowY: "auto",
-                                                backgroundColor: "white"
+                                                overflowY: "auto"
                                             }}
                                         >
-
                                             {medicationResults.map(
                                                 (medication) => (
-
                                                     <button
                                                         type="button"
                                                         key={
@@ -1785,19 +1522,16 @@ export const DashboardMedico = () => {
                                                         }
                                                         className="list-group-item list-group-item-action"
                                                         onClick={() => {
-
-                                                            medicationSelectionRef.current = true;
+                                                            medicationSelectionRef.current =
+                                                                true;
 
                                                             setNewPrescription({
                                                                 ...newPrescription,
-
                                                                 medication:
                                                                     medication.nombre,
-
                                                                 medicationExternalId:
                                                                     medication.registro ||
                                                                     "",
-
                                                                 dosage:
                                                                     medication.dosis ||
                                                                     ""
@@ -1814,10 +1548,8 @@ export const DashboardMedico = () => {
                                                             setSearchingMedications(
                                                                 false
                                                             );
-
                                                         }}
                                                     >
-
                                                         <div className="fw-bold">
                                                             {
                                                                 medication.nombre
@@ -1825,7 +1557,6 @@ export const DashboardMedico = () => {
                                                         </div>
 
                                                         <small className="text-muted">
-
                                                             {medication.principio_activo &&
                                                                 medication.principio_activo}
 
@@ -1834,31 +1565,22 @@ export const DashboardMedico = () => {
 
                                                             {medication.forma_farmaceutica &&
                                                                 ` · ${medication.forma_farmaceutica}`}
-
                                                         </small>
-
                                                     </button>
-
                                                 )
                                             )}
-
                                         </div>
-
                                     )}
-
                                 </div>
 
-                                {/* DOSIS */}
-
                                 <div className="mb-3">
-
                                     <label className="form-label">
                                         Dosis
                                     </label>
 
                                     <input
                                         type="text"
-                                        className="form-control"
+                                        className="form-control bg-dark text-white border-secondary"
                                         name="dosage"
                                         placeholder="Ej. 500 mg"
                                         value={
@@ -1868,20 +1590,16 @@ export const DashboardMedico = () => {
                                             handlePrescriptionChange
                                         }
                                     />
-
                                 </div>
 
-                                {/* FRECUENCIA */}
-
                                 <div className="mb-3">
-
                                     <label className="form-label">
                                         Frecuencia
                                     </label>
 
                                     <input
                                         type="text"
-                                        className="form-control"
+                                        className="form-control bg-dark text-white border-secondary"
                                         name="frequency"
                                         placeholder="Ej. Cada 8 horas"
                                         value={
@@ -1891,20 +1609,16 @@ export const DashboardMedico = () => {
                                             handlePrescriptionChange
                                         }
                                     />
-
                                 </div>
 
-                                {/* DURACIÓN */}
-
                                 <div className="mb-3">
-
                                     <label className="form-label">
                                         Duración
                                     </label>
 
                                     <input
                                         type="text"
-                                        className="form-control"
+                                        className="form-control bg-dark text-white border-secondary"
                                         name="duration"
                                         placeholder="Ej. 7 días"
                                         value={
@@ -1914,19 +1628,15 @@ export const DashboardMedico = () => {
                                             handlePrescriptionChange
                                         }
                                     />
-
                                 </div>
 
-                                {/* INSTRUCCIONES */}
-
-                                <div className="mb-3">
-
+                                <div className="mb-4">
                                     <label className="form-label">
                                         Instrucciones
                                     </label>
 
                                     <textarea
-                                        className="form-control"
+                                        className="form-control bg-dark text-white border-secondary"
                                         rows="3"
                                         name="instructions"
                                         placeholder="Indicaciones para el paciente..."
@@ -1937,12 +1647,11 @@ export const DashboardMedico = () => {
                                             handlePrescriptionChange
                                         }
                                     />
-
                                 </div>
 
                                 <button
                                     type="submit"
-                                    className="btn btn-success"
+                                    className="btn btn-info rounded-pill fw-semibold"
                                     disabled={
                                         patients.length === 0 ||
                                         creatingPrescription
@@ -1956,33 +1665,30 @@ export const DashboardMedico = () => {
                             </form>
 
                         </div>
-
                     </div>
 
-                </div>
+                    {/* RECETAS CREADAS */}
 
-                {/* ========================= */}
-                {/* RECETAS CREADAS */}
-                {/* ========================= */}
+                    <div className="col-12 col-xl-6">
 
-                <div className="col-lg-6 mb-4">
+                        <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
 
-                    <div className="card shadow-sm border-0 h-100">
+                            <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
 
-                        <div className="card-body">
+                                <div>
+                                    <span className="text-info text-uppercase small fw-semibold">
+                                        Historial
+                                    </span>
 
-                            <div className="d-flex justify-content-between align-items-center mb-4">
-
-                                <h3 className="mb-0">
-                                    Recetas
-                                </h3>
+                                    <h2 className="h4 fw-bold mb-0 mt-1">
+                                        Recetas
+                                    </h2>
+                                </div>
 
                                 <button
                                     type="button"
-                                    className="btn btn-outline-primary btn-sm"
-                                    onClick={
-                                        loadPrescriptions
-                                    }
+                                    className="btn btn-outline-info rounded-pill btn-sm"
+                                    onClick={loadPrescriptions}
                                     disabled={
                                         loadingPrescriptions
                                     }
@@ -1996,11 +1702,9 @@ export const DashboardMedico = () => {
 
                             {loadingPrescriptions &&
                                 prescriptions.length === 0 && (
-
                                     <div className="text-center py-5">
-
                                         <div
-                                            className="spinner-border text-primary"
+                                            className="spinner-border text-info"
                                             role="status"
                                         >
                                             <span className="visually-hidden">
@@ -2008,133 +1712,117 @@ export const DashboardMedico = () => {
                                             </span>
                                         </div>
 
-                                        <p className="text-muted mt-2">
+                                        <p className="text-white-50 mt-3">
                                             Cargando recetas...
                                         </p>
-
                                     </div>
-
                                 )}
 
                             {!loadingPrescriptions &&
                                 prescriptions.length === 0 && (
+                                    <div className="text-center py-5">
+                                        <div className="fs-1 mb-3">
+                                            💊
+                                        </div>
 
-                                    <div className="text-center text-muted py-5">
-
-                                        <p className="mb-0">
+                                        <p className="text-white-50 mb-0">
                                             Todavía no has creado ninguna receta.
                                         </p>
-
                                     </div>
-
                                 )}
 
                             {prescriptions.length > 0 && (
-
                                 <div>
-
                                     {prescriptions.map(
                                         (prescription) => (
-
                                             <div
                                                 key={
                                                     prescription.id
                                                 }
-                                                className="border rounded p-3 mb-3"
+                                                className="bg-dark bg-opacity-50 border border-secondary border-opacity-50 rounded-4 p-3 mb-3"
                                             >
 
-                                                <div className="d-flex justify-content-between">
+                                                <div className="d-flex justify-content-between align-items-start gap-3">
 
-                                                    <div>
+                                                    <div className="flex-grow-1">
 
-                                                        <h6 className="mb-1">
+                                                        <div className="d-flex align-items-center flex-wrap gap-2 mb-2">
 
-                                                            {
-                                                                prescription.patientName
-                                                            }
+                                                            <h3 className="h6 fw-bold mb-0">
+                                                                {
+                                                                    prescription.patientName
+                                                                }
+                                                            </h3>
 
                                                             {prescription.status ===
                                                                 "cancelled" && (
-
-                                                                    <span className="badge bg-danger ms-2">
+                                                                    <span className="badge bg-danger rounded-pill">
                                                                         Cancelada
                                                                     </span>
-
                                                                 )}
 
-                                                        </h6>
+                                                        </div>
 
-                                                        <strong>
+                                                        <strong className="d-block mb-1">
                                                             {
                                                                 prescription.medication
                                                             }
                                                         </strong>
 
-                                                        <div className="text-muted">
+                                                        <span className="text-white-50 small d-block">
                                                             {
                                                                 prescription.dosage
                                                             }
-                                                        </div>
+                                                        </span>
 
                                                         {prescription.frequency && (
-
-                                                            <div className="text-muted">
+                                                            <span className="text-white-50 small d-block mt-1">
                                                                 <strong>
                                                                     Frecuencia:
                                                                 </strong>{" "}
                                                                 {
                                                                     prescription.frequency
                                                                 }
-                                                            </div>
-
+                                                            </span>
                                                         )}
 
                                                         {prescription.duration && (
-
-                                                            <div className="text-muted">
+                                                            <span className="text-white-50 small d-block mt-1">
                                                                 <strong>
                                                                     Duración:
                                                                 </strong>{" "}
                                                                 {
                                                                     prescription.duration
                                                                 }
-                                                            </div>
-
+                                                            </span>
                                                         )}
 
                                                         {prescription.instructions && (
-
-                                                            <small className="text-muted d-block mt-1">
+                                                            <span className="text-white-50 small d-block mt-2">
                                                                 {
                                                                     prescription.instructions
                                                                 }
-                                                            </small>
-
+                                                            </span>
                                                         )}
 
                                                         {prescription.issuedAt && (
-
-                                                            <small className="text-muted d-block mt-2">
-
+                                                            <span className="text-white-50 small d-block mt-2">
                                                                 Creada:{" "}
                                                                 {new Date(
                                                                     prescription.issuedAt
                                                                 ).toLocaleString(
                                                                     "es-ES"
                                                                 )}
-
-                                                            </small>
-
+                                                            </span>
                                                         )}
 
                                                     </div>
 
                                                     {prescription.status ===
                                                         "active" && (
-
                                                             <button
                                                                 type="button"
-                                                                className="btn btn-sm btn-outline-danger"
+                                                                className="btn btn-outline-danger btn-sm rounded-pill flex-shrink-0"
                                                                 onClick={() =>
                                                                     removePrescription(
                                                                         prescription.id
@@ -2150,89 +1838,65 @@ export const DashboardMedico = () => {
                                                                     ? "Cancelando..."
                                                                     : "Cancelar"}
                                                             </button>
-
                                                         )}
 
                                                 </div>
 
                                             </div>
-
                                         )
                                     )}
-
                                 </div>
-
                             )}
 
                         </div>
-
                     </div>
 
                 </div>
 
-            </div>
+                {/* MENSAJES */}
 
-            {/* ========================= */}
-            {/* MENSAJES */}
-            {/* ========================= */}
+                <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 mb-4">
 
-            <div className="row">
+                    <div className="d-flex align-items-center gap-2 mb-4">
+                        <span className="fs-4">💬</span>
 
-                <div className="col-12">
-
-                    <div className="card shadow-sm border-0">
-
-                        <div className="card-body">
-
-                            <h3 className="mb-4">
-                                Mensajes recientes
-                            </h3>
-
-                            {messages.map(
-                                (message) => (
-
-                                    <div
-                                        key={
-                                            message.id
-                                        }
-                                        className="border-bottom py-3"
-                                    >
-
-                                        <div className="d-flex justify-content-between">
-
-                                            <strong>
-                                                {
-                                                    message.sender
-                                                }
-                                            </strong>
-
-                                            <small className="text-muted">
-                                                {
-                                                    message.time
-                                                }
-                                            </small>
-
-                                        </div>
-
-                                        <p className="mb-0 mt-1 text-muted">
-                                            {
-                                                message.message
-                                            }
-                                        </p>
-
-                                    </div>
-
-                                )
-                            )}
-
-                        </div>
-
+                        <h2 className="h4 fw-bold mb-0">
+                            Mensajes recientes
+                        </h2>
                     </div>
+
+                    {messages.map((message) => (
+                        <div
+                            key={message.id}
+                            className="d-flex justify-content-between align-items-start gap-3 py-3 border-bottom border-secondary border-opacity-25"
+                        >
+                            <div>
+                                <strong className="d-block">
+                                    {message.sender}
+                                </strong>
+
+                                <span className="text-white-50 small">
+                                    {message.message}
+                                </span>
+                            </div>
+
+                            <span className="text-white-50 small flex-shrink-0">
+                                {message.time}
+                            </span>
+                        </div>
+                    ))}
 
                 </div>
 
-            </div>
+                {/* SEGURIDAD */}
 
+                <div className="text-center border-top border-secondary border-opacity-25 mt-5 pt-4 pb-3">
+                    <span className="text-white-50 small">
+                        🔒 Conexión cifrada SSL · Información sanitaria protegida
+                    </span>
+                </div>
+
+            </div>
         </div>
     );
 };

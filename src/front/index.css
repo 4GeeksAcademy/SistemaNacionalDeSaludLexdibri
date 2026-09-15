@@ -1,3 +1,29 @@
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background: #090d16;
+  color: #fff;
+}
+
+.app-background {
+  min-height: 100vh;
+  background: radial-gradient(
+    ellipse at top,
+    #1e3a8a 0%,
+    #0f172a 70%,
+    #090d16 100%
+  );
+}
+
+.app-content {
+  min-height: calc(100vh - 120px);
+}
+
 .scroll-reveal {
   opacity: 0;
   transform: translateY(40px);

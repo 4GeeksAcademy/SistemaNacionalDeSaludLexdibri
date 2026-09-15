@@ -27,7 +27,7 @@ export const Diagnostico = () => {
     }, []);
 
     return (
-        <div className="bg-dark text-white min-vh-100">
+        <div className=" text-white min-vh-100">
 
             {/* HERO */}
             <section className="container py-5">
