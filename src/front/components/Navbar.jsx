@@ -100,7 +100,7 @@ export const Navbar = () => {
                   </Link>
                 </li>
                 <li>
-                  <Link className="dropdown-item py-2" to="/registro">
+                  <Link className="dropdown-item py-2" to="/register">
                     ✨ Registrarse
                   </Link>
                 </li>

@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 
 export const Home = () => {
-
     useEffect(() => {
         const elements = document.querySelectorAll(".scroll-reveal");
 
@@ -29,29 +28,25 @@ export const Home = () => {
     }, []);
 
     return (
-        <div className="home-page">
+        <div className="bg-dark text-white min-vh-100">
 
             {/* ========================================
                 HERO
             ======================================== */}
             <section className="container py-5">
                 <div className="row justify-content-center">
-
                     <div className="col-lg-9 text-center py-lg-5 scroll-reveal">
 
                         <span className="badge rounded-pill bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-3 py-2 mb-4">
                             Sistema Nacional de Salud
                         </span>
 
-                        <h1 className="display-2 fw-bold text-white lh-sm mb-4">
+                        <h1 className="display-2 fw-bold lh-sm mb-4">
                             Tu salud,
                             <span className="text-info"> conectada.</span>
                         </h1>
 
-                        <p
-                            className="lead text-white-50 mx-auto mb-4"
-                            style={{ maxWidth: "750px" }}
-                        >
+                        <p className="lead text-white-50 mx-auto mb-4 col-lg-10">
                             Accede de forma sencilla a los servicios sanitarios,
                             información de salud y recursos del Sistema Nacional
                             de Salud desde un único espacio digital.
@@ -82,134 +77,128 @@ export const Home = () => {
                         </div>
 
                     </div>
-
                 </div>
             </section>
 
 
-           
-{/* ========================================
-    ACCESOS RÁPIDOS
-======================================== */}
-<section className="container py-5">
+            {/* ========================================
+                ACCESOS RÁPIDOS
+            ======================================== */}
+            <section className="container py-5">
 
-    <div className="text-center mb-5 scroll-reveal">
+                <div className="text-center mb-5 scroll-reveal">
 
-        <span className="text-info small fw-semibold text-uppercase">
-            Servicios digitales
-        </span>
+                    <span className="text-info small fw-semibold text-uppercase">
+                        Servicios digitales
+                    </span>
 
-        <h2 className="text-white fw-bold mt-2">
-            Todo lo que necesitas, en un solo lugar
-        </h2>
+                    <h2 className="fw-bold mt-2">
+                        Todo lo que necesitas, en un solo lugar
+                    </h2>
 
-        <p
-            className="text-white-50 mx-auto"
-            style={{ maxWidth: "650px" }}
-        >
-            Accede rápidamente a información, recursos tecnológicos
-            y diferentes servicios del Sistema Nacional de Salud.
-        </p>
-
-    </div>
-
-
-    {/* TARJETAS */}
-    <div className="row g-4 justify-content-center">
-
-        {/* ESPECIALIDADES */}
-        <div className="col-md-6 col-lg-4 scroll-reveal">
-
-            <Link
-                to="/especialidades"
-                className="home-service-card home-service-card-blue text-decoration-none"
-            >
-
-                <div className="home-service-content">
-
-                    <h5 className="text-white fw-bold mb-3">
-                        Especialidades
-                    </h5>
-
-                    <p className="text-white-50 mb-0">
-                        Consulta las principales especialidades médicas
-                        y conoce las diferentes áreas de atención sanitaria.
+                    <p className="text-white-50 mx-auto col-lg-8">
+                        Accede rápidamente a información, recursos tecnológicos
+                        y diferentes servicios del Sistema Nacional de Salud.
                     </p>
 
                 </div>
 
-                <span className="home-arrow">
-                    DIRIGIRSE →
-                </span>
 
-            </Link>
+                {/* TARJETAS */}
+                <div className="row g-4 justify-content-center">
 
-        </div>
+                    {/* ESPECIALIDADES */}
+                    <div className="col-md-6 col-lg-4 scroll-reveal">
+
+                        <Link
+                            to="/especialidades"
+                            className="card h-100 bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 text-decoration-none"
+                        >
+
+                            <div className="card-body d-flex flex-column p-0">
+
+                                <h5 className="text-white fw-bold mb-3">
+                                    Especialidades
+                                </h5>
+
+                                <p className="text-white-50 mb-4">
+                                    Consulta las principales especialidades médicas
+                                    y conoce las diferentes áreas de atención sanitaria.
+                                </p>
+
+                                <span className="text-info small fw-semibold text-uppercase mt-auto">
+                                    DIRIGIRSE →
+                                </span>
+
+                            </div>
+
+                        </Link>
+
+                    </div>
 
 
-        {/* TECNOLOGÍA */}
-        <div className="col-md-6 col-lg-4 scroll-reveal">
+                    {/* TECNOLOGÍA */}
+                    <div className="col-md-6 col-lg-4 scroll-reveal">
 
-            <Link
-                to="/diagnostico"
-                className="home-service-card home-service-card-blue text-decoration-none"
-            >
+                        <Link
+                            to="/diagnostico"
+                            className="card h-100 bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 text-decoration-none"
+                        >
 
-                <div className="home-service-content">
+                            <div className="card-body d-flex flex-column p-0">
 
-                    <h5 className="text-white fw-bold mb-3">
-                        Tecnología
-                    </h5>
+                                <h5 className="text-white fw-bold mb-3">
+                                    Tecnología
+                                </h5>
 
-                    <p className="text-white-50 mb-0">
-                        Descubre las herramientas y soluciones digitales
-                        que facilitan una atención sanitaria más conectada.
-                    </p>
+                                <p className="text-white-50 mb-4">
+                                    Descubre las herramientas y soluciones digitales
+                                    que facilitan una atención sanitaria más conectada.
+                                </p>
+
+                                <span className="text-info small fw-semibold text-uppercase mt-auto">
+                                    DIRIGIRSE →
+                                </span>
+
+                            </div>
+
+                        </Link>
+
+                    </div>
+
+
+                    {/* CONTACTO */}
+                    <div className="col-md-6 col-lg-4 scroll-reveal">
+
+                        <Link
+                            to="/contacto"
+                            className="card h-100 bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 text-decoration-none"
+                        >
+
+                            <div className="card-body d-flex flex-column p-0">
+
+                                <h5 className="text-white fw-bold mb-3">
+                                    Contacto
+                                </h5>
+
+                                <p className="text-white-50 mb-4">
+                                    Encuentra información para contactar con el sistema
+                                    y resolver tus dudas o consultas.
+                                </p>
+
+                                <span className="text-info small fw-semibold text-uppercase mt-auto">
+                                    DIRIGIRSE →
+                                </span>
+
+                            </div>
+
+                        </Link>
+
+                    </div>
 
                 </div>
 
-                <span className="home-arrow">
-                    DIRIGIRSE →
-                </span>
-
-            </Link>
-
-        </div>
-
-
-        {/* CONTACTO */}
-        <div className="col-md-6 col-lg-4 scroll-reveal">
-
-            <Link
-                to="/contacto"
-                className="home-service-card home-service-card-blue text-decoration-none"
-            >
-
-                <div className="home-service-content">
-
-                    <h5 className="text-white fw-bold mb-3">
-                        Contacto
-                    </h5>
-
-                    <p className="text-white-50 mb-0">
-                        Encuentra información para contactar con el sistema
-                        y resolver tus dudas o consultas.
-                    </p>
-
-                </div>
-
-                <span className="home-arrow">
-                    DIRIGIRSE →
-                </span>
-
-            </Link>
-
-        </div>
-
-    </div>
-
-</section>
-
+            </section>
 
 
             {/* ========================================
@@ -217,7 +206,7 @@ export const Home = () => {
             ======================================== */}
             <section className="container py-5">
 
-                <div className="home-info-section scroll-reveal">
+                <div className="scroll-reveal">
 
                     <div className="row align-items-center g-5">
 
@@ -228,7 +217,7 @@ export const Home = () => {
                                 Una red al servicio de todos
                             </span>
 
-                            <h2 className="display-6 text-white fw-bold mt-3 mb-4">
+                            <h2 className="display-6 fw-bold mt-3 mb-4">
                                 Un sistema sanitario
                                 <br />
                                 conectado y accesible
@@ -264,7 +253,7 @@ export const Home = () => {
                                 {/* COMUNIDADES */}
                                 <div className="col-6 scroll-reveal">
 
-                                    <div className="home-stat-card">
+                                    <div className="card h-100 bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4">
 
                                         <span className="text-info fs-2 fw-bold">
                                             17
@@ -286,7 +275,7 @@ export const Home = () => {
                                 {/* ATENCIÓN */}
                                 <div className="col-6 scroll-reveal">
 
-                                    <div className="home-stat-card">
+                                    <div className="card h-100 bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4">
 
                                         <span className="text-info fs-2 fw-bold">
                                             24/7
@@ -308,7 +297,7 @@ export const Home = () => {
                                 {/* PROFESIONALES */}
                                 <div className="col-6 scroll-reveal">
 
-                                    <div className="home-stat-card">
+                                    <div className="card h-100 bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4">
 
                                         <span className="text-info fs-2 fw-bold">
                                             +1M
@@ -330,7 +319,7 @@ export const Home = () => {
                                 {/* COBERTURA */}
                                 <div className="col-6 scroll-reveal">
 
-                                    <div className="home-stat-card">
+                                    <div className="card h-100 bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4">
 
                                         <span className="text-info fs-2 fw-bold">
                                             🇪🇸
@@ -364,31 +353,35 @@ export const Home = () => {
             ======================================== */}
             <section className="container py-5 pb-5">
 
-                <div className="home-emergency scroll-reveal">
+                <div className="scroll-reveal">
 
-                    <div>
+                    <div className="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-4 bg-danger bg-opacity-10 border border-danger border-opacity-50 rounded-4 p-4 p-lg-5">
 
-                        <span className="text-danger fw-bold">
-                            ATENCIÓN INMEDIATA
-                        </span>
+                        <div>
 
-                        <h3 className="text-white fw-bold mt-2 mb-2">
-                            ¿Necesitas ayuda urgente?
-                        </h3>
+                            <span className="text-danger fw-bold small">
+                                ATENCIÓN INMEDIATA
+                            </span>
 
-                        <p className="text-white-50 mb-0">
-                            En caso de emergencia sanitaria, contacta con los
-                            servicios de emergencias de tu comunidad.
-                        </p>
+                            <h3 className="fw-bold mt-2 mb-2">
+                                ¿Necesitas ayuda urgente?
+                            </h3>
+
+                            <p className="text-white-50 mb-0">
+                                En caso de emergencia sanitaria, contacta con los
+                                servicios de emergencias de tu comunidad.
+                            </p>
+
+                        </div>
+
+                        <Link
+                            to="/urgencias"
+                            className="btn btn-danger rounded-pill px-4 fw-semibold flex-shrink-0"
+                        >
+                            Ver información de urgencias
+                        </Link>
 
                     </div>
-
-                    <Link
-                        to="/urgencias"
-                        className="btn btn-danger rounded-pill px-4 fw-semibold"
-                    >
-                        Ver información de urgencias
-                    </Link>
 
                 </div>
 

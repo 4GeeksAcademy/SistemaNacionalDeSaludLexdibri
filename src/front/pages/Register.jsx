@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 export const Register = () => {
@@ -6,137 +6,335 @@ export const Register = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+    useEffect(() => {
+        const elements = document.querySelectorAll(".scroll-reveal");
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add("visible");
+                    } else {
+                        entry.target.classList.remove("visible");
+                    }
+                });
+            },
+            {
+                threshold: 0.2,
+            }
+        );
+
+        elements.forEach((element) => observer.observe(element));
+
+        return () => {
+            elements.forEach((element) => observer.unobserve(element));
+        };
+    }, []);
+
     return (
-        <div className="container min-vh-100 d-flex align-items-center justify-content-center py-5">
-            <div className="card shadow-lg border-0 glass-card p-4 p-md-5 w-100 text-start" style={{ maxWidth: "850px" }}>
-                
-                {/* CABECERA */}
-                <div className="text-center mb-4">
-                    <div className="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded-3 p-2 mb-3" style={{ width: "40px", height: "40px" }}>
-                        ✚
-                    </div>
-                    <h2 className="fw-bold text-white">Crear una cuenta</h2>
-                    <p className="text-light opacity-75 small">Regístrate en el Sistema Nacional de Salud</p>
-                </div>
+        <div className="bg-dark text-white min-vh-100 d-flex align-items-center">
 
-                {/* SELECTOR PACIENTE / MÉDICO */}
-                <div className="d-flex justify-content-center mb-4">
-                    <div className="btn-group" role="group">
-                        <button
-                            type="button"
-                            onClick={() => setTipoUsuario("paciente")}
-                            className={`btn ${tipoUsuario === "paciente" ? "btn-light text-primary fw-bold" : "btn-outline-light"}`}
-                        >
-                            🔒 Paciente
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setTipoUsuario("medico")}
-                            className={`btn ${tipoUsuario === "medico" ? "btn-light text-primary fw-bold" : "btn-outline-light"}`}
-                        >
-                            👨‍⚕️ Médico
-                        </button>
-                    </div>
-                </div>
+            <section className="container py-5">
+                <div className="row justify-content-center">
 
-                {/* FORMULARIO GRID */}
-                <form className="text-start">
-                    <div className="row g-3">
-                        <div className="col-md-6">
-                            <div className="mb-3">
-                                <label className="form-label text-white small">Nombre</label>
-                                <input type="text" className="form-control" placeholder="Nombre" />
+                    <div className="col-12 col-sm-10 col-md-8 col-lg-5">
+
+                        <div className="card bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 p-md-5 scroll-reveal">
+
+                            {/* CABECERA */}
+                            <div className="text-center mb-4">
+
+                                <div
+                                    className="d-inline-flex align-items-center justify-content-center bg-info bg-opacity-10 border border-info border-opacity-25 rounded-4 text-info fs-4 mb-3"
+                                    style={{ width: "56px", height: "56px" }}
+                                >
+                                    ✚
+                                </div>
+
+                                <h1 className="h2 fw-bold mb-2">
+                                    Crear una cuenta
+                                </h1>
+
+                                <p className="text-white-50 small mb-0">
+                                    Regístrate en el Sistema Nacional de Salud
+                                </p>
+
                             </div>
 
-                            <div className="mb-3">
-                                <label className="form-label text-white small">DNI</label>
-                                <input type="text" className="form-control" placeholder="Ingrese su DNI" />
-                            </div>
+                            {/* SELECTOR */}
+                            <div className="mb-4">
 
-                            <div className="mb-3">
-                                <label className="form-label text-white small">Correo electrónico</label>
-                                <input type="email" className="form-control" placeholder="ejemplo@correo.com" />
-                            </div>
+                                <span className="text-info small fw-semibold text-uppercase d-block mb-2">
+                                    Tipo de usuario
+                                </span>
 
-                            <div className="mb-3">
-                                <label className="form-label text-white small">Teléfono</label>
-                                <input type="tel" className="form-control" placeholder="+34600000000" />
-                            </div>
+                                <div
+                                    className="btn-group w-100"
+                                    role="group"
+                                >
+                                    <button
+                                        type="button"
+                                        onClick={() => setTipoUsuario("paciente")}
+                                        className={`btn rounded-start-pill fw-semibold ${tipoUsuario === "paciente"
+                                                ? "btn-info"
+                                                : "btn-outline-secondary text-white"
+                                            }`}
+                                    >
+                                        🔒 Paciente
+                                    </button>
 
-                            <div className="mb-3">
-                                <label className="form-label text-white small">Fecha de nacimiento</label>
-                                <input type="date" className="form-control" />
-                            </div>
-
-                            <div className="mb-3">
-                                <label className="form-label text-white small">CIP</label>
-                                <input type="text" className="form-control" placeholder="Código CIP" />
-                            </div>
-
-                            <div className="mb-3">
-                                <label className="form-label text-white small">Contraseña</label>
-                                <div className="input-group">
-                                    <input type={showPassword ? "text" : "password"} className="form-control" placeholder="••••••••••••" />
-                                    <button type="button" className="btn btn-light" onClick={() => setShowPassword(!showPassword)}>
-                                        👁️
+                                    <button
+                                        type="button"
+                                        onClick={() => setTipoUsuario("medico")}
+                                        className={`btn rounded-end-pill fw-semibold ${tipoUsuario === "medico"
+                                                ? "btn-info"
+                                                : "btn-outline-secondary text-white"
+                                            }`}
+                                    >
+                                        👨‍⚕️ Médico
                                     </button>
                                 </div>
+
                             </div>
 
-                            <div className="mb-3">
-                                <label className="form-label text-white small">Repite la contraseña</label>
-                                <div className="input-group">
-                                    <input type={showConfirmPassword ? "text" : "password"} className="form-control" placeholder="Repite tu contraseña" />
-                                    <button type="button" className="btn btn-light" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
-                                        👁️
-                                    </button>
+                            {/* FORMULARIO */}
+                            <form className="text-start">
+
+                                <div className="row g-3">
+
+                                    <div className="col-12">
+                                        <label className="form-label text-white-50 small">
+                                            Nombre
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            className="form-control bg-dark text-white border-secondary"
+                                            placeholder="Nombre"
+                                        />
+                                    </div>
+
+                                    <div className="col-12">
+                                        <label className="form-label text-white-50 small">
+                                            Apellidos
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            className="form-control bg-dark text-white border-secondary"
+                                            placeholder="Apellidos"
+                                        />
+                                    </div>
+
+                                    <div className="col-12">
+                                        <label className="form-label text-white-50 small">
+                                            DNI
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            className="form-control bg-dark text-white border-secondary"
+                                            placeholder="Ingrese su DNI"
+                                        />
+                                    </div>
+
+                                    <div className="col-12">
+                                        <label className="form-label text-white-50 small">
+                                            Correo electrónico
+                                        </label>
+
+                                        <input
+                                            type="email"
+                                            className="form-control bg-dark text-white border-secondary"
+                                            placeholder="ejemplo@correo.com"
+                                        />
+                                    </div>
+
+                                    <div className="col-12">
+                                        <label className="form-label text-white-50 small">
+                                            Teléfono
+                                        </label>
+
+                                        <input
+                                            type="tel"
+                                            className="form-control bg-dark text-white border-secondary"
+                                            placeholder="+34600000000"
+                                        />
+                                    </div>
+
+                                    <div className="col-12">
+                                        <label className="form-label text-white-50 small">
+                                            Fecha de nacimiento
+                                        </label>
+
+                                        <input
+                                            type="date"
+                                            className="form-control bg-dark text-white border-secondary"
+                                        />
+                                    </div>
+
+                                    <div className="col-12">
+                                        <label className="form-label text-white-50 small">
+                                            Sexo
+                                        </label>
+
+                                        <select className="form-select bg-dark text-white border-secondary">
+                                            <option value="">
+                                                Seleccione
+                                            </option>
+                                            <option value="M">
+                                                Masculino
+                                            </option>
+                                            <option value="F">
+                                                Femenino
+                                            </option>
+                                        </select>
+                                    </div>
+
+                                    <div className="col-12">
+                                        <label className="form-label text-white-50 small">
+                                            Grupo sanguíneo
+                                        </label>
+
+                                        <select className="form-select bg-dark text-white border-secondary">
+                                            <option value="">
+                                                Seleccione
+                                            </option>
+
+                                            <option value="A+">A+</option>
+                                            <option value="A-">A-</option>
+                                            <option value="B+">B+</option>
+                                            <option value="B-">B-</option>
+                                            <option value="AB+">AB+</option>
+                                            <option value="AB-">AB-</option>
+                                            <option value="O+">O+</option>
+                                            <option value="O-">O-</option>
+                                        </select>
+                                    </div>
+                                    <div className="col-12">
+                                        <label className="form-label text-white-50 small">
+                                            CIP
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            className="form-control bg-dark text-white border-secondary"
+                                            placeholder="Código CIP"
+                                        />
+                                    </div>
+
+                                    <div className="col-12">
+                                        <label className="form-label text-white-50 small">
+                                            Contraseña
+                                        </label>
+
+                                        <div className="input-group">
+
+                                            <input
+                                                type={
+                                                    showPassword
+                                                        ? "text"
+                                                        : "password"
+                                                }
+                                                className="form-control bg-dark text-white border-secondary"
+                                                placeholder="••••••••••••"
+                                            />
+
+                                            <button
+                                                type="button"
+                                                className="btn btn-outline-secondary text-white"
+                                                onClick={() =>
+                                                    setShowPassword(
+                                                        !showPassword
+                                                    )
+                                                }
+                                            >
+                                                {showPassword ? "🙈" : "👁️"}
+                                            </button>
+
+                                        </div>
+                                    </div>
+
+                                    <div className="col-12">
+                                        <label className="form-label text-white-50 small">
+                                            Repite la contraseña
+                                        </label>
+
+                                        <div className="input-group">
+
+                                            <input
+                                                type={
+                                                    showConfirmPassword
+                                                        ? "text"
+                                                        : "password"
+                                                }
+                                                className="form-control bg-dark text-white border-secondary"
+                                                placeholder="Repite tu contraseña"
+                                            />
+
+                                            <button
+                                                type="button"
+                                                className="btn btn-outline-secondary text-white"
+                                                onClick={() =>
+                                                    setShowConfirmPassword(
+                                                        !showConfirmPassword
+                                                    )
+                                                }
+                                            >
+                                                {showConfirmPassword
+                                                    ? "🙈"
+                                                    : "👁️"}
+                                            </button>
+
+                                        </div>
+                                    </div>
+
+                                    <div className="col-12">
+
+                                        <button
+                                            type="submit"
+                                            className="btn btn-info rounded-pill fw-bold w-100 py-2 mt-2"
+                                        >
+                                            Crear cuenta →
+                                        </button>
+
+                                    </div>
+
                                 </div>
+
+                            </form>
+
+                            {/* PIE */}
+                            <div className="text-center mt-4 pt-3 border-top border-secondary">
+
+                                <p className="text-white-50 small mb-2">
+                                    ¿Ya tienes una cuenta?
+                                </p>
+
+                                <Link
+                                    to="/login"
+                                    className="text-info text-decoration-none small fw-bold"
+                                >
+                                    Inicia sesión aquí
+                                </Link>
+
                             </div>
 
-                            <button type="submit" className="btn btn-light text-primary fw-bold w-100 mt-2">
-                                Crear cuenta
-                            </button>
+                            <div className="text-center mt-3">
+
+                                <span className="text-white-50 small">
+                                    🔒 Conexión segura y protegida
+                                </span>
+
+                            </div>
+
                         </div>
 
-                        <div className="col-md-6">
-                            <div className="mb-3">
-                                <label className="form-label text-white small">Apellidos</label>
-                                <input type="text" className="form-control" placeholder="Apellidos" />
-                            </div>
-
-                            <div className="mb-3">
-                                <label className="form-label text-white small">Sexo</label>
-                                <select className="form-select">
-                                    <option value="">Seleccione</option>
-                                    <option value="M">Masculino</option>
-                                    <option value="F">Femenino</option>
-                                </select>
-                            </div>
-
-                            <div className="mb-3">
-                                <label className="form-label text-white small">Grupo sanguíneo</label>
-                                <select className="form-select">
-                                    <option value="">Seleccione</option>
-                                    <option value="A+">A+</option>
-                                    <option value="O+">O+</option>
-                                </select>
-                            </div>
-                        </div>
                     </div>
-                </form>
 
-                {/* PIE */}
-                <div className="text-center mt-4">
-                    <span className="text-white small">¿Ya tienes una cuenta? </span>
-                    <Link to="/login" className="text-info text-decoration-none small fw-bold">
-                        Inicia sesión aquí
-                    </Link>
                 </div>
+            </section>
 
-                <div className="text-center mt-3 text-light opacity-75 small">
-                    🔒 Conexión segura y protegida
-                </div>
-            </div>
         </div>
     );
 };
