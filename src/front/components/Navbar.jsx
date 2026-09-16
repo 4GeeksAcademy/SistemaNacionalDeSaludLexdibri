@@ -20,7 +20,7 @@ export const Navbar = () => {
   };
 
   const defaultAvatar =
-    "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=300&q=80";
+    "https://th.bing.com/th/id/OIG3.8UOQmAzj8smbYCzlKJ_S?pid=ImgGn";
 
   return (
     <header
@@ -70,11 +70,10 @@ export const Navbar = () => {
           style={{ zIndex: 1050 }}
         >
           <button
-            className={`btn border-0 dropdown-toggle d-flex align-items-center gap-2 px-3 py-1 rounded-pill ${
-              isLoggedIn
+            className={`btn border-0 dropdown-toggle d-flex align-items-center gap-2 px-3 py-1 rounded-pill ${isLoggedIn
                 ? "bg-info text-dark fw-semibold"
                 : "bg-white bg-opacity-10 text-white"
-            }`}
+              }`}
             type="button"
             data-bs-toggle="dropdown"
             aria-expanded="false"
@@ -209,8 +208,7 @@ export const Navbar = () => {
         <NavLink
           to="/especialidades"
           className={({ isActive }) =>
-            `navbar-link text-white text-decoration-none ${
-              isActive ? "active text-info fw-bold" : "opacity-75"
+            `navbar-link text-white text-decoration-none ${isActive ? "active text-info fw-bold" : "opacity-75"
             }`
           }
         >
@@ -220,8 +218,7 @@ export const Navbar = () => {
         <NavLink
           to="/diagnostico"
           className={({ isActive }) =>
-            `navbar-link text-white text-decoration-none ${
-              isActive ? "active text-info fw-bold" : "opacity-75"
+            `navbar-link text-white text-decoration-none ${isActive ? "active text-info fw-bold" : "opacity-75"
             }`
           }
         >
@@ -231,8 +228,7 @@ export const Navbar = () => {
         <NavLink
           to="/el-sistema"
           className={({ isActive }) =>
-            `navbar-link text-white text-decoration-none ${
-              isActive ? "active text-info fw-bold" : "opacity-75"
+            `navbar-link text-white text-decoration-none ${isActive ? "active text-info fw-bold" : "opacity-75"
             }`
           }
         >
@@ -242,8 +238,7 @@ export const Navbar = () => {
         <NavLink
           to="/contacto"
           className={({ isActive }) =>
-            `navbar-link text-white text-decoration-none ${
-              isActive ? "active text-info fw-bold" : "opacity-75"
+            `navbar-link text-white text-decoration-none ${isActive ? "active text-info fw-bold" : "opacity-75"
             }`
           }
         >
@@ -253,8 +248,7 @@ export const Navbar = () => {
         <NavLink
           to="/urgencias"
           className={({ isActive }) =>
-            `navbar-link navbar-link-emergency text-danger fw-bold text-decoration-none ${
-              isActive ? "active" : ""
+            `navbar-link navbar-link-emergency text-danger fw-bold text-decoration-none ${isActive ? "active" : ""
             }`
           }
         >
