@@ -3,7 +3,7 @@ This module takes care of starting the API Server, Loading the DB and Adding the
 """
 
 from flask import Flask, request, jsonify, url_for, Blueprint
-from api.models import db, User, Patient, Doctor, Specialty, UserRole, Disease,DoctorPatient
+from api.models import db, User, Patient, Doctor, Specialty, UserRole, Disease,DoctorPatient,Medication, Prescription,PrescriptionMedication
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from datetime import datetime
@@ -658,4 +658,657 @@ def obtener_mis_pacientes():
     return jsonify({
         "pacientes": pacientes,
         "total": len(pacientes)
+    }), 200
+
+
+@api.route("/medico/pacientes/<int:patient_id>", methods=["DELETE"])
+@jwt_required()
+def eliminar_paciente(patient_id):
+
+    # Obtener usuario autenticado
+    user_id = get_jwt_identity()
+    user = db.session.get(User, int(user_id))
+
+    if not user:
+        return jsonify({
+            "error": "Usuario no encontrado"
+        }), 404
+
+    # Comprobar que es médico
+    if user.role != UserRole.DOCTOR:
+        return jsonify({
+            "error": "No tienes permisos para eliminar pacientes"
+        }), 403
+
+    # Obtener médico
+    doctor = user.doctor
+
+    if not doctor:
+        return jsonify({
+            "error": "Perfil médico no encontrado"
+        }), 404
+
+    # Buscar la relación médico-paciente
+    relation = db.session.execute(
+        db.select(DoctorPatient).where(
+            DoctorPatient.doctor_id == doctor.id,
+            DoctorPatient.patient_id == patient_id
+        )
+    ).scalar_one_or_none()
+
+    if not relation:
+        return jsonify({
+            "error": "El paciente no está en tu lista"
+        }), 404
+
+    # Si ya estaba desactivada
+    if not relation.is_active:
+        return jsonify({
+            "error": "El paciente ya no está en tu lista"
+        }), 409
+
+    # Desactivar la relación
+    relation.is_active = False
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Paciente eliminado correctamente"
+    }), 200
+
+@api.route("/medico/recetas", methods=["POST"])
+@jwt_required()
+def crear_receta():
+
+    data = request.get_json(silent=True)
+
+    if not data:
+        return jsonify({
+            "error": "Los datos de la receta son obligatorios"
+        }), 400
+
+    # =========================================================
+    # 1. OBTENER USUARIO AUTENTICADO
+    # =========================================================
+
+    user_id = get_jwt_identity()
+
+    user = db.session.get(User, int(user_id))
+
+    if not user:
+        return jsonify({
+            "error": "Usuario no encontrado"
+        }), 404
+
+    # =========================================================
+    # 2. COMPROBAR QUE ES MÉDICO
+    # =========================================================
+
+    if user.role != UserRole.DOCTOR:
+        return jsonify({
+            "error": "No tienes permisos para crear recetas"
+        }), 403
+
+    doctor = user.doctor
+
+    if not doctor:
+        return jsonify({
+            "error": "Perfil médico no encontrado"
+        }), 404
+
+    # =========================================================
+    # 3. DATOS BÁSICOS
+    # =========================================================
+
+    patient_id = data.get("patient_id")
+
+    medication_external_id = data.get(
+        "medication_external_id"
+    )
+
+    medication_name = (
+        data.get("medication_name") or ""
+    ).strip()
+
+    dosage = (
+        data.get("dosage") or ""
+    ).strip()
+
+    frequency = (
+        data.get("frequency") or ""
+    ).strip()
+
+    duration = (
+        data.get("duration") or ""
+    ).strip()
+
+    instructions = (
+        data.get("instructions") or ""
+    ).strip()
+
+    appointment_id = data.get("appointment_id")
+
+    # =========================================================
+    # 4. VALIDACIONES
+    # =========================================================
+
+    if not patient_id:
+        return jsonify({
+            "error": "El paciente es obligatorio"
+        }), 400
+
+    if not dosage:
+        return jsonify({
+            "error": "La dosis es obligatoria"
+        }), 400
+
+    # =========================================================
+    # 5. COMPROBAR RELACIÓN MÉDICO-PACIENTE
+    # =========================================================
+
+    relation = db.session.execute(
+        db.select(DoctorPatient).where(
+            DoctorPatient.doctor_id == doctor.id,
+            DoctorPatient.patient_id == int(patient_id),
+            DoctorPatient.is_active.is_(True)
+        )
+    ).scalar_one_or_none()
+
+    if not relation:
+        return jsonify({
+            "error": "El paciente no pertenece a tu lista de pacientes"
+        }), 403
+
+    patient = db.session.get(
+        Patient,
+        int(patient_id)
+    )
+
+    if not patient:
+        return jsonify({
+            "error": "Paciente no encontrado"
+        }), 404
+
+    # =========================================================
+    # 6. OBTENER / CREAR MEDICAMENTO
+    # =========================================================
+
+    medication = None
+
+    # ---------------------------------------------------------
+    # CASO A: MEDICAMENTO DE CIMA
+    # ---------------------------------------------------------
+
+    if medication_external_id:
+
+        medication_external_id = str(
+            medication_external_id
+        ).strip()
+
+        # Primero buscamos si ya lo tenemos guardado
+        medication = db.session.execute(
+            db.select(Medication).where(
+                Medication.external_id ==
+                medication_external_id
+            )
+        ).scalar_one_or_none()
+
+        # Si no existe, lo obtenemos de CIMA
+        if not medication:
+
+            cima_url = (
+                "https://cima.aemps.es/cima/rest/medicamento"
+            )
+
+            try:
+
+                response = requests.get(
+                    cima_url,
+                    params={
+                        "nregistro": medication_external_id
+                    },
+                    timeout=10
+                )
+
+                response.raise_for_status()
+
+            except requests.RequestException:
+                return jsonify({
+                    "error": (
+                        "No se pudo consultar el medicamento "
+                        "en CIMA"
+                    )
+                }), 502
+
+            cima_data = response.json()
+
+            if not cima_data:
+                return jsonify({
+                    "error": (
+                        "El medicamento no existe en CIMA"
+                    )
+                }), 404
+
+            medication = Medication(
+                external_id=medication_external_id,
+                name=cima_data.get("nombre"),
+                active_ingredient=(
+                    cima_data.get("vtm", {}).get("nombre")
+                    if cima_data.get("vtm")
+                    else None
+                ),
+                strength=cima_data.get("dosis"),
+                type=(
+                    cima_data.get(
+                        "formaFarmaceutica",
+                        {}
+                    ).get("nombre")
+                    if cima_data.get("formaFarmaceutica")
+                    else None
+                ),
+                source="CIMA",
+                last_synced_at=datetime.utcnow()
+            )
+
+            db.session.add(medication)
+
+    # ---------------------------------------------------------
+    # CASO B: MEDICAMENTO MANUAL
+    # ---------------------------------------------------------
+
+    else:
+
+        if not medication_name:
+            return jsonify({
+                "error": (
+                    "El nombre del medicamento "
+                    "es obligatorio"
+                )
+            }), 400
+
+        medication = Medication(
+            external_id=None,
+            name=medication_name,
+            active_ingredient=data.get(
+                "active_ingredient"
+            ),
+            strength=data.get(
+                "strength"
+            ),
+            type=data.get(
+                "type"
+            ),
+            source="MANUAL",
+            last_synced_at=None
+        )
+
+        db.session.add(medication)
+
+    # =========================================================
+    # 7. CREAR RECETA
+    # =========================================================
+
+    prescription = Prescription(
+        patient_id=patient.id,
+        doctor_id=doctor.id,
+        appointment_id=appointment_id,
+        issued_at=datetime.utcnow(),
+        status="active",
+        notes=None
+    )
+
+    db.session.add(prescription)
+
+    # =========================================================
+    # 8. AÑADIR MEDICAMENTO A LA RECETA
+    # =========================================================
+
+    prescription_medication = PrescriptionMedication(
+        prescription=prescription,
+        medication=medication,
+        dosage=dosage,
+        frequency=frequency or None,
+        duration=duration or None,
+        instructions=instructions or None
+    )
+
+    db.session.add(prescription_medication)
+
+    # =========================================================
+    # 9. GUARDAR TODO
+    # =========================================================
+
+    try:
+
+        db.session.commit()
+
+    except Exception:
+
+        db.session.rollback()
+
+        return jsonify({
+            "error": "No se pudo guardar la receta"
+        }), 500
+
+    # =========================================================
+    # 10. RESPUESTA
+    # =========================================================
+
+    return jsonify({
+        "message": "Receta creada correctamente",
+        "prescription": {
+            "id": prescription.id,
+            "patient_id": prescription.patient_id,
+            "doctor_id": prescription.doctor_id,
+            "appointment_id": prescription.appointment_id,
+            "issued_at": (
+                prescription.issued_at.isoformat()
+                if prescription.issued_at
+                else None
+            ),
+            "status": prescription.status,
+            "medication": {
+                "id": medication.id,
+                "name": medication.name,
+                "external_id": medication.external_id,
+                "source": medication.source,
+                "dosage": prescription_medication.dosage,
+                "frequency": prescription_medication.frequency,
+                "duration": prescription_medication.duration,
+                "instructions": (
+                    prescription_medication.instructions
+                )
+            }
+        }
+    }), 201
+
+@api.route("/medico/recetas", methods=["GET"])
+@jwt_required()
+def obtener_recetas():
+
+    # =========================================================
+    # 1. USUARIO AUTENTICADO
+    # =========================================================
+
+    user_id = get_jwt_identity()
+
+    user = db.session.get(
+        User,
+        int(user_id)
+    )
+
+    if not user:
+        return jsonify({
+            "error": "Usuario no encontrado"
+        }), 404
+
+    # =========================================================
+    # 2. COMPROBAR MÉDICO
+    # =========================================================
+
+    if user.role != UserRole.DOCTOR:
+        return jsonify({
+            "error": "No tienes permisos para consultar recetas"
+        }), 403
+
+    doctor = user.doctor
+
+    if not doctor:
+        return jsonify({
+            "error": "Perfil médico no encontrado"
+        }), 404
+
+    # =========================================================
+    # 3. OBTENER RECETAS
+    # =========================================================
+
+    prescriptions = db.session.execute(
+        db.select(Prescription)
+        .where(
+            Prescription.doctor_id == doctor.id
+        )
+        .order_by(
+            Prescription.issued_at.desc()
+        )
+    ).scalars().all()
+
+    resultado = []
+
+    for prescription in prescriptions:
+
+        medicamentos = []
+
+        for item in prescription.medications:
+
+            medicamentos.append({
+                "id": item.medication.id,
+                "name": item.medication.name,
+                "external_id": (
+                    item.medication.external_id
+                ),
+                "source": item.medication.source,
+                "dosage": item.dosage,
+                "frequency": item.frequency,
+                "duration": item.duration,
+                "instructions": item.instructions
+            })
+
+        resultado.append({
+            "id": prescription.id,
+            "patient_id": prescription.patient_id,
+            "doctor_id": prescription.doctor_id,
+            "appointment_id": prescription.appointment_id,
+            "issued_at": (
+                prescription.issued_at.isoformat()
+                if prescription.issued_at
+                else None
+            ),
+            "status": prescription.status,
+            "notes": prescription.notes,
+            "medications": medicamentos
+        })
+
+    return jsonify({
+        "prescriptions": resultado
+    }), 200
+
+@api.route(
+    "/medico/recetas/<int:prescription_id>",
+    methods=["GET"]
+)
+@jwt_required()
+def obtener_receta(prescription_id):
+
+    user_id = get_jwt_identity()
+
+    user = db.session.get(
+        User,
+        int(user_id)
+    )
+
+    if not user:
+        return jsonify({
+            "error": "Usuario no encontrado"
+        }), 404
+
+    if user.role != UserRole.DOCTOR:
+        return jsonify({
+            "error": "No tienes permisos para consultar recetas"
+        }), 403
+
+    doctor = user.doctor
+
+    if not doctor:
+        return jsonify({
+            "error": "Perfil médico no encontrado"
+        }), 404
+
+    prescription = db.session.execute(
+        db.select(Prescription).where(
+            Prescription.id == prescription_id,
+            Prescription.doctor_id == doctor.id
+        )
+    ).scalar_one_or_none()
+
+    if not prescription:
+        return jsonify({
+            "error": "Receta no encontrada"
+        }), 404
+
+    medicamentos = []
+
+    for item in prescription.medications:
+
+        medicamentos.append({
+            "id": item.medication.id,
+            "name": item.medication.name,
+            "external_id": item.medication.external_id,
+            "source": item.medication.source,
+            "dosage": item.dosage,
+            "frequency": item.frequency,
+            "duration": item.duration,
+            "instructions": item.instructions
+        })
+
+    return jsonify({
+        "id": prescription.id,
+        "patient_id": prescription.patient_id,
+        "doctor_id": prescription.doctor_id,
+        "appointment_id": prescription.appointment_id,
+        "issued_at": (
+            prescription.issued_at.isoformat()
+            if prescription.issued_at
+            else None
+        ),
+        "status": prescription.status,
+        "notes": prescription.notes,
+        "medications": medicamentos
+    }), 200
+
+@api.route(
+    "/medico/recetas/<int:prescription_id>",
+    methods=["DELETE"]
+)
+@jwt_required()
+def cancelar_receta(prescription_id):
+
+    user_id = get_jwt_identity()
+
+    user = db.session.get(
+        User,
+        int(user_id)
+    )
+
+    if not user:
+        return jsonify({
+            "error": "Usuario no encontrado"
+        }), 404
+
+    if user.role != UserRole.DOCTOR:
+        return jsonify({
+            "error": "No tienes permisos para cancelar recetas"
+        }), 403
+
+    doctor = user.doctor
+
+    if not doctor:
+        return jsonify({
+            "error": "Perfil médico no encontrado"
+        }), 404
+
+    prescription = db.session.execute(
+        db.select(Prescription).where(
+            Prescription.id == prescription_id,
+            Prescription.doctor_id == doctor.id
+        )
+    ).scalar_one_or_none()
+
+    if not prescription:
+        return jsonify({
+            "error": "Receta no encontrada"
+        }), 404
+
+    if prescription.status == "cancelled":
+        return jsonify({
+            "error": "La receta ya está cancelada"
+        }), 409
+
+    prescription.status = "cancelled"
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Receta cancelada correctamente"
+    }), 200
+
+@api.route("/medicamentos", methods=["GET"])
+def buscar_medicamentos():
+
+    query = request.args.get("q", "").strip()
+
+    if not query:
+        return jsonify({
+            "error": "Debes introducir un término de búsqueda"
+        }), 400
+
+    url = "https://cima.aemps.es/cima/rest/medicamentos"
+
+    params = {
+        "nombre": query
+    }
+
+    try:
+        response = requests.get(
+            url,
+            params=params,
+            timeout=10
+        )
+
+        response.raise_for_status()
+
+    except requests.RequestException as e:
+        return jsonify({
+            "error": "No se pudo consultar CIMA",
+            "details": str(e)
+        }), 502
+
+    data = response.json()
+
+    resultados = []
+
+    for medicamento in data.get("resultados", []):
+        resultados.append({
+            "nombre": medicamento.get("nombre"),
+
+            "principio_activo": (
+                medicamento.get("vtm", {}).get("nombre")
+                if medicamento.get("vtm")
+                else None
+            ),
+
+            "dosis": medicamento.get("dosis"),
+
+            "forma_farmaceutica": (
+                medicamento.get("formaFarmaceutica", {}).get("nombre")
+                if medicamento.get("formaFarmaceutica")
+                else None
+            ),
+
+            "laboratorio": medicamento.get("labtitular"),
+
+            "registro": medicamento.get("nregistro"),
+
+            "requiere_receta": medicamento.get("receta"),
+
+            "generico": medicamento.get("generico"),
+
+            "vias_administracion": [
+                via.get("nombre")
+                for via in medicamento.get("viasAdministracion", [])
+            ]
+        })
+
+    return jsonify({
+        "pagina": data.get("pagina"),
+        "resultados": resultados
     }), 200

@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 
 export const Diagnostico = () => {
-
     useEffect(() => {
         const elements = document.querySelectorAll(".scroll-reveal");
 
@@ -28,102 +27,87 @@ export const Diagnostico = () => {
     }, []);
 
     return (
-        <div className="diagnostico-page">
-            <section className="diagnostico-hero">
-                <div className="container">
-                    <div className="row justify-content-center text-center">
-                        <div className="col-lg-9">
+        <div className=" text-white min-vh-100">
 
-                            <div className="diagnostico-hero-content scroll-reveal">
+            {/* HERO */}
+            <section className="container py-5">
+                <div className="row justify-content-center text-center">
+                    <div className="col-lg-9 py-lg-5 scroll-reveal">
 
-                                <span className="especialidades-badge">
-                                    Sistema nacional de salud LEXDIBRI
-                                </span>
+                        <span className="badge rounded-pill bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-3 py-2 mb-4">
+                            Sistema Nacional de Salud
+                        </span>
 
-                                <h1 className="display-3 fw-bold text-white mb-4">
-                                    La medicina del futuro
-                                    <br />
-                                    <span className="text-info">
-                                        ya está aquí.
-                                    </span>
-                                </h1>
+                        <h1 className="display-3 fw-bold mb-4">
+                            La medicina del futuro
+                            <br />
+                            <span className="text-info">
+                                ya está aquí.
+                            </span>
+                        </h1>
 
-                                <p className="lead text-white-50 mx-auto">
-                                    La innovación tecnológica está transformando
-                                    la forma en la que se diagnostican enfermedades,
-                                    se realizan tratamientos y se personaliza la
-                                    atención sanitaria.
-                                </p>
+                        <p className="lead text-white-50 mx-auto col-lg-10 mb-0">
+                            La innovación tecnológica está transformando
+                            la forma en la que se diagnostican enfermedades,
+                            se realizan tratamientos y se personaliza la
+                            atención sanitaria.
+                        </p>
 
-                            </div>
-
-                        </div>
                     </div>
                 </div>
-
-                <div className="diagnostico-hero-glow"></div>
             </section>
 
             {/* INTRO */}
             <section className="container py-5">
+                <div className="row justify-content-center">
+                    <div className="col-lg-9 scroll-reveal">
 
-                <div className="diagnostico-intro scroll-reveal">
+                        <span className="text-info small fw-semibold text-uppercase">
+                            Innovación sanitaria
+                        </span>
 
-                    <span className="text-info small fw-semibold text-uppercase">
-                        Innovación sanitaria
-                    </span>
+                        <h2 className="fw-bold mt-2 mb-3">
+                            Tecnología al servicio de la salud
+                        </h2>
 
-                    <h2 className="text-white fw-bold mt-2 mb-3">
-                        Tecnología al servicio de la salud
-                    </h2>
+                        <p className="text-white-50 mb-0">
+                            Desde sistemas capaces de analizar imágenes médicas
+                            mediante inteligencia artificial hasta robots quirúrgicos
+                            y tratamientos capaces de dirigir la radiación con una
+                            precisión extraordinaria, la tecnología está ampliando
+                            las posibilidades de la medicina moderna.
+                        </p>
 
-                    <p className="text-white-50 mb-0">
-                        Desde sistemas capaces de analizar imágenes médicas
-                        mediante inteligencia artificial hasta robots quirúrgicos
-                        y tratamientos capaces de dirigir la radiación con una
-                        precisión extraordinaria, la tecnología está ampliando
-                        las posibilidades de la medicina moderna.
-                    </p>
-
+                    </div>
                 </div>
-
             </section>
 
-
-            {/* 01 */}
+            {/* 01 - INTELIGENCIA ARTIFICIAL */}
             <section className="container py-5">
-
-                <div className="row align-items-center g-5 diagnostico-feature">
+                <div className="row align-items-center g-5">
 
                     <div className="col-lg-6">
+                        <div className="scroll-reveal">
 
-                        <div className="diagnostico-image scroll-reveal">
-
-                            <img
-                                src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=80"
-                                alt="Inteligencia artificial aplicada a la medicina"
-                            />
-
-                            <div className="diagnostico-image-overlay"></div>
-
-                            <div className="diagnostico-image-label">
-                                <span>01</span>
-                                Inteligencia artificial
+                            <div className="ratio ratio-4x3 rounded-4 overflow-hidden border border-secondary border-opacity-50">
+                                <img
+                                    src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=80"
+                                    alt="Inteligencia artificial aplicada a la medicina"
+                                    className="w-100 h-100 object-fit-cover"
+                                />
                             </div>
 
                         </div>
-
                     </div>
 
                     <div className="col-lg-6">
-
-                        <div className="diagnostico-content scroll-reveal">
+                        <div className="scroll-reveal">
 
                             <span className="text-info small fw-semibold">
                                 01 / INTELIGENCIA ARTIFICIAL
                             </span>
 
-                            <h2 className="text-white fw-bold mt-3 mb-4">
+                            <h2 className="fw-bold mt-3 mb-4">
                                 Inteligencia artificial aplicada al diagnóstico
                             </h2>
 
@@ -140,8 +124,7 @@ export const Diagnostico = () => {
                                 determinados hallazgos médicos.
                             </p>
 
-                            <div className="diagnostico-highlight">
-
+                            <div className="bg-info bg-opacity-10 border border-info border-opacity-25 rounded-4 p-4 mt-4">
                                 <span className="text-info fw-bold">
                                     IA + Diagnóstico
                                 </span>
@@ -151,32 +134,26 @@ export const Diagnostico = () => {
                                     profesional a tomar decisiones con mayor
                                     información.
                                 </p>
-
                             </div>
 
                         </div>
-
                     </div>
 
                 </div>
-
             </section>
 
-
-            {/* 02 */}
+            {/* 02 - CIRUGÍA ROBÓTICA */}
             <section className="container py-5">
-
-                <div className="row align-items-center g-5 diagnostico-feature">
+                <div className="row align-items-center g-5">
 
                     <div className="col-lg-6 order-2 order-lg-1">
-
-                        <div className="diagnostico-content scroll-reveal">
+                        <div className="scroll-reveal">
 
                             <span className="text-info small fw-semibold">
                                 02 / CIRUGÍA ROBÓTICA
                             </span>
 
-                            <h2 className="text-white fw-bold mt-3 mb-4">
+                            <h2 className="fw-bold mt-3 mb-4">
                                 Cirugía robótica de alta precisión
                             </h2>
 
@@ -192,75 +169,66 @@ export const Diagnostico = () => {
                                 asistencia durante la intervención.
                             </p>
 
-                            <div className="diagnostico-tags">
-                                <span>Precisión</span>
-                                <span>Visión 3D</span>
-                                <span>Asistencia IA</span>
+                            <div className="d-flex flex-wrap gap-2 mt-4">
+                                <span className="badge rounded-pill bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-3 py-2">
+                                    Precisión
+                                </span>
+
+                                <span className="badge rounded-pill bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-3 py-2">
+                                    Visión 3D
+                                </span>
+
+                                <span className="badge rounded-pill bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-3 py-2">
+                                    Asistencia IA
+                                </span>
                             </div>
 
                         </div>
-
                     </div>
 
                     <div className="col-lg-6 order-1 order-lg-2">
+                        <div className="scroll-reveal">
 
-                        <div className="diagnostico-image scroll-reveal">
-
-                            <img
-                                src="https://images.unsplash.com/photo-1559757175-0eb30cd8c063?auto=format&fit=crop&w=1200&q=80"
-                                alt="Tecnología robótica aplicada a la cirugía"
-                            />
-
-                            <div className="diagnostico-image-overlay"></div>
-
-                            <div className="diagnostico-image-label">
-                                <span>02</span>
-                                Cirugía robótica
+                            <div className="ratio ratio-4x3 rounded-4 overflow-hidden border border-secondary border-opacity-50">
+                                <img
+                                    src="https://images.unsplash.com/photo-1559757175-0eb30cd8c063?auto=format&fit=crop&w=1200&q=80"
+                                    alt="Tecnología robótica aplicada a la cirugía"
+                                    className="w-100 h-100 object-fit-cover"
+                                />
                             </div>
 
                         </div>
-
                     </div>
 
                 </div>
-
             </section>
 
-
-            {/* 03 */}
+            {/* 03 - ONCOLOGÍA DE PRECISIÓN */}
             <section className="container py-5">
-
-                <div className="row align-items-center g-5 diagnostico-feature">
+                <div className="row align-items-center g-5">
 
                     <div className="col-lg-6">
+                        <div className="scroll-reveal">
 
-                        <div className="diagnostico-image scroll-reveal">
-
-                            <img
-                                src="https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1200&q=80"
-                                alt="Tecnología avanzada para tratamientos médicos"
-                            />
-
-                            <div className="diagnostico-image-overlay"></div>
-
-                            <div className="diagnostico-image-label">
-                                <span>03</span>
-                                Protonterapia
+                            <div className="ratio ratio-4x3 rounded-4 overflow-hidden border border-secondary border-opacity-50">
+                                <img
+                                    src="https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1200&q=80"
+                                    alt="Tecnología avanzada para tratamientos médicos"
+                                    className="w-100 h-100 object-fit-cover"
+                                />
                             </div>
 
                         </div>
-
                     </div>
 
                     <div className="col-lg-6">
-
-                        <div className="diagnostico-content scroll-reveal">
+                        <div className="scroll-reveal">
 
                             <span className="text-info small fw-semibold">
                                 03 / ONCOLOGÍA DE PRECISIÓN
                             </span>
 
-                            <h2 className="text-white fw-bold mt-3 mb-4">
+                            <h2 className="fw-bold mt-3 mb-4">
                                 Protonterapia: radiación dirigida
                             </h2>
 
@@ -277,8 +245,7 @@ export const Diagnostico = () => {
                                 dentro de la radioterapia.
                             </p>
 
-                            <div className="diagnostico-highlight">
-
+                            <div className="bg-info bg-opacity-10 border border-info border-opacity-25 rounded-4 p-4 mt-4">
                                 <span className="text-info fw-bold">
                                     Precisión terapéutica
                                 </span>
@@ -288,32 +255,26 @@ export const Diagnostico = () => {
                                     cada vez más adaptados a la anatomía de cada
                                     paciente.
                                 </p>
-
                             </div>
 
                         </div>
-
                     </div>
 
                 </div>
-
             </section>
 
-
-            {/* 04 */}
+            {/* 04 - MEDICINA DE PRECISIÓN */}
             <section className="container py-5">
-
-                <div className="row align-items-center g-5 diagnostico-feature">
+                <div className="row align-items-center g-5">
 
                     <div className="col-lg-6 order-2 order-lg-1">
-
-                        <div className="diagnostico-content scroll-reveal">
+                        <div className="scroll-reveal">
 
                             <span className="text-info small fw-semibold">
                                 04 / MEDICINA DE PRECISIÓN
                             </span>
 
-                            <h2 className="text-white fw-bold mt-3 mb-4">
+                            <h2 className="fw-bold mt-3 mb-4">
                                 Genómica y medicina personalizada
                             </h2>
 
@@ -330,75 +291,66 @@ export const Diagnostico = () => {
                                 estrategias terapéuticas más personalizadas.
                             </p>
 
-                            <div className="diagnostico-tags">
-                                <span>Genómica</span>
-                                <span>Datos clínicos</span>
-                                <span>Personalización</span>
+                            <div className="d-flex flex-wrap gap-2 mt-4">
+                                <span className="badge rounded-pill bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-3 py-2">
+                                    Genómica
+                                </span>
+
+                                <span className="badge rounded-pill bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-3 py-2">
+                                    Datos clínicos
+                                </span>
+
+                                <span className="badge rounded-pill bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-3 py-2">
+                                    Personalización
+                                </span>
                             </div>
 
                         </div>
-
                     </div>
 
                     <div className="col-lg-6 order-1 order-lg-2">
+                        <div className="scroll-reveal">
 
-                        <div className="diagnostico-image scroll-reveal">
-
-                            <img
-                                src="https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=1200&q=80"
-                                alt="Investigación genética y medicina de precisión"
-                            />
-
-                            <div className="diagnostico-image-overlay"></div>
-
-                            <div className="diagnostico-image-label">
-                                <span>04</span>
-                                Medicina de precisión
+                            <div className="ratio ratio-4x3 rounded-4 overflow-hidden border border-secondary border-opacity-50">
+                                <img
+                                    src="https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=1200&q=80"
+                                    alt="Investigación genética y medicina de precisión"
+                                    className="w-100 h-100 object-fit-cover"
+                                />
                             </div>
 
                         </div>
-
                     </div>
 
                 </div>
-
             </section>
 
-
-            {/* 05 */}
+            {/* 05 - BIOINGENIERÍA */}
             <section className="container py-5">
-
-                <div className="row align-items-center g-5 diagnostico-feature">
+                <div className="row align-items-center g-5">
 
                     <div className="col-lg-6">
+                        <div className="scroll-reveal">
 
-                        <div className="diagnostico-image scroll-reveal">
-
-                            <img
-                                src="https://images.unsplash.com/photo-1581093458791-9d42e3c6d5f6?auto=format&fit=crop&w=1200&q=80"
-                                alt="Tecnología de impresión 3D aplicada a la medicina"
-                            />
-
-                            <div className="diagnostico-image-overlay"></div>
-
-                            <div className="diagnostico-image-label">
-                                <span>05</span>
-                                Bioimpresión 3D
+                            <div className="ratio ratio-4x3 rounded-4 overflow-hidden border border-secondary border-opacity-50">
+                                <img
+                                    src="https://casenrecordati.com/wp-content/uploads/shutterstock_313372355-624x416.jpg"
+                                    alt="Bioimpresión 3D de tejidos y órganos"
+                                    className="w-100 h-100 object-fit-cover"
+                                />
                             </div>
 
                         </div>
-
                     </div>
 
                     <div className="col-lg-6">
-
-                        <div className="diagnostico-content scroll-reveal">
+                        <div className="scroll-reveal">
 
                             <span className="text-info small fw-semibold">
                                 05 / BIOINGENIERÍA
                             </span>
 
-                            <h2 className="text-white fw-bold mt-3 mb-4">
+                            <h2 className="fw-bold mt-3 mb-4">
                                 Bioimpresión y fabricación 3D
                             </h2>
 
@@ -416,8 +368,7 @@ export const Diagnostico = () => {
                                 futuras aplicaciones regenerativas.
                             </p>
 
-                            <div className="diagnostico-highlight">
-
+                            <div className="bg-info bg-opacity-10 border border-info border-opacity-25 rounded-4 p-4 mt-4">
                                 <span className="text-info fw-bold">
                                     Fabricación personalizada
                                 </span>
@@ -427,34 +378,26 @@ export const Diagnostico = () => {
                                     determinados dispositivos a la anatomía
                                     específica de cada paciente.
                                 </p>
-
                             </div>
 
                         </div>
-
                     </div>
 
                 </div>
-
             </section>
 
-
             {/* FINAL */}
-            <section className="container py-5">
+            <section className="container py-5 pb-5">
+                <div className="row justify-content-center text-center">
+                    <div className="col-lg-9 scroll-reveal">
 
-                <div className="diagnostico-future scroll-reveal">
-
-                    <div className="diagnostico-future-line"></div>
-
-                    <div className="row justify-content-center text-center">
-
-                        <div className="col-lg-8">
+                        <div className="bg-info bg-opacity-10 border border-info border-opacity-25 rounded-4 p-4 p-md-5">
 
                             <span className="text-info small fw-semibold text-uppercase">
                                 El siguiente paso
                             </span>
 
-                            <h2 className="display-6 text-white fw-bold mt-3 mb-4">
+                            <h2 className="display-6 fw-bold mt-2 mb-4">
                                 Una medicina cada vez más
                                 <span className="text-info">
                                     {" "}precisa, conectada y personalizada.
@@ -465,16 +408,14 @@ export const Diagnostico = () => {
                                 La tecnología no sustituye al profesional
                                 sanitario. Lo dota de nuevas herramientas para
                                 comprender mejor las enfermedades, mejorar los
-                                tratamientos y ofrecer una atención cada vez más
-                                adaptada a cada paciente.
+                                tratamientos y ofrecer una atención más adaptada
+                                a cada paciente.
                             </p>
 
                         </div>
 
                     </div>
-
                 </div>
-
             </section>
 
         </div>

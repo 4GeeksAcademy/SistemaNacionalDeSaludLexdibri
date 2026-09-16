@@ -1,4 +1,8 @@
+
 export const initialStore = () => {
+  const accessToken = localStorage.getItem("access_token");
+  const savedUser = localStorage.getItem("user");
+
   return {
     message: null,
 
@@ -16,21 +20,21 @@ export const initialStore = () => {
     ],
 
     // AUTENTICACIÓN
-    user: null,
-    access_token: localStorage.getItem("access_token"),
-    isAuthenticated: !!localStorage.getItem("access_token"),
+    user: savedUser ? JSON.parse(savedUser) : null,
+    access_token: accessToken,
+    isAuthenticated: !!accessToken,
   };
 };
 
+
+
 export default function storeReducer(store, action = {}) {
   switch (action.type) {
-
     case "set_hello":
       return {
         ...store,
         message: action.payload,
       };
-
 
     case "add_task":
       const { id, color } = action.payload;
@@ -38,12 +42,9 @@ export default function storeReducer(store, action = {}) {
       return {
         ...store,
         todos: store.todos.map((todo) =>
-          todo.id === id
-            ? { ...todo, background: color }
-            : todo
+          todo.id === id ? { ...todo, background: color } : todo,
         ),
       };
-
 
     // LOGIN
     case "login":
@@ -54,10 +55,11 @@ export default function storeReducer(store, action = {}) {
         isAuthenticated: true,
       };
 
-
     // LOGOUT
+
     case "logout":
       localStorage.removeItem("access_token");
+      localStorage.removeItem("user");
 
       return {
         ...store,
@@ -65,7 +67,6 @@ export default function storeReducer(store, action = {}) {
         access_token: null,
         isAuthenticated: false,
       };
-
 
     default:
       throw Error("Unknown action.");
