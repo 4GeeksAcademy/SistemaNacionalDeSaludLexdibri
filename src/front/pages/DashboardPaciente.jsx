@@ -1,139 +1,49 @@
 import React from "react";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
-import rigoImageUrl from "../assets/img/rigo-baby.jpg";
 
 export const DashboardPaciente = () => {
   const { store } = useGlobalReducer();
   const user = store.user;
-  const profileImage = user?.profile_image || rigoImageUrl;
+  
+  // OPCIÓN 1: Icono neutro vectorial en SVG con temática médica/paciente
+  const defaultProfileImage = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230dcaf0'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-3.8-.85-5.05-2.2.03-1.68 3.37-2.6 5.05-2.6s5.02.92 5.05 2.6C15.8 19.15 14.03 20 12 20z'/></svg>";
+
+  // OPCIÓN 2 (Alternativa dinámica): Iniciales del paciente sobre fondo cyan sanitario
+  // const userInitial = user?.first_name ? user.first_name.charAt(0).toUpperCase() : "P";
+  // const defaultProfileImage = `https://ui-avatars.com/api/?name=${userInitial}&background=0dcaf0&color=000&size=128&bold=true`;
+
+  const profileImage = user?.profile_image || defaultProfileImage;
 
   return (
-    <div className="dashboard-paciente-page py-4">
-
-      {/* ESTILOS DE ESPACIADO Y ESTRUCTURA */}
-      <style>{`
-        .dashboard-paciente-profile-image {
-          width: 64px;
-          height: 64px;
-          min-width: 64px;
-          min-height: 64px;
-          object-fit: cover;
-          object-position: center;
-          border-radius: 50%;
-          display: block;
-        }
-
-        /* RELLENO INTERNO Y ESPACIADO EN TARJETAS */
-        .glass-card {
-          padding: 1.5rem !important;
-          border-radius: 12px;
-        }
-
-        .dashboard-paciente-card {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-        }
-
-        .dashboard-paciente-card-header {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          margin-bottom: 0.75rem;
-        }
-
-        .dashboard-paciente-card h3 {
-          margin-bottom: 0.5rem;
-          font-weight: 600;
-        }
-
-        .dashboard-paciente-card p {
-          flex-grow: 1;
-          margin-bottom: 1.25rem;
-          opacity: 0.85;
-        }
-
-        /* BOTONES DE LAS TARJETAS */
-        .dashboard-paciente-button {
-          margin-top: auto;
-          width: 100%;
-          padding: 0.5rem 1rem;
-          border: none;
-          border-radius: 6px;
-          background-color: #ffffff;
-          color: #0d6efd;
-          font-weight: 600;
-          cursor: pointer;
-          transition: background-color 0.2s ease;
-        }
-
-        .dashboard-paciente-button:hover {
-          background-color: #f8f9fa;
-        }
-
-        /* FILAS Y SIDEBAR */
-        .dashboard-paciente-sidebar {
-          display: flex;
-          flex-direction: column;
-          gap: 1.5rem;
-        }
-
-        .dashboard-paciente-widget-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 1rem;
-          padding-bottom: 0.5rem;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .dashboard-paciente-health-list > div {
-          display: flex;
-          justify-content: space-between;
-          padding: 0.5rem 0;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .dashboard-paciente-notifications > div {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          padding: 0.5rem 0;
-        }
-
-        .dashboard-paciente-message {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          margin-bottom: 1rem;
-        }
-      `}</style>
-
+    <div className="dashboard-paciente-page py-4 bg-dark text-white min-vh-100">
       <section className="dashboard-paciente-section">
         <div className="container">
 
           {/* BIENVENIDA */}
-          <div className="dashboard-paciente-welcome glass-card mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
-            <div className="dashboard-paciente-user d-flex align-items-center gap-3">
-              <img
-                src={profileImage}
-                alt="Foto de perfil"
-                className="dashboard-paciente-profile-image"
-              />
+          <div className="p-4 rounded-3 bg-dark bg-opacity-75 border border-secondary border-opacity-25 mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3 shadow-sm">
+            <div className="d-flex align-items-center gap-3">
+              <div className="position-relative">
+                <img
+                  src={profileImage}
+                  alt="Foto de perfil"
+                  className="rounded-circle object-fit-cover flex-shrink-0 bg-dark p-1 border border-info border-opacity-50"
+                  style={{ width: "64px", height: "64px" }}
+                />
+              </div>
               <div>
-                <span className="dashboard-paciente-eyebrow text-muted small d-block mb-1">
-                  Área personal
+                <span className="text-info small d-block mb-1 fw-semibold">
+                  Área personal sanitaria
                 </span>
-                <h2 className="m-0 fw-bold">
-                  Hola, {user?.first_name || "Miguel"} 👋
+                <h2 className="m-0 fw-bold fs-3 text-white">
+                  Hola, {user?.first_name || "Paciente"} 👋
                 </h2>
-                <p className="m-0 text-muted small">
-                  Aquí tienes un resumen de tu información sanitaria.
+                <p className="m-0 text-white-50 small">
+                  Aquí tienes un resumen de tu información clínica y citas.
                 </p>
               </div>
             </div>
 
-            <div className="dashboard-paciente-status bg-success bg-opacity-25 text-success border border-success px-3 py-1 rounded-pill small">
+            <div className="bg-success bg-opacity-25 text-success border border-success px-3 py-1 rounded-pill small">
               Cuenta activa
             </div>
           </div>
@@ -146,16 +56,14 @@ export const DashboardPaciente = () => {
 
                 {/* CITAS */}
                 <div className="col-12 col-md-6">
-                  <div className="dashboard-paciente-card glass-card">
-                    <div className="dashboard-paciente-card-header">
-                      <div className="dashboard-paciente-card-icon">📅</div>
-                      <span className="dashboard-paciente-card-label text-muted small">
-                        Próxima cita
-                      </span>
+                  <div className="p-4 rounded-3 bg-dark bg-opacity-75 border border-secondary border-opacity-25 h-100 d-flex flex-column shadow-sm">
+                    <div className="d-flex align-items-center gap-2 mb-3">
+                      <span className="fs-5">📅</span>
+                      <span className="text-white-50 small">Próxima cita</span>
                     </div>
-                    <h3>Citas médicas</h3>
-                    <p>15 de Mayo · 10:00 AM</p>
-                    <button className="dashboard-paciente-button">
+                    <h3 className="h5 fw-bold text-white mb-2">Citas médicas</h3>
+                    <p className="text-white-50 mb-4 flex-grow-1">15 de Mayo · 10:00 AM</p>
+                    <button className="btn btn-info text-dark fw-semibold w-100 mt-auto shadow-none">
                       Ver citas
                     </button>
                   </div>
@@ -163,16 +71,14 @@ export const DashboardPaciente = () => {
 
                 {/* RECETAS */}
                 <div className="col-12 col-md-6">
-                  <div className="dashboard-paciente-card glass-card">
-                    <div className="dashboard-paciente-card-header">
-                      <div className="dashboard-paciente-card-icon">💊</div>
-                      <span className="dashboard-paciente-card-label text-muted small">
-                        Tratamiento
-                      </span>
+                  <div className="p-4 rounded-3 bg-dark bg-opacity-75 border border-secondary border-opacity-25 h-100 d-flex flex-column shadow-sm">
+                    <div className="d-flex align-items-center gap-2 mb-3">
+                      <span className="fs-5">💊</span>
+                      <span className="text-white-50 small">Tratamiento</span>
                     </div>
-                    <h3>Recetas electrónicas</h3>
-                    <p>2 recetas activas</p>
-                    <button className="dashboard-paciente-button">
+                    <h3 className="h5 fw-bold text-white mb-2">Recetas electrónicas</h3>
+                    <p className="text-white-50 mb-4 flex-grow-1">2 recetas activas</p>
+                    <button className="btn btn-info text-dark fw-semibold w-100 mt-auto shadow-none">
                       Ver recetas
                     </button>
                   </div>
@@ -180,16 +86,14 @@ export const DashboardPaciente = () => {
 
                 {/* DIAGNÓSTICOS */}
                 <div className="col-12 col-md-6">
-                  <div className="dashboard-paciente-card glass-card">
-                    <div className="dashboard-paciente-card-header">
-                      <div className="dashboard-paciente-card-icon">🔬</div>
-                      <span className="dashboard-paciente-card-label text-muted small">
-                        Información clínica
-                      </span>
+                  <div className="p-4 rounded-3 bg-dark bg-opacity-75 border border-secondary border-opacity-25 h-100 d-flex flex-column shadow-sm">
+                    <div className="d-flex align-items-center gap-2 mb-3">
+                      <span className="fs-5">🔬</span>
+                      <span className="text-white-50 small">Información clínica</span>
                     </div>
-                    <h3>Diagnósticos</h3>
-                    <p>Hipertensión · Diabetes Tipo 2</p>
-                    <button className="dashboard-paciente-button">
+                    <h3 className="h5 fw-bold text-white mb-2">Diagnósticos</h3>
+                    <p className="text-white-50 mb-4 flex-grow-1">Hipertensión · Diabetes Tipo 2</p>
+                    <button className="btn btn-info text-dark fw-semibold w-100 mt-auto shadow-none">
                       Ver diagnósticos
                     </button>
                   </div>
@@ -197,16 +101,14 @@ export const DashboardPaciente = () => {
 
                 {/* HISTORIAL */}
                 <div className="col-12 col-md-6">
-                  <div className="dashboard-paciente-card glass-card">
-                    <div className="dashboard-paciente-card-header">
-                      <div className="dashboard-paciente-card-icon">📁</div>
-                      <span className="dashboard-paciente-card-label text-muted small">
-                        Historial
-                      </span>
+                  <div className="p-4 rounded-3 bg-dark bg-opacity-75 border border-secondary border-opacity-25 h-100 d-flex flex-column shadow-sm">
+                    <div className="d-flex align-items-center gap-2 mb-3">
+                      <span className="fs-5">📁</span>
+                      <span className="text-white-50 small">Historial</span>
                     </div>
-                    <h3>Historial médico</h3>
-                    <p>Consulta toda tu información clínica.</p>
-                    <button className="dashboard-paciente-button">
+                    <h3 className="h5 fw-bold text-white mb-2">Historial médico</h3>
+                    <p className="text-white-50 mb-4 flex-grow-1">Consulta toda tu información clínica.</p>
+                    <button className="btn btn-info text-dark fw-semibold w-100 mt-auto shadow-none">
                       Ver historial
                     </button>
                   </div>
@@ -217,62 +119,62 @@ export const DashboardPaciente = () => {
 
             {/* COLUMNA LATERAL */}
             <div className="col-12 col-lg-4">
-              <div className="dashboard-paciente-sidebar">
+              <div className="d-flex flex-column gap-4">
 
                 {/* MI SALUD */}
-                <div className="dashboard-paciente-widget glass-card">
-                  <div className="dashboard-paciente-widget-header">
-                    <h3 className="h5 m-0">Mi salud</h3>
+                <div className="p-4 rounded-3 bg-dark bg-opacity-75 border border-secondary border-opacity-25 shadow-sm">
+                  <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+                    <h3 className="h5 m-0 text-white fw-bold">Mi salud</h3>
                     <span>📡</span>
                   </div>
-                  <div className="dashboard-paciente-health-list">
-                    <div>
-                      <span className="text-muted small">Última revisión</span>
-                      <strong>05/04/2024</strong>
+                  <div className="d-flex flex-column">
+                    <div className="d-flex justify-content-between py-2 border-bottom border-secondary border-opacity-10">
+                      <span className="text-white-50 small">Última revisión</span>
+                      <strong className="text-white">05/04/2024</strong>
                     </div>
-                    <div>
-                      <span className="text-muted small">Presión arterial</span>
-                      <strong>125/80 mmHg</strong>
+                    <div className="d-flex justify-content-between py-2 border-bottom border-secondary border-opacity-10">
+                      <span className="text-white-50 small">Presión arterial</span>
+                      <strong className="text-white">125/80 mmHg</strong>
                     </div>
-                    <div>
-                      <span className="text-muted small">Peso</span>
-                      <strong>78 kg</strong>
+                    <div className="d-flex justify-content-between py-2 border-bottom border-secondary border-opacity-10">
+                      <span className="text-white-50 small">Peso</span>
+                      <strong className="text-white">78 kg</strong>
                     </div>
                   </div>
                 </div>
 
                 {/* NOTIFICACIONES */}
-                <div className="dashboard-paciente-widget glass-card">
-                  <div className="dashboard-paciente-widget-header">
-                    <h3 className="h5 m-0">Notificaciones</h3>
+                <div className="p-4 rounded-3 bg-dark bg-opacity-75 border border-secondary border-opacity-25 shadow-sm">
+                  <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+                    <h3 className="h5 m-0 text-white fw-bold">Notificaciones</h3>
                     <span>🔔</span>
                   </div>
-                  <div className="dashboard-paciente-notifications">
-                    <div>
+                  <div className="d-flex flex-column gap-2">
+                    <div className="d-flex align-items-center gap-2 py-1">
                       <span>💊</span>
-                      <p className="m-0 small">Receta próxima a vencer</p>
+                      <p className="m-0 small text-white-50">Receta próxima a vencer</p>
                     </div>
-                    <div>
+                    <div className="d-flex align-items-center gap-2 py-1">
                       <span>📅</span>
-                      <p className="m-0 small">Cita confirmada para el 15 de Mayo</p>
+                      <p className="m-0 small text-white-50">Cita confirmada para el 15 de Mayo</p>
                     </div>
                   </div>
                 </div>
 
                 {/* MENSAJES */}
-                <div className="dashboard-paciente-widget glass-card">
-                  <div className="dashboard-paciente-widget-header">
-                    <h3 className="h5 m-0">Mensajes</h3>
+                <div className="p-4 rounded-3 bg-dark bg-opacity-75 border border-secondary border-opacity-25 shadow-sm">
+                  <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+                    <h3 className="h5 m-0 text-white fw-bold">Mensajes</h3>
                     <span>💬</span>
                   </div>
-                  <div className="dashboard-paciente-message">
-                    <div className="dashboard-paciente-message-icon fs-4">👨‍⚕️</div>
+                  <div className="d-flex align-items-center gap-3 mb-3">
+                    <div className="fs-4">👨‍⚕️</div>
                     <div>
-                      <strong className="d-block small">Dr. Pérez</strong>
-                      <p className="m-0 small text-muted">"Hola, ¿cómo se encuentra?"</p>
+                      <strong className="d-block small text-white">Dr. Pérez</strong>
+                      <p className="m-0 small text-white-50">"Hola, ¿cómo se encuentra?"</p>
                     </div>
                   </div>
-                  <button className="dashboard-paciente-button">
+                  <button className="btn btn-info text-dark fw-semibold w-100 shadow-none">
                     Ver mensajes
                   </button>
                 </div>
@@ -283,8 +185,8 @@ export const DashboardPaciente = () => {
           </div>
 
           {/* SEGURIDAD */}
-          <div className="dashboard-paciente-security text-center mt-4 pt-3 border-top border-secondary text-muted small">
-            🔒 Conexión cifrada SSL · Información sanitaria protegida
+          <div className="text-center mt-4 pt-3 border-top border-secondary border-opacity-25 text-white-50 small">
+            🔒 Conexión cifrada SSL · Sistema Nacional de Salud LEXDIBRI
           </div>
 
         </div>
