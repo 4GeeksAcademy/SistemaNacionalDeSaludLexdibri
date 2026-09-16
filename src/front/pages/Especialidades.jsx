@@ -246,27 +246,24 @@ export const Especialidades = () => {
     ];
 
     return (
-        <div className="especialidades-page">
+        <div className=" text-white min-vh-100">
 
             {/* HERO */}
-            <section className="especialidades-hero">
-                <div className="especialidades-hero-glow"></div>
+            <section className="container py-5">
+                <div className="row justify-content-center">
+                    <div className="col-lg-9 text-center py-lg-5 scroll-reveal">
 
-                <div className="container">
-                    <div className="especialidades-hero-content scroll-reveal">
-
-                        <span className="especialidades-badge">
-                            Sistema nacional de salud LEXDIBRI
+                        <span className="badge rounded-pill bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-3 py-2 mb-3">
+                            Sistema Nacional de Salud
                         </span>
 
                         <h1 className="display-4 fw-bold mt-3 mb-3">
-                            Especialidades <span>Médicas</span>
+                            Especialidades <span className="text-info">Médicas</span>
                         </h1>
 
-                        <p className="lead text-muted-light mb-0">
-                            Absolutamente todas las especialidades que necesitas,
-                            gestionadas  en nuestro
-                            sistema nacional de salud.
+                        <p className="lead text-white-50 mb-0">
+                            Todas las especialidades que necesitas, gestionadas
+                            desde nuestro Sistema Nacional de Salud.
                         </p>
 
                     </div>
@@ -274,87 +271,113 @@ export const Especialidades = () => {
             </section>
 
             {/* CATÁLOGO */}
-            <section className="especialidades-content">
-                <div className="container">
+            <section className="container py-5">
 
-                    <div className="especialidades-heading scroll-reveal">
-                        <div>
-                            <h2 className="fw-bold mb-2">
-                                Áreas de atención sanitaria
-                            </h2>
+                <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-4 mb-5 scroll-reveal">
 
-                            <p className="text-muted-light mb-0">
-                                Información sobre las diferentes áreas médicas,
-                                sus funciones y los servicios que pueden ofrecer.
-                            </p>
-                        </div>
+                    <div>
+                        <span className="text-info small fw-semibold text-uppercase">
+                            Catálogo sanitario
+                        </span>
 
-                        <div className="especialidades-counter">
-                            <strong>{especialidades.length}</strong>
-                            <span>especialidades</span>
-                        </div>
+                        <h2 className="fw-bold mt-2 mb-2">
+                            Áreas de atención sanitaria
+                        </h2>
+
+                        <p className="text-white-50 mb-0">
+                            Información sobre las diferentes áreas médicas,
+                            sus funciones y los servicios que pueden ofrecer.
+                        </p>
                     </div>
 
-                    <div className="row g-4">
-                        {especialidades.map((esp, i) => (
-                            <div
-                                key={i}
-                                className="col-12 col-md-6 col-xl-4 scroll-reveal"
-                            >
-                                <article className="especialidad-card h-100">
-
-                                    <div className="especialidad-card-top">
-                                        <div className="especialidad-icon">
-                                            {esp.icono}
-                                        </div>
-
-                                        <span className="especialidad-number">
-                                            {(i + 1)
-                                                .toString()
-                                                .padStart(2, "0")}
-                                        </span>
-                                    </div>
-
-                                    <h3>{esp.titulo}</h3>
-
-                                    <p className="especialidad-description">
-                                        {esp.desc}
-                                    </p>
-
-                                    <div className="especialidad-services">
-                                        <span>Información</span>
-                                        <p>{esp.servicios}</p>
-                                    </div>
-
-                                </article>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* INFORMACIÓN FINAL */}
-                    <div className="especialidades-info scroll-reveal">
-
-                        <div className="especialidades-info-icon">
-                            ℹ
-                        </div>
-
-                        <div>
-                            <h3>
-                                Una vez iniciada la sesión tendrás acceso a más servicios
-                            </h3>
-
-                            <p>
-                                El acceso identificado permite consultar y gestionar
-                                información relacionada con tu asistencia sanitaria,
-                                como citas, documentación clínica, tratamientos,
-                                pruebas y otros servicios disponibles según tu
-                                informe médico.
-                            </p>
-                        </div>
-
+                    <div className="text-lg-end flex-shrink-0">
+                        <span className="d-block text-info display-6 fw-bold lh-1">
+                            {especialidades.length}
+                        </span>
+                        <span className="text-white-50 small">
+                            especialidades
+                        </span>
                     </div>
 
                 </div>
+
+                <div className="row g-4">
+                    {especialidades.map((esp, i) => (
+                        <div
+                            key={i}
+                            className="col-12 col-md-6 col-xl-4 scroll-reveal"
+                        >
+                            <article className="card h-100 bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4">
+
+                                <div className="d-flex justify-content-between align-items-start mb-4">
+
+                                    <div
+                                        className="d-flex align-items-center justify-content-center bg-info bg-opacity-10 border border-info border-opacity-25 rounded-4 fs-3"
+                                        style={{ width: "56px", height: "56px" }}
+                                    >
+                                        {esp.icono}
+                                    </div>
+
+                                    <span className="text-white-50 small fw-semibold">
+                                        {(i + 1).toString().padStart(2, "0")}
+                                    </span>
+
+                                </div>
+
+                                <h3 className="h4 text-white fw-bold mb-3">
+                                    {esp.titulo}
+                                </h3>
+
+                                <p className="text-white-50 mb-4">
+                                    {esp.desc}
+                                </p>
+
+                                <div className="border-top border-secondary border-opacity-50 pt-3 mt-auto">
+                                    <span className="text-info small fw-semibold text-uppercase">
+                                        Información
+                                    </span>
+
+                                    <p className="text-white-50 small mb-0 mt-2">
+                                        {esp.servicios}
+                                    </p>
+                                </div>
+
+                            </article>
+                        </div>
+                    ))}
+                </div>
+
+                {/* INFORMACIÓN FINAL */}
+                <div className="row justify-content-center mt-5 scroll-reveal">
+                    <div className="col-lg-10">
+                        <div className="alert bg-info bg-opacity-10 border border-info border-opacity-25 text-white rounded-4 p-4 mb-0">
+
+                            <div className="d-flex gap-3 align-items-start">
+
+                                <div className="text-info fs-4 flex-shrink-0">
+                                    ℹ
+                                </div>
+
+                                <div>
+                                    <h3 className="h5 fw-bold mb-2">
+                                        Una vez iniciada la sesión tendrás acceso a más servicios
+                                    </h3>
+
+                                    <p className="text-white-50 mb-0">
+                                        El acceso identificado permite consultar y gestionar
+                                        información relacionada con tu asistencia sanitaria,
+                                        como citas, documentación clínica, tratamientos,
+                                        pruebas y otros servicios disponibles según tu
+                                        informe médico.
+                                    </p>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
             </section>
         </div>
     );

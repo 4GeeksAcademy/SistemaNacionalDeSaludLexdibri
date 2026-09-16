@@ -57,7 +57,7 @@ export const router = createBrowserRouter(
             />
             
 
-            <Route path="registro" element={<Register />} />
+            <Route path="register" element={<Register />} />
             <Route path="demo" element={<Demo />} />
             <Route path="single/:theId" element={<Single />} />
 

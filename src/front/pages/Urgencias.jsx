@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 
 export const Urgencias = () => {
-
   useEffect(() => {
     const elements = document.querySelectorAll(".scroll-reveal");
 
@@ -28,19 +27,18 @@ export const Urgencias = () => {
   }, []);
 
   return (
-    <div className="urgencias-page">
+    <div className=" text-white min-vh-100">
 
       {/* HERO */}
-      <section className="urgencias-hero">
-        <div className="container">
+      <section className="container py-5">
+        <div className="row justify-content-center text-center">
+          <div className="col-lg-9 py-lg-5 scroll-reveal">
 
-          <div className="urgencias-hero-content scroll-reveal">
-
-            <span className="especialidades-badge">
-              Sistema nacional de salud LEXDIBRI
+            <span className="badge rounded-pill bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-3 py-2 mb-4">
+              Sistema Nacional de Salud
             </span>
 
-            <h1 className="display-3 fw-bold text-white mt-4 mb-4">
+            <h1 className="display-3 fw-bold mb-4">
               Urgencias sanitarias
               <br />
               <span className="text-danger">
@@ -48,71 +46,85 @@ export const Urgencias = () => {
               </span>
             </h1>
 
-            <p className="lead text-white-50 mx-auto">
-              Atención sanitaria urgente y acceso rápido a los servicios
-              de emergencia cuando más lo necesitas.
+            <p className="lead text-white-50 mx-auto col-lg-9 mb-0">
+              Acceso rápido a los servicios de emergencia cuando más
+              lo necesitas.
             </p>
 
           </div>
-
         </div>
-
-        <div className="urgencias-hero-glow"></div>
       </section>
 
       {/* EMERGENCIA */}
       <section className="container py-5">
 
-        <div className="urgencias-emergency scroll-reveal">
+        <div className="row justify-content-center">
+          <div className="col-12 scroll-reveal">
 
-          <div className="urgencias-emergency-content">
+            <div className="bg-danger bg-opacity-10 border border-danger border-opacity-25 rounded-4 p-4 p-md-5">
 
-            <span className="urgencias-emergency-label">
-              🚨 EMERGENCIA
-            </span>
+              <div className="row align-items-center g-4">
 
-            <h2 className="text-white fw-bold mt-3 mb-3">
-              ¿Necesitas asistencia médica inmediata?
-            </h2>
+                <div className="col-lg-8">
 
-            <p className="text-white-50 mb-4">
-              Ante una emergencia de riesgo vital, actúa rápidamente y
-              contacta con los servicios de emergencia.
-            </p>
+                  <span className="badge rounded-pill bg-danger text-white px-3 py-2">
+                    🚨 EMERGENCIA
+                  </span>
 
-            <div className="d-flex gap-3 flex-wrap">
+                  <h2 className="fw-bold mt-3 mb-3">
+                    ¿Necesitas asistencia médica inmediata?
+                  </h2>
 
-              <a
-                href="tel:112"
-                className="btn btn-danger btn-lg fw-bold px-4 urgencias-main-button"
-              >
-                📞 Llamar al 112
-              </a>
+                  <p className="text-white-50 mb-4">
+                    Ante una emergencia de riesgo vital, contacta con
+                    los servicios de emergencia.
+                  </p>
 
-              <a
-                href="tel:061"
-                className="btn btn-outline-danger btn-lg fw-bold px-4 urgencias-secondary-button"
-              >
-                🚑 Llamar al 061
-              </a>
+                  <div className="d-flex gap-3 flex-wrap">
+
+                    <a
+                      href="tel:112"
+                      className="btn btn-danger btn-lg rounded-pill fw-bold px-4"
+                    >
+                      📞 Llamar al 112
+                    </a>
+
+                    <a
+                      href="tel:061"
+                      className="btn btn-outline-danger btn-lg rounded-pill fw-bold px-4"
+                    >
+                      🚑 Llamar al 061
+                    </a>
+
+                  </div>
+
+                </div>
+
+                <div className="col-lg-4 text-center">
+
+                  <span className="display-1 fw-bold text-danger">
+                    112
+                  </span>
+
+                  <span className="d-block text-white-50 fw-semibold">
+                    EMERGENCIAS
+                  </span>
+
+                </div>
+
+              </div>
 
             </div>
 
           </div>
-
-          <div className="urgencias-emergency-number">
-            <span>112</span>
-            <small>EMERGENCIAS</small>
-          </div>
-
         </div>
 
       </section>
 
-      {/* MAPA */}
+      {/* LOCALIZACIÓN */}
       <section className="container py-5">
 
-        <div className="urgencias-map-section scroll-reveal">
+        <div className="card bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 p-md-5 scroll-reveal">
 
           <div className="row align-items-center g-5">
 
@@ -122,7 +134,7 @@ export const Urgencias = () => {
                 Localización
               </span>
 
-              <h2 className="text-white fw-bold mt-2 mb-3">
+              <h2 className="fw-bold mt-2 mb-3">
                 Encuentra el centro de urgencias
                 <span className="text-info">
                   {" "}más cercano.
@@ -130,25 +142,27 @@ export const Urgencias = () => {
               </h2>
 
               <p className="text-white-50">
-                Utiliza el mapa para localizar hospitales y centros con
-                servicio de urgencias próximos a tu ubicación.
+                Localiza hospitales y centros con servicio de urgencias
+                próximos a tu ubicación.
               </p>
 
               <button
                 type="button"
-                className="btn btn-info fw-bold mt-3 urgencias-location-button"
+                className="btn btn-info rounded-pill fw-bold mt-3"
               >
                 📍 Buscar centros cercanos
               </button>
 
-              <div className="urgencias-map-info mt-4">
+              <div className="d-flex align-items-start gap-3 mt-4">
 
-                <div className="urgencias-map-info-icon">
+                <div className="d-flex align-items-center justify-content-center bg-info bg-opacity-10 border border-info border-opacity-25 rounded-4 text-info fw-bold flex-shrink-0"
+                  style={{ width: "48px", height: "48px" }}
+                >
                   ✓
                 </div>
 
                 <div>
-                  <strong className="text-white">
+                  <strong className="d-block">
                     Servicios de urgencias
                   </strong>
 
@@ -163,19 +177,14 @@ export const Urgencias = () => {
 
             <div className="col-lg-7">
 
-              <div className="urgencias-map">
+              <div className="ratio ratio-16x9 rounded-4 overflow-hidden border border-secondary border-opacity-50">
 
-                {/* GOOGLE MAPS */}
                 <iframe
                   title="Mapa de centros de urgencias"
                   src="https://www.google.com/maps?q=hospitales%20Vigo%20Espa%C3%B1a&output=embed"
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
                 ></iframe>
-
-                <div className="urgencias-map-overlay">
-                  <span>🚑 Centros de urgencias</span>
-                </div>
 
               </div>
 

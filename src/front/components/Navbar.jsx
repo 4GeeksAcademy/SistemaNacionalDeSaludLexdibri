@@ -8,34 +8,44 @@ export const Navbar = () => {
   const isLoggedIn = store.isAuthenticated;
   const user = store.user;
 
+  const userRole = user?.role?.toString().trim().toUpperCase();
+
+  const isDoctor = userRole === "DOCTOR";
+  const isPatient = userRole === "PATIENT";
+
   const handleLogout = () => {
     dispatch({
       type: "logout",
     });
   };
 
-  // URL pública directa y estable para el avatar por defecto
-  const defaultAvatar = "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=300&q=80";
+  const defaultAvatar =
+    "https://th.bing.com/th/id/OIG3.8UOQmAzj8smbYCzlKJ_S?pid=ImgGn";
 
   return (
     <header
       className="navbar-sns shadow-lg text-white p-3"
       style={{
-        background: `linear-gradient(rgba(15, 23, 42, 0.88), rgba(15, 23, 42, 0.95)), url('https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1600&q=80')`,
+        background:
+          "linear-gradient(rgba(15, 23, 42, 0.88), rgba(15, 23, 42, 0.95)), url('https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1600&q=80')",
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}
     >
       {/* BARRA SUPERIOR PRINCIPAL */}
       <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
-        {/* LOGO CON CARTEL OFICIAL */}
+        {/* LOGO */}
         <Link
           to="/"
           className="navbar-brand-sns text-decoration-none text-white d-flex align-items-center gap-2"
         >
           <span
             className="navbar-brand-plus bg-info text-dark rounded-circle d-flex align-items-center justify-content-center fw-bold"
-            style={{ width: "32px", height: "32px", fontSize: "1.2rem" }}
+            style={{
+              width: "32px",
+              height: "32px",
+              fontSize: "1.2rem",
+            }}
           >
             +
           </span>
@@ -44,7 +54,10 @@ export const Navbar = () => {
             className="border border-info border-opacity-50 rounded px-2 py-1 bg-dark bg-opacity-50"
             style={{ backdropFilter: "blur(4px)" }}
           >
-            <span className="fw-bold tracking-wide" style={{ fontSize: "0.95rem" }}>
+            <span
+              className="fw-bold tracking-wide"
+              style={{ fontSize: "0.95rem" }}
+            >
               SISTEMA NACIONAL DE SALUD{" "}
               <span className="text-info fw-extrabold">LEXDIBRI</span>
             </span>
@@ -52,21 +65,22 @@ export const Navbar = () => {
         </Link>
 
         {/* PERFIL */}
-        <div className="dropdown position-relative" style={{ zIndex: 1050 }}>
+        <div
+          className="dropdown position-relative"
+          style={{ zIndex: 1050 }}
+        >
           <button
-            className={`btn border-0 dropdown-toggle d-flex align-items-center gap-2 px-3 py-1 rounded-pill ${
-              isLoggedIn
+            className={`btn border-0 dropdown-toggle d-flex align-items-center gap-2 px-3 py-1 rounded-pill ${isLoggedIn
                 ? "bg-info text-dark fw-semibold"
                 : "bg-white bg-opacity-10 text-white"
-            }`}
+              }`}
             type="button"
             data-bs-toggle="dropdown"
             aria-expanded="false"
           >
-            {/* Avatar compacto con URL pública accesible */}
             <img
               src={user?.profile_image || defaultAvatar}
-              alt="Avatar perfil médico"
+              alt="Avatar perfil"
               className="rounded-circle border border-2 border-white shadow-sm"
               style={{
                 width: "40px",
@@ -76,7 +90,7 @@ export const Navbar = () => {
               }}
             />
 
-            <span className="navbar-profile-name small">
+            <span className="small">
               {isLoggedIn
                 ? `${user?.first_name || ""} ${user?.last_name || ""}`.trim()
                 : "Sesión no iniciada"}
@@ -89,53 +103,95 @@ export const Navbar = () => {
             style={{
               zIndex: 1060,
               backgroundColor: "#1e293b",
-              minWidth: "220px",
+              minWidth: "240px",
             }}
           >
             {!isLoggedIn ? (
               <>
+                {/* INICIAR SESIÓN */}
                 <li>
-                  <Link className="dropdown-item py-2" to="/login">
+                  <Link
+                    className="dropdown-item py-2 small"
+                    to="/login"
+                  >
                     🔐 Iniciar sesión
                   </Link>
                 </li>
+
+                {/* REGISTRARSE */}
                 <li>
-                  <Link className="dropdown-item py-2" to="/registro">
+                  <Link
+                    className="dropdown-item py-2 small"
+                    to="/register"
+                  >
                     ✨ Registrarse
-                  </Link>
-                </li>
-                <li>
-                  <hr className="dropdown-divider border-secondary" />
-                </li>
-                <li>
-                  <Link className="dropdown-item py-2" to="/contacto">
-                    ❓ Ayuda y soporte
                   </Link>
                 </li>
               </>
             ) : (
               <>
+                {/* DASHBOARD MÉDICO */}
+                {isDoctor && (
+                  <li>
+                    <Link
+                      className="dropdown-item py-2 small"
+                      to="/dashboard/medico"
+                    >
+                      🩺 Dashboard médico
+                    </Link>
+                  </li>
+                )}
+
+                {/* DASHBOARD PACIENTE */}
+                {isPatient && (
+                  <li>
+                    <Link
+                      className="dropdown-item py-2 small"
+                      to="/dashboard/paciente"
+                    >
+                      🏠 Dashboard paciente
+                    </Link>
+                  </li>
+                )}
+
+                {/* AJUSTES */}
                 <li>
-                  <Link className="dropdown-item py-2" to="/profile">
-                    👤 Mi perfil
-                  </Link>
-                </li>
-                <li>
-                  <Link className="dropdown-item py-2" to="/historial">
-                    📋 Mi historial
-                  </Link>
-                </li>
-                <li>
-                  <Link className="dropdown-item py-2" to="/ajustes">
+                  <Link
+                    className="dropdown-item py-2 small"
+                    to="/ajustes"
+                  >
                     ⚙️ Ajustes
                   </Link>
                 </li>
+              </>
+            )}
+
+            {/* SEPARADOR */}
+            <li>
+              <hr className="dropdown-divider border-secondary" />
+            </li>
+
+            {/* AYUDA Y SOPORTE - PARA TODOS */}
+            <li>
+              <Link
+                className="dropdown-item py-2 small"
+                to="/contacto"
+              >
+                ❓ Ayuda y soporte
+              </Link>
+            </li>
+
+            {/* CERRAR SESIÓN */}
+            {isLoggedIn && (
+              <>
                 <li>
                   <hr className="dropdown-divider border-secondary" />
                 </li>
+
                 <li>
                   <button
-                    className="dropdown-item py-2 text-danger fw-semibold"
+                    type="button"
+                    className="dropdown-item py-2 small text-danger fw-semibold"
                     onClick={handleLogout}
                   >
                     🚪 Cerrar sesión
@@ -152,8 +208,7 @@ export const Navbar = () => {
         <NavLink
           to="/especialidades"
           className={({ isActive }) =>
-            `navbar-link text-white text-decoration-none ${
-              isActive ? "active text-info fw-bold" : "opacity-75"
+            `navbar-link text-white text-decoration-none ${isActive ? "active text-info fw-bold" : "opacity-75"
             }`
           }
         >
@@ -163,8 +218,7 @@ export const Navbar = () => {
         <NavLink
           to="/diagnostico"
           className={({ isActive }) =>
-            `navbar-link text-white text-decoration-none ${
-              isActive ? "active text-info fw-bold" : "opacity-75"
+            `navbar-link text-white text-decoration-none ${isActive ? "active text-info fw-bold" : "opacity-75"
             }`
           }
         >
@@ -174,8 +228,7 @@ export const Navbar = () => {
         <NavLink
           to="/el-sistema"
           className={({ isActive }) =>
-            `navbar-link text-white text-decoration-none ${
-              isActive ? "active text-info fw-bold" : "opacity-75"
+            `navbar-link text-white text-decoration-none ${isActive ? "active text-info fw-bold" : "opacity-75"
             }`
           }
         >
@@ -185,8 +238,7 @@ export const Navbar = () => {
         <NavLink
           to="/contacto"
           className={({ isActive }) =>
-            `navbar-link text-white text-decoration-none ${
-              isActive ? "active text-info fw-bold" : "opacity-75"
+            `navbar-link text-white text-decoration-none ${isActive ? "active text-info fw-bold" : "opacity-75"
             }`
           }
         >
@@ -196,8 +248,7 @@ export const Navbar = () => {
         <NavLink
           to="/urgencias"
           className={({ isActive }) =>
-            `navbar-link navbar-link-emergency text-danger fw-bold text-decoration-none ${
-              isActive ? "active" : ""
+            `navbar-link navbar-link-emergency text-danger fw-bold text-decoration-none ${isActive ? "active" : ""
             }`
           }
         >
