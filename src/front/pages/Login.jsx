@@ -120,11 +120,10 @@ export const Login = () => {
                                         onClick={() =>
                                             setTipoUsuario("paciente")
                                         }
-                                        className={`btn rounded-start-pill fw-semibold ${
-                                            tipoUsuario === "paciente"
+                                        className={`btn rounded-start-pill fw-semibold ${tipoUsuario === "paciente"
                                                 ? "btn-info"
                                                 : "btn-outline-secondary text-white"
-                                        }`}
+                                            }`}
                                     >
                                         🔒 Paciente
                                     </button>
@@ -134,11 +133,10 @@ export const Login = () => {
                                         onClick={() =>
                                             setTipoUsuario("medico")
                                         }
-                                        className={`btn rounded-end-pill fw-semibold ${
-                                            tipoUsuario === "medico"
+                                        className={`btn rounded-end-pill fw-semibold ${tipoUsuario === "medico"
                                                 ? "btn-info"
                                                 : "btn-outline-secondary text-white"
-                                        }`}
+                                            }`}
                                     >
                                         👨‍⚕️ Médico
                                     </button>
@@ -235,6 +233,7 @@ export const Login = () => {
                                 <button
                                     type="button"
                                     className="btn btn-link p-0 text-info text-decoration-none small"
+                                    onClick={() => navigate("/olvide/Contraseña")}
                                 >
                                     ¿Olvidó su contraseña?
                                 </button>
