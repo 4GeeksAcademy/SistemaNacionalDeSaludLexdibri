@@ -24,6 +24,7 @@ import { DashboardMedico } from "./pages/DashboardMedico";
 import Teleconsulta from "./pages/Teleconsulta";
 import { HistorialClinico } from "./pages/HistorialClinico";
 import PrivateRoute from "./components/PrivateRoute";
+import OlvideContraseña from "./pages/OlvideContraseña";
 
 
 export const router = createBrowserRouter(
@@ -36,10 +37,9 @@ export const router = createBrowserRouter(
 
             <Route index element={<Home />} />
             <Route path="/login" element={<Login />} />
-
+            <Route path="/olvide/contraseña" element={<OlvideContraseña/>} />
             <Route path="historial/clinico" element={<HistorialClinico/>} />
             <Route path="tele/consulta" element={<Teleconsulta />} />
-            ```jsx
             <Route
                 path="dashboard/paciente"
                 element={
