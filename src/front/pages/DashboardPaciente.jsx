@@ -1,11 +1,49 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 import rigoImageUrl from "../assets/img/rigo-baby.jpg";
 
 export const DashboardPaciente = () => {
-  const { store } = useGlobalReducer();
+  const { store, dispatch } = useGlobalReducer();
+  const navigate = useNavigate();
   const user = store.user;
   const profileImage = user?.profile_image || rigoImageUrl;
+
+  // Función genérica para obtener datos del backend y almacenar en el estado global
+  const handleFetchData = async (endpoint, redirectPath) => {
+    try {
+      const response = await fetch(`${process.env.BACKEND_URL}/api/${endpoint}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${store.token || localStorage.getItem("token")}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error en la petición: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      // Guardar información en el store global según corresponda
+      dispatch({
+        type: "SET_PACIENTE_DATA",
+        payload: { key: endpoint, data }
+      });
+
+      // Navegar a la ruta destino
+      if (redirectPath) {
+        navigate(redirectPath);
+      }
+    } catch (error) {
+      console.error(`Error al conectar con el backend (${endpoint}):`, error);
+      // Opcional: Navegar incluso si falla la petición directa
+      if (redirectPath) {
+        navigate(redirectPath);
+      }
+    }
+  };
 
   return (
     <div className="text-white py-5">
@@ -55,7 +93,10 @@ export const DashboardPaciente = () => {
                 15 de Mayo · 10:00 AM
               </p>
 
-              <button className="btn btn-info rounded-pill w-100">
+              <button 
+                className="btn btn-info rounded-pill w-100"
+                onClick={() => handleFetchData("citas", "/citas")}
+              >
                 Ver citas
               </button>
             </div>
@@ -77,7 +118,10 @@ export const DashboardPaciente = () => {
                 2 recetas activas
               </p>
 
-              <button className="btn btn-info rounded-pill w-100">
+              <button 
+                className="btn btn-info rounded-pill w-100"
+                onClick={() => handleFetchData("recetas", "/recetas")}
+              >
                 Ver recetas
               </button>
             </div>
@@ -99,7 +143,10 @@ export const DashboardPaciente = () => {
                 Hipertensión · Diabetes Tipo 2
               </p>
 
-              <button className="btn btn-info rounded-pill w-100">
+              <button 
+                className="btn btn-info rounded-pill w-100"
+                onClick={() => handleFetchData("diagnosticos", "/diagnosticos")}
+              >
                 Ver diagnósticos
               </button>
             </div>
@@ -121,7 +168,10 @@ export const DashboardPaciente = () => {
                 Consulta toda tu información clínica.
               </p>
 
-              <button className="btn btn-info rounded-pill w-100">
+              <button 
+                className="btn btn-info rounded-pill w-100"
+                onClick={() => handleFetchData("historial", "/historial")}
+              >
                 Ver historial
               </button>
             </div>
@@ -212,7 +262,10 @@ export const DashboardPaciente = () => {
                 </div>
               </div>
 
-              <button className="btn btn-info rounded-pill">
+              <button 
+                className="btn btn-info rounded-pill"
+                onClick={() => handleFetchData("mensajes", "/mensajes")}
+              >
                 Ver mensajes
               </button>
             </div>

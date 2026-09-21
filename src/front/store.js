@@ -1,4 +1,3 @@
-
 export const initialStore = () => {
   const accessToken = localStorage.getItem("access_token");
   const savedUser = localStorage.getItem("user");
@@ -23,10 +22,15 @@ export const initialStore = () => {
     user: savedUser ? JSON.parse(savedUser) : null,
     access_token: accessToken,
     isAuthenticated: !!accessToken,
+
+    // ESTADO INICIAL DATOS SALUD
+    citas: [],
+    recetas: [],
+    diagnosticos: [],
+    historial: [],
+    mensajes: [],
   };
 };
-
-
 
 export default function storeReducer(store, action = {}) {
   switch (action.type) {
@@ -56,7 +60,6 @@ export default function storeReducer(store, action = {}) {
       };
 
     // LOGOUT
-
     case "logout":
       localStorage.removeItem("access_token");
       localStorage.removeItem("user");
@@ -66,6 +69,37 @@ export default function storeReducer(store, action = {}) {
         user: null,
         access_token: null,
         isAuthenticated: false,
+      };
+
+    // OPCIÓN 1: CASOS PARA ACTUALIZAR DATOS DEL PACIENTE DESDE EL BACKEND
+    case "set_citas":
+      return {
+        ...store,
+        citas: action.payload,
+      };
+
+    case "set_recetas":
+      return {
+        ...store,
+        recetas: action.payload,
+      };
+
+    case "set_diagnosticos":
+      return {
+        ...store,
+        diagnosticos: action.payload,
+      };
+
+    case "set_historial":
+      return {
+        ...store,
+        historial: action.payload,
+      };
+
+    case "set_mensajes":
+      return {
+        ...store,
+        mensajes: action.payload,
       };
 
     default:
