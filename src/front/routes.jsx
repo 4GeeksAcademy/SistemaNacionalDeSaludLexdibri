@@ -26,6 +26,7 @@ import { HistorialClinico } from "./pages/HistorialClinico";
 import { NuevoDiagnostico } from "./pages/NuevoDiagnostico";
 import { NuevaConsulta } from "./pages/NuevaConsulta";
 import { CrearReceta } from "./pages/CrearReceta";
+import { SolicitarConsulta } from "./pages/SolicitarConsulta";
 import PrivateRoute from "./components/PrivateRoute";
 
 
@@ -40,11 +41,20 @@ export const router = createBrowserRouter(
             <Route index element={<Home />} />
             <Route path="/login" element={<Login />} />
 
-            <Route path="historial/clinico" element={<HistorialClinico/>} />
+            <Route path="historial/clinico" element={<HistorialClinico />} />
             <Route path="nuevo-diagnostico" element={<NuevoDiagnostico />} />
             <Route path="nueva-consulta" element={<NuevaConsulta />} />
             <Route path="crear-receta" element={<CrearReceta />} />
-            <Route path="tele/consulta" element={<Teleconsulta />} />
+            <Route
+                path="solicitar-consulta"
+                element={
+                    <PrivateRoute>
+                        <SolicitarConsulta />
+                    </PrivateRoute>
+                }
+            />
+            <Route path="tele/consulta/:citaId" element={<Teleconsulta />} />
+            <Route path="teleconsulta/:citaId" element={<Teleconsulta />} />
             ```jsx
             <Route
                 path="dashboard/paciente"
@@ -63,7 +73,7 @@ export const router = createBrowserRouter(
                     </PrivateRoute>
                 }
             />
-            
+
 
             <Route path="register" element={<Register />} />
             <Route path="demo" element={<Demo />} />

@@ -13,6 +13,7 @@ export const registrarUsuario = async (formData) => {
     bloodType,
     medicalLicense,
     specialtyId,
+    specialtyName,
     yearsExperience,
   } = formData;
 
@@ -33,7 +34,8 @@ export const registrarUsuario = async (formData) => {
     payload.blood_type = bloodType;
   } else {
     payload.medical_license = medicalLicense;
-    payload.specialty_id = Number(specialtyId);
+    payload.specialty_id = specialtyId ? Number(specialtyId) : null;
+    payload.specialty_name = specialtyName;
     payload.years_experience = Number(yearsExperience);
   }
 

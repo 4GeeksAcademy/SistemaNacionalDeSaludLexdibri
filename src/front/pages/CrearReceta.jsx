@@ -157,7 +157,7 @@ export const CrearReceta = () => {
                                     Volver al dashboard médico
                                 </Link>
                             </div>
-                            <span className="text-info text-uppercase small fw-semibold">Tratamiento</span>
+                            
                             <h1 className="h3 fw-bold mb-0 mt-1">Crear receta</h1>
                         </div>
                     </div>

@@ -10,6 +10,9 @@ export const HistorialClinico = () => {
     const [recetas, setRecetas] = useState([]);
     const [cargandoRecetas, setCargandoRecetas] = useState(false);
     const [errorRecetas, setErrorRecetas] = useState("");
+    const [consultas, setConsultas] = useState([]);
+    const [cargandoConsultas, setCargandoConsultas] = useState(false);
+    const [errorConsultas, setErrorConsultas] = useState("");
 
     useEffect(() => {
         if (!patient?.id) return;
@@ -48,6 +51,45 @@ export const HistorialClinico = () => {
         };
 
         cargarEnfermedades();
+    }, [patient?.id]);
+
+    useEffect(() => {
+        if (!patient?.id) return;
+
+        const cargarConsultas = async () => {
+            setCargandoConsultas(true);
+            setErrorConsultas("");
+
+            try {
+                const token =
+                    localStorage.getItem("access_token") ||
+                    localStorage.getItem("token");
+                const response = await fetch(
+                    `${import.meta.env.VITE_BACKEND_URL}/api/medico/pacientes/${patient.id}/consultas`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "application/json"
+                        }
+                    }
+                );
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.error || "No se pudieron cargar las consultas."
+                    );
+                }
+
+                setConsultas(data.consultas || []);
+            } catch (error) {
+                setErrorConsultas(error.message);
+            } finally {
+                setCargandoConsultas(false);
+            }
+        };
+
+        cargarConsultas();
     }, [patient?.id]);
 
     useEffect(() => {
@@ -164,6 +206,17 @@ export const HistorialClinico = () => {
         return estados[estado] || estado || "Sin estado";
     };
 
+    const formatearEstadoConsulta = (estado) => {
+        const estados = {
+            scheduled: "Programada",
+            confirmed: "Confirmada",
+            cancelled: "Cancelada",
+            completed: "Completada"
+        };
+
+        return estados[estado] || estado || "Sin estado";
+    };
+
     // Iniciales del paciente
     const iniciales = paciente.nombre
         .split(" ")
@@ -182,8 +235,8 @@ export const HistorialClinico = () => {
                                 Volver al dashboard médico
                             </Link>
                         </div>
-                        <h1 className="h2 fw-bold mb-1">Historial clínico</h1>
-                        <p className="text-white-50 mb-0">
+                        <h1 className="h2 text-info fw-bold mb-1">Historial clínico</h1>
+                        <p className="text-white mb-0">
                             Consulta los antecedentes y tratamientos del paciente.
                         </p>
                     </div>
@@ -191,7 +244,7 @@ export const HistorialClinico = () => {
             </div>
 
             {/* INFORMACIÓN DEL PACIENTE */}
-            <div className="card bg-white border-0 shadow-sm mb-4">
+            <div className="card bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 shadow-sm mb-4">
                 <div className="card-body p-4">
                     <div className="row align-items-center">
                         {/* Avatar */}
@@ -211,16 +264,16 @@ export const HistorialClinico = () => {
                         {/* Datos principales */}
                         <div className="col">
                             <div className="d-flex flex-wrap align-items-center gap-2">
-                                <h3 className="fw-bold mb-0">
+                                <h3 className="text-info fw-bold mb-0">
                                     {paciente.nombre}
                                 </h3>
 
-                                <span className="badge bg-light text-dark border">
+                                <span className="badge bg-info bg-opacity-25 text-info border border-info">
                                     {paciente.id}
                                 </span>
                             </div>
 
-                            <div className="text-body-secondary mt-2">
+                            <div className="text-white-50 mt-2">
                                 {paciente.edad} años
                                 <span className="mx-2">•</span>
                                 {paciente.sexo}
@@ -237,11 +290,11 @@ export const HistorialClinico = () => {
                 <div className="card-body p-4">
                     <div className="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-4">
                         <div>
-                            <h2 className="h4 fw-bold mb-1">
+                            <h2 className="h4 text-info fw-bold mb-1">
                                 Enfermedades del paciente
                             </h2>
 
-                            <p className="text-white-50 mb-0">
+                            <p className="text-white mb-0">
                                 Consulta las enfermedades registradas y
                                 ordénalas por fecha.
                             </p>
@@ -258,7 +311,7 @@ export const HistorialClinico = () => {
 
                             <select
                                 id="orden"
-                                className="form-select"
+                                className="form-select bg-dark text-white border-secondary"
                                 value={orden}
                                 onChange={(e) => setOrden(e.target.value)}
                             >
@@ -297,11 +350,11 @@ export const HistorialClinico = () => {
                                     <div className="row g-3">
                                         {/* FECHA */}
                                         <div className="col-md-3 col-lg-2">
-                                            <div className="small">
+                                            <div className="small text-white">
                                                 Fecha
                                             </div>
 
-                                            <div className="fw-semibold mt-1">
+                                            <div className="fw-semibold text-white mt-1">
                                                 {formatearFecha(
                                                     antecedente.fecha
                                                 )}
@@ -315,12 +368,12 @@ export const HistorialClinico = () => {
                                                     Enfermedad
                                                 </span>
 
-                                                <span className="badge bg-light text-dark border">
+                                                <span className="badge bg-info bg-opacity-25 text-info border border-info">
                                                     {antecedente.estado}
                                                 </span>
                                             </div>
 
-                                            <h3 className="h5 fw-bold mb-2">
+                                            <h3 className="h5 text-info fw-bold mb-2">
                                                 {antecedente.nombre}
                                             </h3>
 
@@ -342,7 +395,7 @@ export const HistorialClinico = () => {
                         <div className="text-center py-5">
                             <div className="mb-3">
                                 <span
-                                    className="d-inline-flex align-items-center justify-content-center rounded-circle bg-light text-secondary"
+                                    className="d-inline-flex align-items-center justify-content-center rounded-circle bg-secondary bg-opacity-50 text-white"
                                     style={{
                                         width: "60px",
                                         height: "60px",
@@ -353,13 +406,79 @@ export const HistorialClinico = () => {
                                 </span>
                             </div>
 
-                            <h3 className="h5 fw-bold">
+                            <h3 className="h5 text-info fw-bold">
                                 No hay enfermedades registradas
                             </h3>
 
                             <p className="text-white mb-0">
                                 Este paciente no tiene enfermedades registradas.
                             </p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* HISTORIAL DE CONSULTAS */}
+            <div className="card bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 shadow-sm mb-4">
+                <div className="card-body p-4">
+                    <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+                        <div>
+                            <span className="text-info text-uppercase small fw-semibold">
+                                Agenda médica
+                            </span>
+                            <h2 className="h4 text-info fw-bold mb-1 mt-1">Historial de consultas</h2>
+                            <p className="text-white mb-0">
+                                Consultas programadas y realizadas para este paciente.
+                            </p>
+                        </div>
+                        <span className="badge bg-warning bg-opacity-25 text-warning border border-warning">
+                            {consultas.length} {consultas.length === 1 ? "consulta" : "consultas"}
+                        </span>
+                    </div>
+
+                    {cargandoConsultas ? (
+                        <div className="d-flex align-items-center gap-2 text-white-50">
+                            <div className="spinner-border spinner-border-sm text-warning" role="status">
+                                <span className="visually-hidden">Cargando...</span>
+                            </div>
+                            Cargando consultas...
+                        </div>
+                    ) : errorConsultas ? (
+                        <div className="alert alert-warning mb-0" role="alert">
+                            {errorConsultas}
+                        </div>
+                    ) : consultas.length === 0 ? (
+                        <p className="text-white mb-0">No hay consultas registradas.</p>
+                    ) : (
+                        <div className="row g-3">
+                            {consultas.map((consulta) => (
+                                <div className="col-12 col-xl-6" key={consulta.id}>
+                                    <div className="bg-dark bg-opacity-50 border border-secondary border-opacity-50 rounded-3 p-3 h-100">
+                                        <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
+                                            <h3 className="h6 text-info fw-bold mb-0">
+                                                {consulta.appointment_type || "Consulta médica"}
+                                            </h3>
+                                            <span className={`badge ${consulta.status === "completed" ? "bg-success" : consulta.status === "cancelled" ? "bg-danger" : "bg-warning text-dark"}`}>
+                                                {formatearEstadoConsulta(consulta.status)}
+                                            </span>
+                                        </div>
+                                        <p className="text-white small mb-2">
+                                            {consulta.scheduled_start
+                                                ? new Date(consulta.scheduled_start).toLocaleString("es-ES", {
+                                                    dateStyle: "medium",
+                                                    timeStyle: "short"
+                                                })
+                                                : "Fecha no disponible"}
+                                        </p>
+                                        <p className="text-white small mb-0">
+                                            Modalidad: {consulta.modality === "virtual" ? "Virtual" : "Presencial"}
+                                        </p>
+                                        {consulta.reason && (
+                                            <p className="text-white small mt-2 mb-0">{consulta.reason}</p>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     )}
                 </div>
@@ -373,10 +492,10 @@ export const HistorialClinico = () => {
                             <span className="text-info text-uppercase small fw-semibold">
                                 Tratamientos
                             </span>
-                            <h2 className="h4 fw-bold mb-1 mt-1">
+                            <h2 className="h4 text-info fw-bold mb-1 mt-1">
                                 Historial de recetas
                             </h2>
-                            <p className="text-white-50 mb-0">
+                            <p className="text-white mb-0">
                                 Recetas emitidas para este paciente.
                             </p>
                         </div>
@@ -399,8 +518,8 @@ export const HistorialClinico = () => {
                     ) : recetas.length === 0 ? (
                         <div className="text-center py-4">
                             <div className="fs-2 mb-2">💊</div>
-                            <h3 className="h6 fw-bold">No hay recetas registradas</h3>
-                            <p className="text-white-50 mb-0">
+                            <h3 className="h6 text-info fw-bold">No hay recetas registradas</h3>
+                            <p className="text-white mb-0">
                                 Este paciente todavía no tiene tratamientos prescritos.
                             </p>
                         </div>
@@ -411,7 +530,7 @@ export const HistorialClinico = () => {
                                     <div className="bg-dark bg-opacity-50 border border-secondary border-opacity-50 rounded-3 p-3 h-100">
                                         <div className="d-flex justify-content-between align-items-start gap-3 mb-3">
                                             <div>
-                                                <h3 className="h6 fw-bold mb-1">
+                                                <h3 className="h6 text-info fw-bold mb-1">
                                                     Receta #{receta.id}
                                                 </h3>
                                                 <span className="text-white-50 small">
@@ -425,7 +544,7 @@ export const HistorialClinico = () => {
 
                                         {receta.medications.map((medicamento) => (
                                             <div className="border-top border-secondary border-opacity-50 pt-3 mt-3" key={medicamento.id}>
-                                                <h4 className="h6 fw-semibold mb-2">
+                                                <h4 className="h6 text-info fw-semibold mb-2">
                                                     {medicamento.name}
                                                 </h4>
                                                 <div className="row g-2 small text-white-50">

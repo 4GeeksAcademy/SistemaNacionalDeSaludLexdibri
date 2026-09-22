@@ -15,6 +15,7 @@ export const NuevaConsulta = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+    const [consultaCreada, setConsultaCreada] = useState(null);
 
     const actualizarCampo = (event) => {
         const { name, value } = event.target;
@@ -25,6 +26,7 @@ export const NuevaConsulta = () => {
         event.preventDefault();
         setError("");
         setSuccess("");
+        setConsultaCreada(null);
 
         if (!patient?.id) {
             setError("No se ha seleccionado ningún paciente.");
@@ -54,7 +56,20 @@ export const NuevaConsulta = () => {
                 throw new Error(data.error || "No se pudo crear la consulta.");
             }
 
-            setSuccess("Consulta creada correctamente.");
+            const consulta = data.consulta;
+
+            if (!consulta?.id) {
+                throw new Error(
+                    "La consulta se creó, pero el servidor no devolvió su identificador."
+                );
+            }
+
+            setConsultaCreada(consulta);
+            setSuccess(
+                consulta.modality === "virtual"
+                    ? "Consulta virtual creada correctamente."
+                    : "Consulta creada correctamente."
+            );
             setFormulario((actual) => ({
                 ...actual,
                 scheduled_start: "",
@@ -113,7 +128,19 @@ export const NuevaConsulta = () => {
                             )}
 
                             {error && <div className="alert alert-danger" role="alert">{error}</div>}
-                            {success && <div className="alert alert-success" role="alert">{success}</div>}
+                            {success && (
+                                <div className="alert alert-success" role="alert">
+                                    <div>{success}</div>
+                                    {consultaCreada?.modality === "virtual" && (
+                                        <Link
+                                            to={`/teleconsulta/${consultaCreada.id}`}
+                                            className="btn btn-info rounded-pill mt-3"
+                                        >
+                                            🎥 Entrar a teleconsulta
+                                        </Link>
+                                    )}
+                                </div>
+                            )}
 
                             <form onSubmit={handleSubmit}>
                                 <div className="row g-3">

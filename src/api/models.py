@@ -1064,3 +1064,4 @@ class DoctorPatient(db.Model):
     patient: Mapped["Patient"] = relationship(
         back_populates="doctors",
     )
+

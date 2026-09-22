@@ -32,6 +32,7 @@ export const DashboardMedico = () => {
     const [consultations, setConsultations] = useState([]);
     const [loadingConsultations, setLoadingConsultations] = useState(false);
     const [consultationError, setConsultationError] = useState("");
+    const [completingConsultationId, setCompletingConsultationId] = useState(null);
 
     // =========================
     // MENSAJES
@@ -152,6 +153,35 @@ export const DashboardMedico = () => {
             setConsultationError("Error de conexión con el servidor.");
         } finally {
             setLoadingConsultations(false);
+        }
+    };
+
+    const completeConsultation = async (consultationId) => {
+        setCompletingConsultationId(consultationId);
+        setConsultationError("");
+
+        try {
+            const response = await fetch(
+                `${import.meta.env.VITE_BACKEND_URL}/api/medico/consultas/${consultationId}/completar`,
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${getToken()}`,
+                        "Content-Type": "application/json"
+                    }
+                }
+            );
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "No se pudo completar la consulta.");
+            }
+
+            await loadConsultations();
+        } catch (error) {
+            setConsultationError(error.message);
+        } finally {
+            setCompletingConsultationId(null);
         }
     };
 
@@ -443,7 +473,7 @@ export const DashboardMedico = () => {
 
                 <div className="row g-4 mb-4">
 
-                    <div className="col-12 col-md-6">
+                    <div className="col-12 col-md-4">
                         <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
                             <span className="fs-2">👥</span>
 
@@ -457,7 +487,21 @@ export const DashboardMedico = () => {
                         </div>
                     </div>
 
-                    <div className="col-12 col-md-6">
+                    <div className="col-12 col-md-4">
+                        <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
+                            <span className="fs-2">📅</span>
+
+                            <p className="text-info text-uppercase small fw-semibold mt-3 mb-1">
+                                Consultas pendientes
+                            </p>
+
+                            <h2 className="display-6 fw-bold mb-0">
+                                {consultations.length}
+                            </h2>
+                        </div>
+                    </div>
+
+                    <div className="col-12 col-md-4">
                         <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
                             <span className="fs-2">💬</span>
 
@@ -614,11 +658,10 @@ export const DashboardMedico = () => {
                                                     </div>
 
                                                     <span
-                                                        className={`badge rounded-pill ${
-                                                            alreadyMine
+                                                        className={`badge rounded-pill ${alreadyMine
                                                                 ? "bg-success"
                                                                 : "bg-secondary"
-                                                        }`}
+                                                            }`}
                                                     >
                                                         {alreadyMine
                                                             ? "Mi paciente"
@@ -984,7 +1027,7 @@ export const DashboardMedico = () => {
                                             }
                                         >
                                             {removingPatientId ===
-                                            patient.id
+                                                patient.id
                                                 ? "Eliminando..."
                                                 : "Eliminar"}
                                         </button>
@@ -1085,13 +1128,22 @@ export const DashboardMedico = () => {
                                                 )}
                                                 {consultation.modality === "virtual" && (
                                                     <Link
-                                                        to="/tele/consulta"
-                                                        state={{ consultation }}
+                                                        to={`/teleconsulta/${consultation.id}`}
                                                         className="btn btn-info rounded-pill btn-sm mt-3"
                                                     >
                                                         Entrar en teleconsulta
                                                     </Link>
                                                 )}
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-outline-success rounded-pill btn-sm mt-3 ms-2"
+                                                    onClick={() => completeConsultation(consultation.id)}
+                                                    disabled={completingConsultationId === consultation.id}
+                                                >
+                                                    {completingConsultationId === consultation.id
+                                                        ? "Completando..."
+                                                        : "Marcar como completada"}
+                                                </button>
                                             </div>
                                         </div>
                                     ))}
