@@ -457,12 +457,6 @@ class Appointment(db.Model):
 
     appointment_type: Mapped[str | None] = mapped_column(String(50))
 
-    modality: Mapped[str] = mapped_column(
-        String(20),
-        nullable=False,
-        default="presencial",
-    )
-
     scheduled_start: Mapped[datetime | None] = mapped_column(DateTime)
     scheduled_end: Mapped[datetime | None] = mapped_column(DateTime)
 
@@ -518,7 +512,6 @@ class Appointment(db.Model):
             "doctor_id": self.doctor_id,
             "health_center_id": self.health_center_id,
             "appointment_type": self.appointment_type,
-            "modality": self.modality,
             "scheduled_start": (
                 self.scheduled_start.isoformat()
                 if self.scheduled_start else None
@@ -1064,4 +1057,3 @@ class DoctorPatient(db.Model):
     patient: Mapped["Patient"] = relationship(
         back_populates="doctors",
     )
-
