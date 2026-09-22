@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import React from "react";
+import { useNavigate } from "react-router-dom";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 import rigoImageUrl from "../assets/img/rigo-baby.jpg";
 
@@ -25,115 +27,44 @@ const statusLabels = {
 };
 
 export const DashboardPaciente = () => {
-  const { store } = useGlobalReducer();
-  const [dashboard, setDashboard] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [mostrarRecetas, setMostrarRecetas] = useState(false);
-  const [mostrarDiagnosticos, setMostrarDiagnosticos] = useState(false);
-  const [cancelandoConsultaId, setCancelandoConsultaId] = useState(null);
-  const [errorCancelacion, setErrorCancelacion] = useState("");
+  const { store, dispatch } = useGlobalReducer();
+  const navigate = useNavigate();
+  const user = store.user;
+  const profileImage = user?.profile_image || rigoImageUrl;
 
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadDashboard = async () => {
-      try {
-        const response = await fetch(
-          `${import.meta.env.VITE_BACKEND_URL}/api/paciente/dashboard`,
-          {
-            headers: {
-              Authorization: `Bearer ${getToken()}`,
-              "Content-Type": "application/json"
-            }
-          }
-        );
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "No se pudo cargar tu información.");
-        if (!cancelled) setDashboard(data);
-      } catch (loadError) {
-        if (!cancelled) setError(loadError.message);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-
-    loadDashboard();
-    return () => { cancelled = true; };
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="text-white min-vh-100 d-flex align-items-center justify-content-center">
-        <div className="d-flex align-items-center gap-2 text-white-50">
-          <div className="spinner-border spinner-border-sm text-info" role="status">
-            <span className="visually-hidden">Cargando...</span>
-          </div>
-          Cargando tu información sanitaria...
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !dashboard) {
-    return (
-      <div className="container text-white py-5">
-        <div className="alert alert-danger" role="alert">
-          {error || "No se pudo cargar tu información sanitaria."}
-        </div>
-      </div>
-    );
-  }
-
-  const patient = dashboard.paciente;
-  const consultations = dashboard.consultas || [];
-  const diagnoses = dashboard.diagnosticos || [];
-  const prescriptions = dashboard.recetas || [];
-  const activePrescriptions = prescriptions.filter((item) => item.status === "active");
-  const nextConsultation = consultations.find(
-    (item) => !["cancelled", "completed"].includes(item.status)
-  );
-  const profileImage = store.user?.profile_image || rigoImageUrl;
-  const assignedDoctor = dashboard.medico_asignado;
-  const assignedSpecialty = (assignedDoctor?.especialidad || "").toLowerCase();
-  const hasPendingAssignedSpecialtyConsultation = consultations.some(
-    (consultation) =>
-      !["cancelled", "completed"].includes(consultation.status) &&
-      (consultation.doctor_specialty || "").toLowerCase() === assignedSpecialty
-  );
-  const cancelarConsulta = async (appointmentId) => {
-    setCancelandoConsultaId(appointmentId);
-    setErrorCancelacion("");
-
+  // Función genérica para obtener datos del backend y almacenar en el estado global
+  const handleFetchData = async (endpoint, redirectPath) => {
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/paciente/consultas/${appointmentId}/cancelar`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${getToken()}`,
-            "Content-Type": "application/json"
-          }
+      const response = await fetch(`${process.env.BACKEND_URL}/api/${endpoint}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${store.token || localStorage.getItem("token")}`
         }
-      );
-      const data = await response.json();
+      });
 
       if (!response.ok) {
-        throw new Error(data.error || "No se pudo cancelar la consulta.");
+        throw new Error(`Error en la petición: ${response.statusText}`);
       }
 
-      setDashboard((actual) => ({
-        ...actual,
-        consultas: (actual.consultas || []).map((consultation) => (
-          consultation.id === appointmentId
-            ? { ...consultation, status: "cancelled" }
-            : consultation
-        ))
-      }));
-    } catch (cancelError) {
-      setErrorCancelacion(cancelError.message);
-    } finally {
-      setCancelandoConsultaId(null);
+      const data = await response.json();
+
+      // Guardar información en el store global según corresponda
+      dispatch({
+        type: "SET_PACIENTE_DATA",
+        payload: { key: endpoint, data }
+      });
+
+      // Navegar a la ruta destino
+      if (redirectPath) {
+        navigate(redirectPath);
+      }
+    } catch (error) {
+      console.error(`Error al conectar con el backend (${endpoint}):`, error);
+      // Opcional: Navegar incluso si falla la petición directa
+      if (redirectPath) {
+        navigate(redirectPath);
+      }
     }
   };
 
@@ -151,46 +82,91 @@ export const DashboardPaciente = () => {
           </div>
         </div>
 
-        <div className="row g-4 mb-4">
-          {[
-            ["Consultas", consultations.length, "C"],
-            ["Recetas activas", activePrescriptions.length, "R"],
-            ["Diagnósticos", diagnoses.length, "D"]
-          ].map(([label, value, icon]) => (
-            <div className="col-12 col-md-4" key={label}>
-              <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
-                <span className="fs-2">{icon}</span>
-                <p className="text-info text-uppercase small fw-semibold mt-3 mb-1">{label}</p>
-                <h2 className="display-6 fw-bold mb-0">{value}</h2>
-              </div>
+        <div className="row g-4">
+
+          <div className="col-12 col-md-6 col-lg-4">
+            <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
+              <div className="fs-2 mb-3">📅</div>
+
+              <span className="text-info small text-uppercase">
+                Próxima cita
+              </span>
+
+              <h2 className="h4 fw-bold mt-2">
+                Citas médicas
+              </h2>
+
+              <p className="text-white-50">
+                15 de Mayo · 10:00 AM
+              </p>
+
+              <button 
+                className="btn btn-info rounded-pill w-100"
+                onClick={() => handleFetchData("citas", "/citas")}
+              >
+                Ver citas
+              </button>
+            </div>
+          </div>
+
+          <div className="col-12 col-md-6 col-lg-4">
+            <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
+              <div className="fs-2 mb-3">💊</div>
+
+              <span className="text-info small text-uppercase">
+                Tratamiento
+              </span>
+
+              <h2 className="h4 fw-bold mt-2">
+                Recetas electrónicas
+              </h2>
+
+              <p className="text-white-50">
+                2 recetas activas
+              </p>
+
+              <button 
+                className="btn btn-info rounded-pill w-100"
+                onClick={() => handleFetchData("recetas", "/recetas")}
+              >
+                Ver recetas
+              </button>
+            </div>
+          </div>
+
+          <div className="col-12 col-md-6 col-lg-4">
+            <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
+              <div className="fs-2 mb-3">🔬</div>
+
+              <span className="text-info small text-uppercase">
+                Información clínica
+              </span>
+
+              <h2 className="h4 fw-bold mt-2">
+                Diagnósticos
+              </h2>
+
+              <p className="text-white-50">
+                Hipertensión · Diabetes Tipo 2
+              </p>
+
+              <button 
+                className="btn btn-info rounded-pill w-100"
+                onClick={() => handleFetchData("diagnosticos", "/diagnosticos")}
+              >
+                Ver diagnósticos
+              </button>
             </div>
           ))}
         </div>
 
-        <div className="row g-4">
-          <div className="col-12">
-            <section className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4">
-              <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-                <div>
-                  <span className="text-info text-uppercase small fw-semibold">Agenda</span>
-                  <h2 className="h4 fw-bold mb-1 mt-1">Pedir una consulta</h2>
-                  <p className="text-white-50 mb-0">
-                    Programa una consulta con tu médico asignado.
-                  </p>
-                </div>
-                {assignedDoctor && !hasPendingAssignedSpecialtyConsultation ? (
-                  <Link to="/solicitar-consulta" className="btn btn-info rounded-pill fw-semibold">
-                    Pedir consulta
-                  </Link>
-                ) : hasPendingAssignedSpecialtyConsultation ? (
-                  <span className="text-danger small fw-semibold">
-                    {`Ya tienes una consulta pendiente con ${assignedDoctor.especialidad}. Cancélala antes de pedir otra.`}
-                  </span>
-                ) : (
-                  <span className="text-warning small">No tienes médico asignado</span>
-                )}
-              </div>
-            </section>
+              <button 
+                className="btn btn-info rounded-pill w-100"
+                onClick={() => handleFetchData("historial", "/historial")}
+              >
+                Ver historial
+              </button>
+            </div>
           </div>
 
           <div className="col-12 col-lg-7">
@@ -303,12 +279,12 @@ export const DashboardPaciente = () => {
                 <h2 className="h4 fw-bold mb-0">Diagnósticos</h2>
                 <span className="badge bg-info bg-opacity-25 text-info border border-info">{diagnoses.length}</span>
               </div>
-              <button
-                type="button"
-                className="btn btn-outline-info rounded-pill btn-sm mb-3"
-                onClick={() => setMostrarDiagnosticos((visible) => !visible)}
+
+              <button 
+                className="btn btn-info rounded-pill"
+                onClick={() => handleFetchData("mensajes", "/mensajes")}
               >
-                {mostrarDiagnosticos ? "Ocultar enfermedades" : "Ver enfermedades"}
+                Ver mensajes
               </button>
               {!mostrarDiagnosticos ? null : diagnoses.length === 0 ? <p className="text-white-50 mb-0">No tienes enfermedades registradas.</p> : diagnoses.slice(0, 4).map((diagnosis) => (
                 <div className="border-bottom border-secondary border-opacity-25 py-2" key={diagnosis.id}>

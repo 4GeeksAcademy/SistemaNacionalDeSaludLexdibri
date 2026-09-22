@@ -28,6 +28,7 @@ import { NuevaConsulta } from "./pages/NuevaConsulta";
 import { CrearReceta } from "./pages/CrearReceta";
 import { SolicitarConsulta } from "./pages/SolicitarConsulta";
 import PrivateRoute from "./components/PrivateRoute";
+import OlvideContraseña from "./pages/OlvideContraseña";
 
 
 export const router = createBrowserRouter(
@@ -56,6 +57,9 @@ export const router = createBrowserRouter(
             <Route path="tele/consulta/:citaId" element={<Teleconsulta />} />
             <Route path="teleconsulta/:citaId" element={<Teleconsulta />} />
             ```jsx
+            <Route path="/olvide/contraseña" element={<OlvideContraseña/>} />
+            <Route path="historial/clinico" element={<HistorialClinico/>} />
+            <Route path="tele/consulta" element={<Teleconsulta />} />
             <Route
                 path="dashboard/paciente"
                 element={
