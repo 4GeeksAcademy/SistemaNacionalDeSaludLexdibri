@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 import rigoImageUrl from "../assets/img/rigo-baby.jpg";
+import { Link } from "react-router-dom";
 
 export const DashboardMedico = () => {
     const { store } = useGlobalReducer();
@@ -25,36 +26,13 @@ export const DashboardMedico = () => {
     const [searchDone, setSearchDone] = useState(false);
 
     // =========================
-    // RECETAS
+    // CONSULTAS PENDIENTES
     // =========================
 
-    const [prescriptions, setPrescriptions] = useState([]);
-
-    const [newPrescription, setNewPrescription] = useState({
-        patientId: "",
-        medication: "",
-        medicationExternalId: "",
-        dosage: "",
-        frequency: "",
-        duration: "",
-        instructions: ""
-    });
-
-    const [loadingPrescriptions, setLoadingPrescriptions] = useState(false);
-    const [creatingPrescription, setCreatingPrescription] = useState(false);
-    const [removingPrescriptionId, setRemovingPrescriptionId] = useState(null);
-    const [prescriptionError, setPrescriptionError] = useState("");
-    const [prescriptionSuccess, setPrescriptionSuccess] = useState("");
-
-    // =========================
-    // BÚSQUEDA DE MEDICAMENTOS
-    // =========================
-
-    const [medicationResults, setMedicationResults] = useState([]);
-    const [searchingMedications, setSearchingMedications] = useState(false);
-    const [medicationSearchDone, setMedicationSearchDone] = useState(false);
-
-    const medicationSelectionRef = useRef(false);
+    const [consultations, setConsultations] = useState([]);
+    const [loadingConsultations, setLoadingConsultations] = useState(false);
+    const [consultationError, setConsultationError] = useState("");
+    const [completingConsultationId, setCompletingConsultationId] = useState(null);
 
     // =========================
     // MENSAJES
@@ -139,109 +117,71 @@ export const DashboardMedico = () => {
         }
     };
 
-    // =========================
-    // CARGAR MIS RECETAS
-    // =========================
-
-    const loadPrescriptions = async () => {
-        setLoadingPrescriptions(true);
-        setPrescriptionError("");
+    const loadConsultations = async () => {
+        setLoadingConsultations(true);
+        setConsultationError("");
 
         try {
             const token = getToken();
 
             if (!token) {
-                setPrescriptionError(
-                    "No hay sesión iniciada."
-                );
+                setConsultationError("No hay sesión iniciada.");
                 return;
             }
 
             const response = await fetch(
-                `${import.meta.env.VITE_BACKEND_URL}/api/medico/recetas`,
+                `${import.meta.env.VITE_BACKEND_URL}/api/medico/consultas`,
                 {
-                    method: "GET",
                     headers: {
                         Authorization: `Bearer ${token}`,
                         "Content-Type": "application/json"
                     }
                 }
             );
-
             const data = await response.json();
 
             if (!response.ok) {
-                setPrescriptionError(
-                    data.error ||
-                    "No se pudieron cargar las recetas."
+                setConsultationError(
+                    data.error || "No se pudieron cargar las consultas."
                 );
                 return;
             }
 
-            const formattedPrescriptions = (
-                data.prescriptions || []
-            ).map((prescription) => {
-                const medication =
-                    prescription.medications?.[0];
-
-                const patient = patients.find(
-                    (p) =>
-                        String(p.id) ===
-                        String(prescription.patient_id)
-                );
-
-                return {
-                    id: prescription.id,
-
-                    patientId:
-                        prescription.patient_id,
-
-                    patientName: patient
-                        ? `${patient.nombre} ${patient.apellidos}`
-                        : `Paciente #${prescription.patient_id}`,
-
-                    medication:
-                        medication?.name || "Medicamento",
-
-                    medicationExternalId:
-                        medication?.external_id || "",
-
-                    dosage:
-                        medication?.dosage || "",
-
-                    frequency:
-                        medication?.frequency || "",
-
-                    duration:
-                        medication?.duration || "",
-
-                    instructions:
-                        medication?.instructions || "",
-
-                    status:
-                        prescription.status,
-
-                    issuedAt:
-                        prescription.issued_at
-                };
-            });
-
-            setPrescriptions(
-                formattedPrescriptions
-            );
-
+            setConsultations(data.consultas || []);
         } catch (error) {
-            console.error(
-                "Error cargando recetas:",
-                error
-            );
-
-            setPrescriptionError(
-                "Error de conexión con el servidor."
-            );
-
+            console.error("Error cargando consultas:", error);
+            setConsultationError("Error de conexión con el servidor.");
         } finally {
-            setLoadingPrescriptions(false);
+            setLoadingConsultations(false);
+        }
+    };
+
+    const completeConsultation = async (consultationId) => {
+        setCompletingConsultationId(consultationId);
+        setConsultationError("");
+
+        try {
+            const response = await fetch(
+                `${import.meta.env.VITE_BACKEND_URL}/api/medico/consultas/${consultationId}/completar`,
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${getToken()}`,
+                        "Content-Type": "application/json"
+                    }
+                }
+            );
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "No se pudo completar la consulta.");
+            }
+
+            await loadConsultations();
+        } catch (error) {
+            setConsultationError(error.message);
+        } finally {
+            setCompletingConsultationId(null);
         }
     };
 
@@ -251,7 +191,7 @@ export const DashboardMedico = () => {
 
     useEffect(() => {
         loadMyPatients();
-        loadPrescriptions();
+        loadConsultations();
     }, []);
 
     // =========================
@@ -486,310 +426,6 @@ export const DashboardMedico = () => {
     };
 
     // =========================
-    // CAMBIOS EN RECETA
-    // =========================
-
-    const handlePrescriptionChange = (e) => {
-        const { name, value } = e.target;
-
-        setNewPrescription((prev) => {
-            if (name === "medication") {
-                return {
-                    ...prev,
-                    medication: value,
-                    medicationExternalId: ""
-                };
-            }
-
-            return {
-                ...prev,
-                [name]: value
-            };
-        });
-    };
-
-    // =========================
-    // CREAR RECETA
-    // =========================
-
-    const addPrescription = async (e) => {
-        e.preventDefault();
-
-        setPrescriptionError("");
-        setPrescriptionSuccess("");
-
-        if (!newPrescription.patientId) {
-            setPrescriptionError(
-                "Selecciona un paciente."
-            );
-            return;
-        }
-
-        if (!newPrescription.medication.trim()) {
-            setPrescriptionError(
-                "Introduce un medicamento."
-            );
-            return;
-        }
-
-        if (!newPrescription.dosage.trim()) {
-            setPrescriptionError(
-                "Introduce la dosis."
-            );
-            return;
-        }
-
-        setCreatingPrescription(true);
-
-        try {
-            const token = getToken();
-
-            if (!token) {
-                setPrescriptionError(
-                    "No hay sesión iniciada."
-                );
-                return;
-            }
-
-            const response = await fetch(
-                `${import.meta.env.VITE_BACKEND_URL}/api/medico/recetas`,
-                {
-                    method: "POST",
-
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json"
-                    },
-
-                    body: JSON.stringify({
-                        patient_id:
-                            Number(
-                                newPrescription.patientId
-                            ),
-
-                        medication_external_id:
-                            newPrescription.medicationExternalId ||
-                            null,
-
-                        medication_name:
-                            newPrescription.medication.trim(),
-
-                        dosage:
-                            newPrescription.dosage.trim(),
-
-                        frequency:
-                            newPrescription.frequency.trim() ||
-                            null,
-
-                        duration:
-                            newPrescription.duration.trim() ||
-                            null,
-
-                        instructions:
-                            newPrescription.instructions.trim() ||
-                            null
-                    })
-                }
-            );
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                setPrescriptionError(
-                    data.error ||
-                    "No se pudo crear la receta."
-                );
-                return;
-            }
-
-            setPrescriptionSuccess(
-                "Receta creada correctamente."
-            );
-
-            setNewPrescription({
-                patientId: "",
-                medication: "",
-                medicationExternalId: "",
-                dosage: "",
-                frequency: "",
-                duration: "",
-                instructions: ""
-            });
-
-            setMedicationResults([]);
-            setMedicationSearchDone(false);
-            setSearchingMedications(false);
-
-            await loadPrescriptions();
-
-        } catch (error) {
-            console.error(
-                "Error creando receta:",
-                error
-            );
-
-            setPrescriptionError(
-                "Error de conexión con el servidor."
-            );
-
-        } finally {
-            setCreatingPrescription(false);
-        }
-    };
-
-    // =========================
-    // CANCELAR RECETA
-    // =========================
-
-    const removePrescription = async (id) => {
-        setRemovingPrescriptionId(id);
-        setPrescriptionError("");
-        setPrescriptionSuccess("");
-
-        try {
-            const token = getToken();
-
-            if (!token) {
-                setPrescriptionError(
-                    "No hay sesión iniciada."
-                );
-                return;
-            }
-
-            const response = await fetch(
-                `${import.meta.env.VITE_BACKEND_URL}/api/medico/recetas/${id}`,
-                {
-                    method: "DELETE",
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json"
-                    }
-                }
-            );
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                setPrescriptionError(
-                    data.error ||
-                    "No se pudo cancelar la receta."
-                );
-                return;
-            }
-
-            setPrescriptionSuccess(
-                "Receta cancelada correctamente."
-            );
-
-            await loadPrescriptions();
-
-        } catch (error) {
-            console.error(
-                "Error cancelando receta:",
-                error
-            );
-
-            setPrescriptionError(
-                "Error de conexión con el servidor."
-            );
-
-        } finally {
-            setRemovingPrescriptionId(null);
-        }
-    };
-
-    // =========================
-    // BÚSQUEDA DE MEDICAMENTOS
-    // =========================
-
-    useEffect(() => {
-        const query =
-            newPrescription.medication.trim();
-
-        if (medicationSelectionRef.current) {
-            medicationSelectionRef.current = false;
-            return;
-        }
-
-        if (!query) {
-            setMedicationResults([]);
-            setMedicationSearchDone(false);
-            setSearchingMedications(false);
-            return;
-        }
-
-        if (query.length < 2) {
-            setMedicationResults([]);
-            setMedicationSearchDone(false);
-            setSearchingMedications(false);
-            return;
-        }
-
-        let cancelled = false;
-
-        const timeoutId = setTimeout(async () => {
-            setSearchingMedications(true);
-            setMedicationSearchDone(false);
-
-            try {
-                const response = await fetch(
-                    `${import.meta.env.VITE_BACKEND_URL}/api/medicamentos?q=${encodeURIComponent(
-                        query
-                    )}`
-                );
-
-                const data = await response.json();
-
-                if (cancelled) {
-                    return;
-                }
-
-                if (!response.ok) {
-                    console.error(
-                        "Error buscando medicamentos:",
-                        data.error
-                    );
-
-                    setMedicationResults([]);
-                    setMedicationSearchDone(true);
-                    return;
-                }
-
-                setMedicationResults(
-                    data.resultados || []
-                );
-
-                setMedicationSearchDone(true);
-
-            } catch (error) {
-                if (cancelled) {
-                    return;
-                }
-
-                console.error(
-                    "Error buscando medicamentos:",
-                    error
-                );
-
-                setMedicationResults([]);
-                setMedicationSearchDone(false);
-
-            } finally {
-                if (!cancelled) {
-                    setSearchingMedications(false);
-                }
-            }
-
-        }, 400);
-
-        return () => {
-            cancelled = true;
-            clearTimeout(timeoutId);
-        };
-
-    }, [newPrescription.medication]);
-
-    // =========================
     // DATOS DEL MÉDICO
     // =========================
 
@@ -827,7 +463,7 @@ export const DashboardMedico = () => {
                             </h1>
 
                             <p className="text-white-50 mb-0">
-                                Gestiona tus pacientes y recetas desde un mismo lugar.
+                                Gestiona tus pacientes desde un mismo lugar.
                             </p>
                         </div>
                     </div>
@@ -853,20 +489,14 @@ export const DashboardMedico = () => {
 
                     <div className="col-12 col-md-4">
                         <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
-                            <span className="fs-2">💊</span>
+                            <span className="fs-2">📅</span>
 
                             <p className="text-info text-uppercase small fw-semibold mt-3 mb-1">
-                                Recetas creadas
+                                Consultas pendientes
                             </p>
 
                             <h2 className="display-6 fw-bold mb-0">
-                                {
-                                    prescriptions.filter(
-                                        (prescription) =>
-                                            prescription.status !==
-                                            "cancelled"
-                                    ).length
-                                }
+                                {consultations.length}
                             </h2>
                         </div>
                     </div>
@@ -1028,11 +658,10 @@ export const DashboardMedico = () => {
                                                     </div>
 
                                                     <span
-                                                        className={`badge rounded-pill ${
-                                                            alreadyMine
+                                                        className={`badge rounded-pill ${alreadyMine
                                                                 ? "bg-success"
                                                                 : "bg-secondary"
-                                                        }`}
+                                                            }`}
                                                     >
                                                         {alreadyMine
                                                             ? "Mi paciente"
@@ -1352,19 +981,37 @@ export const DashboardMedico = () => {
 
                                     <div className="d-flex flex-wrap gap-2 mt-4">
 
-                                        <button
-                                            type="button"
+                                        <Link
+                                            to="/historial/clinico"
+                                            state={{ patient }}
                                             className="btn btn-outline-info rounded-pill btn-sm"
                                         >
                                             Ver historial
-                                        </button>
+                                        </Link>
 
-                                        <button
-                                            type="button"
-                                            className="btn btn-outline-success rounded-pill btn-sm"
+                                        <Link
+                                            to="/nueva-consulta"
+                                            state={{ patient }}
+                                            className="btn btn-outline-info rounded-pill btn-sm"
                                         >
                                             Nueva consulta
-                                        </button>
+                                        </Link>
+
+                                        <Link
+                                            to="/crear-receta"
+                                            state={{ patient }}
+                                            className="btn btn-outline-info rounded-pill btn-sm"
+                                        >
+                                            Crear receta
+                                        </Link>
+
+                                        <Link
+                                            to="/nuevo-diagnostico"
+                                            state={{ patient }}
+                                            className="btn btn-outline-info rounded-pill btn-sm"
+                                        >
+                                            Crear diagnóstico
+                                        </Link>
 
                                         <button
                                             type="button"
@@ -1380,7 +1027,7 @@ export const DashboardMedico = () => {
                                             }
                                         >
                                             {removingPatientId ===
-                                            patient.id
+                                                patient.id
                                                 ? "Eliminando..."
                                                 : "Eliminar"}
                                         </button>
@@ -1395,462 +1042,115 @@ export const DashboardMedico = () => {
 
                 </div>
 
-                {/* RECETAS */}
+                {/* CONSULTAS PENDIENTES */}
 
                 <div className="row g-4 mb-5">
-
-                    {/* CREAR RECETA */}
-
-                    <div className="col-12 col-xl-6">
-
-                        <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
-
-                            <div className="mb-4">
-                                <span className="text-info text-uppercase small fw-semibold">
-                                    Tratamiento
-                                </span>
-
-                                <h2 className="h4 fw-bold mb-0 mt-1">
-                                    Crear receta
-                                </h2>
-                            </div>
-
-                            {prescriptionError && (
-                                <div className="alert alert-danger">
-                                    {prescriptionError}
-                                </div>
-                            )}
-
-                            {prescriptionSuccess && (
-                                <div className="alert alert-success">
-                                    {prescriptionSuccess}
-                                </div>
-                            )}
-
-                            <form onSubmit={addPrescription}>
-
-                                <div className="mb-3">
-                                    <label className="form-label">
-                                        Paciente
-                                    </label>
-
-                                    <select
-                                        className="form-select bg-dark text-white border-secondary"
-                                        name="patientId"
-                                        value={
-                                            newPrescription.patientId
-                                        }
-                                        onChange={
-                                            handlePrescriptionChange
-                                        }
-                                    >
-                                        <option value="">
-                                            Selecciona un paciente
-                                        </option>
-
-                                        {patients.map((patient) => (
-                                            <option
-                                                key={patient.id}
-                                                value={patient.id}
-                                            >
-                                                {patient.nombre}{" "}
-                                                {patient.apellidos}
-                                            </option>
-                                        ))}
-                                    </select>
-
-                                    {patients.length === 0 && (
-                                        <div className="form-text text-white-50">
-                                            Primero agrega un paciente a tu lista.
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* MEDICAMENTO */}
-
-                                <div className="mb-3 position-relative">
-
-                                    <label className="form-label">
-                                        Medicamento
-                                    </label>
-
-                                    <input
-                                        type="text"
-                                        className="form-control bg-dark text-white border-secondary"
-                                        name="medication"
-                                        placeholder="Ej. Paracetamol"
-                                        value={
-                                            newPrescription.medication
-                                        }
-                                        onChange={
-                                            handlePrescriptionChange
-                                        }
-                                        autoComplete="off"
-                                    />
-
-                                    {searchingMedications && (
-                                        <div className="text-white-50 small mt-2">
-                                            Buscando medicamentos...
-                                        </div>
-                                    )}
-
-                                    {!searchingMedications &&
-                                        medicationSearchDone &&
-                                        medicationResults.length === 0 && (
-                                            <div className="text-white-50 small mt-2">
-                                                No se encontraron medicamentos.
-                                                Puedes introducir un medicamento manualmente.
-                                            </div>
-                                        )}
-
-                                    {medicationResults.length > 0 && (
-                                        <div
-                                            className="list-group position-absolute w-100 shadow"
-                                            style={{
-                                                top: "100%",
-                                                zIndex: 1000,
-                                                maxHeight: "300px",
-                                                overflowY: "auto"
-                                            }}
-                                        >
-                                            {medicationResults.map(
-                                                (medication) => (
-                                                    <button
-                                                        type="button"
-                                                        key={
-                                                            medication.registro
-                                                        }
-                                                        className="list-group-item list-group-item-action"
-                                                        onClick={() => {
-                                                            medicationSelectionRef.current =
-                                                                true;
-
-                                                            setNewPrescription({
-                                                                ...newPrescription,
-                                                                medication:
-                                                                    medication.nombre,
-                                                                medicationExternalId:
-                                                                    medication.registro ||
-                                                                    "",
-                                                                dosage:
-                                                                    medication.dosis ||
-                                                                    ""
-                                                            });
-
-                                                            setMedicationResults(
-                                                                []
-                                                            );
-
-                                                            setMedicationSearchDone(
-                                                                false
-                                                            );
-
-                                                            setSearchingMedications(
-                                                                false
-                                                            );
-                                                        }}
-                                                    >
-                                                        <div className="fw-bold">
-                                                            {
-                                                                medication.nombre
-                                                            }
-                                                        </div>
-
-                                                        <small className="text-muted">
-                                                            {medication.principio_activo &&
-                                                                medication.principio_activo}
-
-                                                            {medication.dosis &&
-                                                                ` · ${medication.dosis}`}
-
-                                                            {medication.forma_farmaceutica &&
-                                                                ` · ${medication.forma_farmaceutica}`}
-                                                        </small>
-                                                    </button>
-                                                )
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="mb-3">
-                                    <label className="form-label">
-                                        Dosis
-                                    </label>
-
-                                    <input
-                                        type="text"
-                                        className="form-control bg-dark text-white border-secondary"
-                                        name="dosage"
-                                        placeholder="Ej. 500 mg"
-                                        value={
-                                            newPrescription.dosage
-                                        }
-                                        onChange={
-                                            handlePrescriptionChange
-                                        }
-                                    />
-                                </div>
-
-                                <div className="mb-3">
-                                    <label className="form-label">
-                                        Frecuencia
-                                    </label>
-
-                                    <input
-                                        type="text"
-                                        className="form-control bg-dark text-white border-secondary"
-                                        name="frequency"
-                                        placeholder="Ej. Cada 8 horas"
-                                        value={
-                                            newPrescription.frequency
-                                        }
-                                        onChange={
-                                            handlePrescriptionChange
-                                        }
-                                    />
-                                </div>
-
-                                <div className="mb-3">
-                                    <label className="form-label">
-                                        Duración
-                                    </label>
-
-                                    <input
-                                        type="text"
-                                        className="form-control bg-dark text-white border-secondary"
-                                        name="duration"
-                                        placeholder="Ej. 7 días"
-                                        value={
-                                            newPrescription.duration
-                                        }
-                                        onChange={
-                                            handlePrescriptionChange
-                                        }
-                                    />
-                                </div>
-
-                                <div className="mb-4">
-                                    <label className="form-label">
-                                        Instrucciones
-                                    </label>
-
-                                    <textarea
-                                        className="form-control bg-dark text-white border-secondary"
-                                        rows="3"
-                                        name="instructions"
-                                        placeholder="Indicaciones para el paciente..."
-                                        value={
-                                            newPrescription.instructions
-                                        }
-                                        onChange={
-                                            handlePrescriptionChange
-                                        }
-                                    />
-                                </div>
-
-                                <button
-                                    type="submit"
-                                    className="btn btn-info rounded-pill fw-semibold"
-                                    disabled={
-                                        patients.length === 0 ||
-                                        creatingPrescription
-                                    }
-                                >
-                                    {creatingPrescription
-                                        ? "Creando receta..."
-                                        : "Crear receta"}
-                                </button>
-
-                            </form>
-
-                        </div>
-                    </div>
-
-                    {/* RECETAS CREADAS */}
-
-                    <div className="col-12 col-xl-6">
-
-                        <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
-
+                    <div className="col-12">
+                        <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4">
                             <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
-
                                 <div>
-                                    <span className="text-info text-uppercase small fw-semibold">
-                                        Historial
+                                    <span className="text-warning text-uppercase small fw-semibold">
+                                        Agenda médica
                                     </span>
-
                                     <h2 className="h4 fw-bold mb-0 mt-1">
-                                        Recetas
+                                        Consultas pendientes
                                     </h2>
                                 </div>
 
                                 <button
                                     type="button"
-                                    className="btn btn-outline-info rounded-pill btn-sm"
-                                    onClick={loadPrescriptions}
-                                    disabled={
-                                        loadingPrescriptions
-                                    }
+                                    className="btn btn-outline-warning rounded-pill btn-sm"
+                                    onClick={loadConsultations}
+                                    disabled={loadingConsultations}
                                 >
-                                    {loadingPrescriptions
+                                    {loadingConsultations
                                         ? "Actualizando..."
                                         : "Actualizar"}
                                 </button>
-
                             </div>
 
-                            {loadingPrescriptions &&
-                                prescriptions.length === 0 && (
-                                    <div className="text-center py-5">
-                                        <div
-                                            className="spinner-border text-info"
-                                            role="status"
-                                        >
-                                            <span className="visually-hidden">
-                                                Cargando...
-                                            </span>
-                                        </div>
-
-                                        <p className="text-white-50 mt-3">
-                                            Cargando recetas...
-                                        </p>
-                                    </div>
-                                )}
-
-                            {!loadingPrescriptions &&
-                                prescriptions.length === 0 && (
-                                    <div className="text-center py-5">
-                                        <div className="fs-1 mb-3">
-                                            💊
-                                        </div>
-
-                                        <p className="text-white-50 mb-0">
-                                            Todavía no has creado ninguna receta.
-                                        </p>
-                                    </div>
-                                )}
-
-                            {prescriptions.length > 0 && (
-                                <div>
-                                    {prescriptions.map(
-                                        (prescription) => (
-                                            <div
-                                                key={
-                                                    prescription.id
-                                                }
-                                                className="bg-dark bg-opacity-50 border border-secondary border-opacity-50 rounded-4 p-3 mb-3"
-                                            >
-
-                                                <div className="d-flex justify-content-between align-items-start gap-3">
-
-                                                    <div className="flex-grow-1">
-
-                                                        <div className="d-flex align-items-center flex-wrap gap-2 mb-2">
-
-                                                            <h3 className="h6 fw-bold mb-0">
-                                                                {
-                                                                    prescription.patientName
-                                                                }
-                                                            </h3>
-
-                                                            {prescription.status ===
-                                                                "cancelled" && (
-                                                                    <span className="badge bg-danger rounded-pill">
-                                                                        Cancelada
-                                                                    </span>
-                                                                )}
-
-                                                        </div>
-
-                                                        <strong className="d-block mb-1">
-                                                            {
-                                                                prescription.medication
-                                                            }
-                                                        </strong>
-
-                                                        <span className="text-white-50 small d-block">
-                                                            {
-                                                                prescription.dosage
-                                                            }
-                                                        </span>
-
-                                                        {prescription.frequency && (
-                                                            <span className="text-white-50 small d-block mt-1">
-                                                                <strong>
-                                                                    Frecuencia:
-                                                                </strong>{" "}
-                                                                {
-                                                                    prescription.frequency
-                                                                }
-                                                            </span>
-                                                        )}
-
-                                                        {prescription.duration && (
-                                                            <span className="text-white-50 small d-block mt-1">
-                                                                <strong>
-                                                                    Duración:
-                                                                </strong>{" "}
-                                                                {
-                                                                    prescription.duration
-                                                                }
-                                                            </span>
-                                                        )}
-
-                                                        {prescription.instructions && (
-                                                            <span className="text-white-50 small d-block mt-2">
-                                                                {
-                                                                    prescription.instructions
-                                                                }
-                                                            </span>
-                                                        )}
-
-                                                        {prescription.issuedAt && (
-                                                            <span className="text-white-50 small d-block mt-2">
-                                                                Creada:{" "}
-                                                                {new Date(
-                                                                    prescription.issuedAt
-                                                                ).toLocaleString(
-                                                                    "es-ES"
-                                                                )}
-                                                            </span>
-                                                        )}
-
-                                                    </div>
-
-                                                    {prescription.status ===
-                                                        "active" && (
-                                                            <button
-                                                                type="button"
-                                                                className="btn btn-outline-danger btn-sm rounded-pill flex-shrink-0"
-                                                                onClick={() =>
-                                                                    removePrescription(
-                                                                        prescription.id
-                                                                    )
-                                                                }
-                                                                disabled={
-                                                                    removingPrescriptionId ===
-                                                                    prescription.id
-                                                                }
-                                                            >
-                                                                {removingPrescriptionId ===
-                                                                prescription.id
-                                                                    ? "Cancelando..."
-                                                                    : "Cancelar"}
-                                                            </button>
-                                                        )}
-
-                                                </div>
-
-                                            </div>
-                                        )
-                                    )}
+                            {consultationError && (
+                                <div className="alert alert-danger">
+                                    {consultationError}
                                 </div>
                             )}
 
+                            {loadingConsultations && consultations.length === 0 && (
+                                <div className="text-center py-4">
+                                    <div className="spinner-border text-warning" role="status">
+                                        <span className="visually-hidden">Cargando...</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {!loadingConsultations &&
+                                !consultationError &&
+                                consultations.length === 0 && (
+                                    <p className="text-white-50 mb-0">
+                                        No tienes consultas pendientes.
+                                    </p>
+                                )}
+
+                            {consultations.length > 0 && (
+                                <div className="row g-3">
+                                    {consultations.map((consultation) => (
+                                        <div className="col-12 col-md-6 col-xl-4" key={consultation.id}>
+                                            <div className="border border-secondary border-opacity-50 rounded-3 p-3 h-100">
+                                                <div className="d-flex justify-content-between gap-2 mb-2">
+                                                    <h3 className="h6 mb-0">
+                                                        {consultation.patient_name}
+                                                    </h3>
+                                                    <span className="badge text-bg-warning">
+                                                        {consultation.status === "confirmed"
+                                                            ? "Confirmada"
+                                                            : "Programada"}
+                                                    </span>
+                                                </div>
+                                                <p className="text-white-50 small mb-2">
+                                                    {consultation.appointment_type} · {
+                                                        consultation.modality === "virtual"
+                                                            ? "Virtual"
+                                                            : "Presencial"
+                                                    }
+                                                </p>
+                                                <p className="text-white mb-2">
+                                                    {consultation.scheduled_start
+                                                        ? new Date(consultation.scheduled_start).toLocaleString("es-ES", {
+                                                            dateStyle: "medium",
+                                                            timeStyle: "short"
+                                                        })
+                                                        : "Fecha no disponible"}
+                                                </p>
+                                                {consultation.reason && (
+                                                    <p className="text-white-50 small mb-0">
+                                                        {consultation.reason}
+                                                    </p>
+                                                )}
+                                                {consultation.modality === "virtual" && (
+                                                    <Link
+                                                        to={`/teleconsulta/${consultation.id}`}
+                                                        className="btn btn-info rounded-pill btn-sm mt-3"
+                                                    >
+                                                        Entrar en teleconsulta
+                                                    </Link>
+                                                )}
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-outline-success rounded-pill btn-sm mt-3 ms-2"
+                                                    onClick={() => completeConsultation(consultation.id)}
+                                                    disabled={completingConsultationId === consultation.id}
+                                                >
+                                                    {completingConsultationId === consultation.id
+                                                        ? "Completando..."
+                                                        : "Marcar como completada"}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
-
                 </div>
 
                 {/* MENSAJES */}
