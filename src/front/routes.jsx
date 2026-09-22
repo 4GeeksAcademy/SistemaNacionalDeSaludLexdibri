@@ -23,6 +23,9 @@ import { Home } from "./pages/Home";
 import { DashboardMedico } from "./pages/DashboardMedico";
 import Teleconsulta from "./pages/Teleconsulta";
 import { HistorialClinico } from "./pages/HistorialClinico";
+import { NuevoDiagnostico } from "./pages/NuevoDiagnostico";
+import { NuevaConsulta } from "./pages/NuevaConsulta";
+import { CrearReceta } from "./pages/CrearReceta";
 import PrivateRoute from "./components/PrivateRoute";
 
 
@@ -38,6 +41,9 @@ export const router = createBrowserRouter(
             <Route path="/login" element={<Login />} />
 
             <Route path="historial/clinico" element={<HistorialClinico/>} />
+            <Route path="nuevo-diagnostico" element={<NuevoDiagnostico />} />
+            <Route path="nueva-consulta" element={<NuevaConsulta />} />
+            <Route path="crear-receta" element={<CrearReceta />} />
             <Route path="tele/consulta" element={<Teleconsulta />} />
             ```jsx
             <Route

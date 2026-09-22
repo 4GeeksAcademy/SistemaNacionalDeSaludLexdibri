@@ -3,7 +3,7 @@ This module takes care of starting the API Server, Loading the DB and Adding the
 """
 
 from flask import Flask, request, jsonify, url_for, Blueprint
-from api.models import db, User, Patient, Doctor, Specialty, UserRole, Disease,DoctorPatient,Medication, Prescription,PrescriptionMedication
+from api.models import db, User, Patient, Doctor, Specialty, UserRole, Disease, Diagnosis, DoctorPatient, Appointment, Medication, Prescription, PrescriptionMedication
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from datetime import datetime
@@ -457,6 +457,237 @@ def obtener_enfermedades():
         "enfermedades": [
             disease.serialize()
             for disease in diseases
+        ]
+    }), 200
+
+
+@api.route("/medico/pacientes/<int:patient_id>/enfermedades", methods=["GET"])
+@jwt_required()
+def obtener_enfermedades_paciente(patient_id):
+
+    user_id = get_jwt_identity()
+    user = db.session.get(User, int(user_id))
+
+    if not user:
+        return jsonify({
+            "error": "Usuario no encontrado"
+        }), 404
+
+    if user.role != UserRole.DOCTOR or not user.doctor:
+        return jsonify({
+            "error": "No tienes permisos para consultar enfermedades"
+        }), 403
+
+    patient_is_assigned = db.session.execute(
+        db.select(DoctorPatient).where(
+            DoctorPatient.doctor_id == user.doctor.id,
+            DoctorPatient.patient_id == patient_id,
+            DoctorPatient.is_active.is_(True)
+        )
+    ).scalar_one_or_none()
+
+    if not patient_is_assigned:
+        return jsonify({
+            "error": "El paciente no está asignado a este médico"
+        }), 403
+
+    diagnoses = db.session.execute(
+        db.select(Diagnosis)
+        .join(Disease, Diagnosis.disease_id == Disease.id)
+        .where(Diagnosis.patient_id == patient_id)
+        .order_by(Diagnosis.diagnosed_at.desc())
+    ).scalars().all()
+
+    return jsonify({
+        "enfermedades": [
+            {
+                "id": diagnosis.id,
+                "nombre": diagnosis.disease.name,
+                "descripcion": (
+                    diagnosis.disease.description
+                    or "Sin descripción disponible"
+                ),
+                "fecha": (
+                    diagnosis.diagnosed_at.isoformat()
+                    if diagnosis.diagnosed_at
+                    else None
+                ),
+                "estado": diagnosis.status or "Activo",
+                "detalle": diagnosis.notes or "Sin observaciones"
+            }
+            for diagnosis in diagnoses
+        ]
+    }), 200
+
+
+@api.route("/medico/pacientes/<int:patient_id>/diagnosticos", methods=["POST"])
+@jwt_required()
+def crear_diagnostico_paciente(patient_id):
+
+    user_id = get_jwt_identity()
+    user = db.session.get(User, int(user_id))
+
+    if not user:
+        return jsonify({"error": "Usuario no encontrado"}), 404
+
+    if user.role != UserRole.DOCTOR or not user.doctor:
+        return jsonify({"error": "No tienes permisos para crear diagnósticos"}), 403
+
+    patient_is_assigned = db.session.execute(
+        db.select(DoctorPatient).where(
+            DoctorPatient.doctor_id == user.doctor.id,
+            DoctorPatient.patient_id == patient_id,
+            DoctorPatient.is_active.is_(True)
+        )
+    ).scalar_one_or_none()
+
+    if not patient_is_assigned:
+        return jsonify({
+            "error": "El paciente no está asignado a este médico"
+        }), 403
+
+    data = request.get_json() or {}
+    disease_id = data.get("disease_id")
+
+    if not disease_id:
+        return jsonify({"error": "Debes seleccionar una enfermedad"}), 400
+
+    disease = db.session.get(Disease, int(disease_id))
+    if not disease:
+        return jsonify({"error": "La enfermedad no existe"}), 404
+
+    diagnosis = Diagnosis(
+        patient_id=patient_id,
+        disease_id=disease.id,
+        doctor_id=user.doctor.id,
+        diagnosed_at=datetime.utcnow(),
+        status=data.get("status") or "Activo",
+        notes=data.get("notes")
+    )
+
+    db.session.add(diagnosis)
+    db.session.commit()
+
+    return jsonify({
+        "message": "Diagnóstico creado correctamente",
+        "diagnostico": diagnosis.serialize()
+    }), 201
+
+
+@api.route("/medico/pacientes/<int:patient_id>/consultas", methods=["POST"])
+@jwt_required()
+def crear_consulta_paciente(patient_id):
+
+    user_id = get_jwt_identity()
+    user = db.session.get(User, int(user_id))
+
+    if not user:
+        return jsonify({"error": "Usuario no encontrado"}), 404
+
+    if user.role != UserRole.DOCTOR or not user.doctor:
+        return jsonify({"error": "No tienes permisos para crear consultas"}), 403
+
+    patient_is_assigned = db.session.execute(
+        db.select(DoctorPatient).where(
+            DoctorPatient.doctor_id == user.doctor.id,
+            DoctorPatient.patient_id == patient_id,
+            DoctorPatient.is_active.is_(True)
+        )
+    ).scalar_one_or_none()
+
+    if not patient_is_assigned:
+        return jsonify({
+            "error": "El paciente no está asignado a este médico"
+        }), 403
+
+    data = request.get_json() or {}
+    scheduled_start_value = data.get("scheduled_start")
+    modality = data.get("modality")
+
+    if modality not in ("virtual", "presencial"):
+        return jsonify({
+            "error": "Debes seleccionar si la consulta es virtual o presencial"
+        }), 400
+
+    if not scheduled_start_value:
+        return jsonify({
+            "error": "Debes indicar la fecha y hora de la consulta"
+        }), 400
+
+    try:
+        scheduled_start = datetime.fromisoformat(
+            scheduled_start_value.replace("Z", "+00:00")
+        )
+    except (TypeError, ValueError):
+        return jsonify({
+            "error": "La fecha y hora de la consulta no son válidas"
+        }), 400
+
+    scheduled_end = None
+    if data.get("scheduled_end"):
+        try:
+            scheduled_end = datetime.fromisoformat(
+                data["scheduled_end"].replace("Z", "+00:00")
+            )
+        except (TypeError, ValueError):
+            return jsonify({
+                "error": "La hora de finalización no es válida"
+            }), 400
+
+    consultation = Appointment(
+        patient_id=patient_id,
+        doctor_id=user.doctor.id,
+        appointment_type=data.get("appointment_type") or "Consulta médica",
+        modality=modality,
+        scheduled_start=scheduled_start,
+        scheduled_end=scheduled_end,
+        status=data.get("status") or "scheduled",
+        reason=data.get("reason") or None
+    )
+
+    db.session.add(consultation)
+    db.session.commit()
+
+    return jsonify({
+        "message": "Consulta creada correctamente",
+        "consulta": consultation.serialize()
+    }), 201
+
+
+@api.route("/medico/consultas", methods=["GET"])
+@jwt_required()
+def obtener_consultas_pendientes():
+
+    user_id = get_jwt_identity()
+    user = db.session.get(User, int(user_id))
+
+    if not user:
+        return jsonify({"error": "Usuario no encontrado"}), 404
+
+    if user.role != UserRole.DOCTOR or not user.doctor:
+        return jsonify({"error": "No tienes permisos para consultar citas"}), 403
+
+    consultations = db.session.execute(
+        db.select(Appointment)
+        .join(Patient, Appointment.patient_id == Patient.id)
+        .join(User, Patient.user_id == User.id)
+        .where(
+            Appointment.doctor_id == user.doctor.id,
+            Appointment.status.notin_(["cancelled", "completed"])
+        )
+        .order_by(Appointment.scheduled_start.asc())
+    ).scalars().all()
+
+    return jsonify({
+        "consultas": [
+            {
+                **consultation.serialize(),
+                "patient_name": (
+                    f"{consultation.patient.user.first_name} "
+                    f"{consultation.patient.user.last_name}"
+                )
+            }
+            for consultation in consultations
         ]
     }), 200
 
