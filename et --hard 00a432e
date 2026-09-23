@@ -1,0 +1,10 @@
+[33m1a55a1b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/OrganizandoDashboardMedico[m[33m, [m[1;31morigin/feature/OrganizandoDashboardMedico[m[33m)[m HEAD@{0}: pull --ff-only: Fast-forward
+[33m00a432e[m HEAD@{1}: checkout: moving from develop to feature/OrganizandoDashboardMedico
+[33mca16412[m[33m ([m[1;32mdevelop[m[33m)[m HEAD@{2}: checkout: moving from feature/OrganizandoDashboardMedico to develop
+[33m00a432e[m HEAD@{3}: checkout: moving from develop to feature/OrganizandoDashboardMedico
+[33mca16412[m[33m ([m[1;32mdevelop[m[33m)[m HEAD@{4}: pull: Fast-forward
+[33m3023753[m HEAD@{5}: checkout: moving from feature/OrganizandoDashboardMedico to develop
+[33m00a432e[m HEAD@{6}: commit: cambios en su totalidad
+[33m1f1519a[m HEAD@{7}: commit: cambios en el dashboard de los medicos
+[33m3023753[m HEAD@{8}: merge origin/develop: Fast-forward
+[33m8942f19[m HEAD@{9}: checkout: moving from develop to feature/OrganizandoDashboardMedico
