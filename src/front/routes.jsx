@@ -23,11 +23,8 @@ import { Home } from "./pages/Home";
 import { DashboardMedico } from "./pages/DashboardMedico";
 import Teleconsulta from "./pages/Teleconsulta";
 import { HistorialClinico } from "./pages/HistorialClinico";
-import { NuevoDiagnostico } from "./pages/NuevoDiagnostico";
-import { NuevaConsulta } from "./pages/NuevaConsulta";
-import { CrearReceta } from "./pages/CrearReceta";
-import { SolicitarConsulta } from "./pages/SolicitarConsulta";
 import PrivateRoute from "./components/PrivateRoute";
+import OlvideContraseña from "./pages/OlvideContraseña";
 
 
 export const router = createBrowserRouter(
@@ -40,22 +37,9 @@ export const router = createBrowserRouter(
 
             <Route index element={<Home />} />
             <Route path="/login" element={<Login />} />
-
-            <Route path="historial/clinico" element={<HistorialClinico />} />
-            <Route path="nuevo-diagnostico" element={<NuevoDiagnostico />} />
-            <Route path="nueva-consulta" element={<NuevaConsulta />} />
-            <Route path="crear-receta" element={<CrearReceta />} />
-            <Route
-                path="solicitar-consulta"
-                element={
-                    <PrivateRoute>
-                        <SolicitarConsulta />
-                    </PrivateRoute>
-                }
-            />
-            <Route path="tele/consulta/:citaId" element={<Teleconsulta />} />
-            <Route path="teleconsulta/:citaId" element={<Teleconsulta />} />
-            ```jsx
+            <Route path="/olvide/contraseña" element={<OlvideContraseña/>} />
+            <Route path="historial/clinico" element={<HistorialClinico/>} />
+            <Route path="tele/consulta" element={<Teleconsulta />} />
             <Route
                 path="dashboard/paciente"
                 element={
@@ -73,7 +57,7 @@ export const router = createBrowserRouter(
                     </PrivateRoute>
                 }
             />
-
+            
 
             <Route path="register" element={<Register />} />
             <Route path="demo" element={<Demo />} />

@@ -1,58 +1,122 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { registrarUsuario } from "../services/authServices";
+
+// Datos de los pacientes pre-registrados en el sistema (sin credenciales ni datos privados)
+const pacientesRegistrados = [
+  {
+    first_name: "Ana",
+    last_name: "García López",
+    dni: "12345678Z",
+    date_of_birth: "1988-04-15",
+    sex: "F",
+    is_active: true,
+    cip: "CIP000001"
+  },
+  {
+    first_name: "Carlos",
+    last_name: "Martínez Ruiz",
+    dni: "23456789D",
+    date_of_birth: "1975-09-22",
+    sex: "M",
+    is_active: true,
+    cip: "CIP000002"
+  },
+  {
+    first_name: "Laura",
+    last_name: "Sánchez Martín",
+    dni: "34567890V",
+    date_of_birth: "1995-02-10",
+    sex: "F",
+    is_active: true,
+    cip: "CIP000003"
+  },
+  {
+    first_name: "Miguel",
+    last_name: "Fernández García",
+    dni: "45678901G",
+    date_of_birth: "1968-11-30",
+    sex: "M",
+    is_active: true,
+    cip: "CIP000004"
+  },
+  {
+    first_name: "Marta",
+    last_name: "López Rodríguez",
+    dni: "56789012B",
+    date_of_birth: "2001-07-18",
+    sex: "F",
+    is_active: true,
+    cip: "CIP000005"
+  },
+  {
+    first_name: "David",
+    last_name: "Navarro Pérez",
+    dni: "67890123N",
+    date_of_birth: "1982-04-03",
+    sex: "M",
+    is_active: true,
+    cip: "CIP000006"
+  },
+  {
+    first_name: "Sofía",
+    last_name: "Romero Díaz",
+    dni: "78901234X",
+    date_of_birth: "1990-12-25",
+    sex: "F",
+    is_active: true,
+    cip: "CIP000007"
+  },
+  {
+    first_name: "Jorge",
+    last_name: "Molina Sánchez",
+    dni: "89012345E",
+    date_of_birth: "1959-06-12",
+    sex: "M",
+    is_active: true,
+    cip: "CIP000008"
+  },
+  {
+    first_name: "Elena",
+    last_name: "Castro Moreno",
+    dni: "90123456W",
+    date_of_birth: "1979-03-27",
+    sex: "F",
+    is_active: true,
+    cip: "CIP000009"
+  },
+  {
+    first_name: "Pablo",
+    last_name: "Ortega Jiménez",
+    dni: "01234567L",
+    date_of_birth: "1998-10-05",
+    sex: "M",
+    is_active: true,
+    cip: "CIP000010"
+  }
+];
 
 export const Register = () => {
     const [tipoUsuario, setTipoUsuario] = useState("paciente");
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+    // Estado del formulario
+    const [formData, setFormData] = useState({
+        dni: "",
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        dateOfBirth: "",
+        sex: "",
+        bloodType: "",
+        cip: "",
+        password: "",
+        confirmPassword: ""
+    });
+
     const [error, setError] = useState("");
-    const [success, setSuccess] = useState("");
-    const [submitting, setSubmitting] = useState(false);
-    const [especialidades, setEspecialidades] = useState([]);
-    const [loadingEspecialidades, setLoadingEspecialidades] = useState(false);
-    const [errorEspecialidades, setErrorEspecialidades] = useState("");
-
-    const handleSubmit = async (event) => {
-        event.preventDefault();
-        setError("");
-        setSuccess("");
-
-        const formData = new FormData(event.currentTarget);
-        const password = formData.get("password");
-        const confirmPassword = formData.get("confirm_password");
-
-        if (password !== confirmPassword) {
-            setError("Las contraseñas no coinciden.");
-            return;
-        }
-
-        setSubmitting(true);
-        try {
-            await registrarUsuario({
-                role: tipoUsuario === "medico" ? "doctor" : "patient",
-                firstName: formData.get("first_name"),
-                lastName: formData.get("last_name"),
-                dni: formData.get("dni"),
-                email: formData.get("email"),
-                password,
-                phone: formData.get("phone"),
-                dateOfBirth: formData.get("date_of_birth"),
-                sex: formData.get("sex"),
-                cip: formData.get("cip"),
-                bloodType: formData.get("blood_type"),
-                medicalLicense: formData.get("medical_license"),
-                specialtyId: formData.get("specialty_id"),
-                yearsExperience: formData.get("years_experience") || 0
-            });
-            setSuccess("Cuenta creada correctamente. Ya puedes iniciar sesión.");
-            event.currentTarget.reset();
-        } catch (submitError) {
-            setError(submitError.message);
-        } finally {
-            setSubmitting(false);
-        }
-    };
+    const [pacienteValido, setPacienteValido] = useState(false);
 
     useEffect(() => {
         const elements = document.querySelectorAll(".scroll-reveal");
@@ -79,36 +143,61 @@ export const Register = () => {
         };
     }, []);
 
-    useEffect(() => {
-        if (tipoUsuario !== "medico") return;
+    // Buscar paciente automáticamente cuando cambia el DNI
+    const handleDniChange = (e) => {
+        const dniIngresado = e.target.value.toUpperCase().trim();
 
-        const cargarEspecialidades = async () => {
-            setLoadingEspecialidades(true);
-            setErrorEspecialidades("");
+        setFormData((prev) => ({
+            ...prev,
+            dni: dniIngresado
+        }));
 
-            try {
-                const response = await fetch(
-                    `${import.meta.env.VITE_BACKEND_URL}/api/especialidades`
-                );
-                const data = await response.json();
+        if (dniIngresado.length === 9) {
+            const paciente = pacientesRegistrados.find((p) => p.dni === dniIngresado);
 
-                if (!response.ok) {
-                    throw new Error(
-                        data.error || "No se pudieron cargar las especialidades."
-                    );
-                }
-
-                setEspecialidades(data.especialidades || []);
-            } catch (loadError) {
-                setErrorEspecialidades(loadError.message);
-                setEspecialidades([]);
-            } finally {
-                setLoadingEspecialidades(false);
+            if (paciente) {
+                setFormData((prev) => ({
+                    ...prev,
+                    firstName: paciente.first_name,
+                    lastName: paciente.last_name,
+                    dateOfBirth: paciente.date_of_birth,
+                    sex: paciente.sex,
+                    cip: paciente.cip
+                }));
+                setPacienteValido(true);
+                setError("");
+            } else {
+                setPacienteValido(false);
+                setError("El DNI ingresado no existe en el registro del SNS.");
             }
-        };
+        } else {
+            setPacienteValido(false);
+            setError("");
+        }
+    };
 
-        cargarEspecialidades();
-    }, [tipoUsuario]);
+    const handleChange = (e) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value
+        });
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+
+        if (!pacienteValido && tipoUsuario === "paciente") {
+            setError("Debes ingresar un DNI válido para registrarte.");
+            return;
+        }
+
+        if (formData.password !== formData.confirmPassword) {
+            setError("Las contraseñas no coinciden.");
+            return;
+        }
+
+        alert(`Registro exitoso para ${formData.firstName} ${formData.lastName}`);
+    };
 
     return (
         <div className=" text-white min-vh-100 d-flex align-items-center">
@@ -177,9 +266,42 @@ export const Register = () => {
                             </div>
 
                             {/* FORMULARIO */}
-                            <form className="text-start" onSubmit={handleSubmit}>
+                            <form className="text-start" onSubmit={handleSubmit} autoComplete="off">
 
                                 <div className="row g-3">
+
+                                    <div className="col-12">
+                                        <label className="form-label text-white-50 small">
+                                            DNI
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            name="dni"
+                                            value={formData.dni}
+                                            onChange={handleDniChange}
+                                            maxLength={9}
+                                            autoComplete="off"
+                                            className="form-control bg-dark text-white border-secondary text-uppercase"
+                                            placeholder="Ingrese su DNI (ej: 12345678Z)"
+                                        />
+                                    </div>
+
+                                    {error && (
+                                        <div className="col-12">
+                                            <div className="alert alert-danger bg-danger bg-opacity-25 text-danger border-danger border-opacity-50 py-2 small mb-0">
+                                                {error}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {pacienteValido && (
+                                        <div className="col-12">
+                                            <div className="alert alert-success bg-success bg-opacity-25 text-success border-success border-opacity-50 py-2 small mb-0">
+                                                ✓ DNI Verificado en el sistema.
+                                            </div>
+                                        </div>
+                                    )}
 
                                     <div className="col-12">
                                         <label className="form-label text-white-50 small">
@@ -188,7 +310,10 @@ export const Register = () => {
 
                                         <input
                                             type="text"
-                                            name="first_name"
+                                            name="firstName"
+                                            value={formData.firstName}
+                                            onChange={handleChange}
+                                            readOnly={pacienteValido}
                                             className="form-control bg-dark text-white border-secondary"
                                             placeholder="Nombre"
                                         />
@@ -201,22 +326,12 @@ export const Register = () => {
 
                                         <input
                                             type="text"
-                                            name="last_name"
+                                            name="lastName"
+                                            value={formData.lastName}
+                                            onChange={handleChange}
+                                            readOnly={pacienteValido}
                                             className="form-control bg-dark text-white border-secondary"
                                             placeholder="Apellidos"
-                                        />
-                                    </div>
-
-                                    <div className="col-12">
-                                        <label className="form-label text-white-50 small">
-                                            DNI
-                                        </label>
-
-                                        <input
-                                            type="text"
-                                            name="dni"
-                                            className="form-control bg-dark text-white border-secondary"
-                                            placeholder="Ingrese su DNI"
                                         />
                                     </div>
 
@@ -228,6 +343,9 @@ export const Register = () => {
                                         <input
                                             type="email"
                                             name="email"
+                                            value={formData.email}
+                                            onChange={handleChange}
+                                            autoComplete="off"
                                             className="form-control bg-dark text-white border-secondary"
                                             placeholder="ejemplo@correo.com"
                                         />
@@ -241,6 +359,9 @@ export const Register = () => {
                                         <input
                                             type="tel"
                                             name="phone"
+                                            value={formData.phone}
+                                            onChange={handleChange}
+                                            autoComplete="off"
                                             className="form-control bg-dark text-white border-secondary"
                                             placeholder="+34600000000"
                                         />
@@ -253,7 +374,10 @@ export const Register = () => {
 
                                         <input
                                             type="date"
-                                            name="date_of_birth"
+                                            name="dateOfBirth"
+                                            value={formData.dateOfBirth}
+                                            onChange={handleChange}
+                                            readOnly={pacienteValido}
                                             className="form-control bg-dark text-white border-secondary"
                                         />
                                     </div>
@@ -263,7 +387,13 @@ export const Register = () => {
                                             Sexo
                                         </label>
 
-                                        <select name="sex" className="form-select bg-dark text-white border-secondary" required>
+                                        <select 
+                                            name="sex"
+                                            value={formData.sex}
+                                            onChange={handleChange}
+                                            disabled={pacienteValido}
+                                            className="form-select bg-dark text-white border-secondary"
+                                        >
                                             <option value="">
                                                 Seleccione
                                             </option>
@@ -281,7 +411,12 @@ export const Register = () => {
                                             Grupo sanguíneo
                                         </label>
 
-                                        <select name="blood_type" className="form-select bg-dark text-white border-secondary" required>
+                                        <select 
+                                            name="bloodType"
+                                            value={formData.bloodType}
+                                            onChange={handleChange}
+                                            className="form-select bg-dark text-white border-secondary"
+                                        >
                                             <option value="">
                                                 Seleccione
                                             </option>
@@ -296,6 +431,7 @@ export const Register = () => {
                                             <option value="O-">O-</option>
                                         </select>
                                     </div>
+
                                     <div className="col-12">
                                         <label className="form-label text-white-50 small">
                                             CIP
@@ -304,70 +440,13 @@ export const Register = () => {
                                         <input
                                             type="text"
                                             name="cip"
+                                            value={formData.cip}
+                                            onChange={handleChange}
+                                            readOnly={pacienteValido}
                                             className="form-control bg-dark text-white border-secondary"
                                             placeholder="Código CIP"
                                         />
                                     </div>
-
-                                    {tipoUsuario === "medico" && (
-                                        <>
-                                            <div className="col-12">
-                                                <label className="form-label text-white-50 small">
-                                                    Número de colegiado
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    name="medical_license"
-                                                    className="form-control bg-dark text-white border-secondary"
-                                                    placeholder="Número de colegiado"
-                                                    required
-                                                />
-                                            </div>
-
-                                            <div className="col-12">
-                                                <label className="form-label text-white-50 small">
-                                                    Especialidad
-                                                </label>
-                                                <select
-                                                    name="specialty_id"
-                                                    className="form-select bg-dark text-white border-secondary"
-                                                    defaultValue=""
-                                                    required
-                                                    disabled={loadingEspecialidades || especialidades.length === 0}
-                                                >
-                                                    <option value="">
-                                                        {loadingEspecialidades
-                                                            ? "Cargando especialidades..."
-                                                            : "Seleccione una especialidad"}
-                                                    </option>
-                                                    {especialidades.map((especialidad) => (
-                                                        <option key={especialidad.id} value={especialidad.id}>
-                                                            {especialidad.name}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                                {errorEspecialidades && (
-                                                    <div className="text-danger small mt-2">
-                                                        {errorEspecialidades}
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            <div className="col-12">
-                                                <label className="form-label text-white-50 small">
-                                                    Años de experiencia
-                                                </label>
-                                                <input
-                                                    type="number"
-                                                    name="years_experience"
-                                                    min="0"
-                                                    className="form-control bg-dark text-white border-secondary"
-                                                    placeholder="Años de experiencia"
-                                                    required
-                                                />
-                                            </div>
-                                        </>
-                                    )}
 
                                     <div className="col-12">
                                         <label className="form-label text-white-50 small">
@@ -383,6 +462,9 @@ export const Register = () => {
                                                         : "password"
                                                 }
                                                 name="password"
+                                                value={formData.password}
+                                                onChange={handleChange}
+                                                autoComplete="new-password"
                                                 className="form-control bg-dark text-white border-secondary"
                                                 placeholder="••••••••••••"
                                             />
@@ -415,7 +497,10 @@ export const Register = () => {
                                                         ? "text"
                                                         : "password"
                                                 }
-                                                name="confirm_password"
+                                                name="confirmPassword"
+                                                value={formData.confirmPassword}
+                                                onChange={handleChange}
+                                                autoComplete="new-password"
                                                 className="form-control bg-dark text-white border-secondary"
                                                 placeholder="Repite tu contraseña"
                                             />
@@ -437,16 +522,13 @@ export const Register = () => {
                                         </div>
                                     </div>
 
-                                    {error && <div className="col-12"><div className="alert alert-danger mb-0">{error}</div></div>}
-                                    {success && <div className="col-12"><div className="alert alert-success mb-0">{success}</div></div>}
-
                                     <div className="col-12">
 
                                         <button
                                             type="submit"
                                             className="btn btn-info rounded-pill fw-bold w-100 py-2 mt-2"
                                         >
-                                            {submitting ? "Creando cuenta..." : "Crear cuenta →"}
+                                            Crear cuenta →
                                         </button>
 
                                     </div>
