@@ -1065,3 +1065,4 @@ class DoctorPatient(db.Model):
         back_populates="doctors",
     )
 
+
