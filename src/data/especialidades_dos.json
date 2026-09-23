@@ -1,0 +1,150 @@
+[
+  {
+    "name": "Alergología",
+    "description": "Diagnóstico y tratamiento de las enfermedades alérgicas."
+  },
+  {
+    "name": "Anatomía Patológica",
+    "description": "Estudio de tejidos y células para diagnosticar enfermedades."
+  },
+  {
+    "name": "Anestesiología y Reanimación",
+    "description": "Atención anestésica, control del dolor y cuidados de reanimación."
+  },
+  {
+    "name": "Angiología y Cirugía Vascular",
+    "description": "Prevención y tratamiento de enfermedades de los vasos sanguíneos."
+  },
+  {
+    "name": "Aparato Digestivo",
+    "description": "Diagnóstico y tratamiento de enfermedades del sistema digestivo."
+  },
+  {
+    "name": "Cirugía Cardiovascular",
+    "description": "Tratamiento quirúrgico de enfermedades del corazón y los grandes vasos."
+  },
+  {
+    "name": "Cirugía General y del Aparato Digestivo",
+    "description": "Tratamiento quirúrgico de enfermedades generales y digestivas."
+  },
+  {
+    "name": "Cirugía Maxilofacial",
+    "description": "Tratamiento quirúrgico de la cara, boca, mandíbula y cuello."
+  },
+  {
+    "name": "Cirugía Pediátrica",
+    "description": "Tratamiento quirúrgico de enfermedades en niños y adolescentes."
+  },
+  {
+    "name": "Cirugía Plástica, Estética y Reparadora",
+    "description": "Reconstrucción y corrección funcional o estética de tejidos."
+  },
+  {
+    "name": "Cirugía Torácica",
+    "description": "Tratamiento quirúrgico de enfermedades del tórax."
+  },
+  {
+    "name": "Endocrinología y Nutrición",
+    "description": "Diagnóstico y tratamiento de trastornos hormonales y metabólicos."
+  },
+  {
+    "name": "Geriatría",
+    "description": "Atención integral de la salud de las personas mayores."
+  },
+  {
+    "name": "Hematología y Hemoterapia",
+    "description": "Diagnóstico y tratamiento de enfermedades de la sangre."
+  },
+  {
+    "name": "Inmunología",
+    "description": "Estudio del sistema inmunitario y sus enfermedades."
+  },
+  {
+    "name": "Medicina del Trabajo",
+    "description": "Prevención y atención de problemas de salud relacionados con el trabajo."
+  },
+  {
+    "name": "Medicina Familiar y Comunitaria",
+    "description": "Atención integral y continuada de la persona y su entorno familiar."
+  },
+  {
+    "name": "Medicina Interna",
+    "description": "Atención integral de enfermedades complejas en personas adultas."
+  },
+  {
+    "name": "Medicina Nuclear",
+    "description": "Uso médico de sustancias radiactivas para diagnóstico y tratamiento."
+  },
+  {
+    "name": "Medicina Preventiva y Salud Pública",
+    "description": "Prevención de enfermedades y protección de la salud de la población."
+  },
+  {
+    "name": "Microbiología y Parasitología",
+    "description": "Diagnóstico de enfermedades causadas por microorganismos y parásitos."
+  },
+  {
+    "name": "Nefrología",
+    "description": "Diagnóstico y tratamiento de enfermedades de los riñones."
+  },
+  {
+    "name": "Neumología",
+    "description": "Diagnóstico y tratamiento de enfermedades respiratorias."
+  },
+  {
+    "name": "Neurocirugía",
+    "description": "Tratamiento quirúrgico de enfermedades del sistema nervioso."
+  },
+  {
+    "name": "Neurología",
+    "description": "Diagnóstico y tratamiento de enfermedades del sistema nervioso."
+  },
+  {
+    "name": "Obstetricia y Ginecología",
+    "description": "Atención de la salud reproductiva, embarazo y parto."
+  },
+  {
+    "name": "Oftalmología",
+    "description": "Diagnóstico y tratamiento de enfermedades de los ojos y la visión."
+  },
+  {
+    "name": "Oncología Médica",
+    "description": "Prevención, diagnóstico y tratamiento médico del cáncer."
+  },
+  {
+    "name": "Oncología Radioterápica",
+    "description": "Tratamiento de tumores mediante radiación ionizante."
+  },
+  {
+    "name": "Otorrinolaringología",
+    "description": "Atención de enfermedades del oído, nariz y garganta."
+  },
+  {
+    "name": "Psiquiatría",
+    "description": "Diagnóstico y tratamiento de trastornos de la salud mental."
+  },
+  {
+    "name": "Radiodiagnóstico",
+    "description": "Diagnóstico médico mediante técnicas de imagen."
+  },
+  {
+    "name": "Rehabilitación",
+    "description": "Recuperación funcional tras lesiones, enfermedades o discapacidades."
+  },
+  {
+    "name": "Reumatología",
+    "description": "Diagnóstico y tratamiento de enfermedades reumáticas y musculoesqueléticas."
+  },
+  {
+    "name": "Traumatología y Cirugía Ortopédica",
+    "description": "Tratamiento de lesiones y enfermedades del aparato locomotor."
+  },
+  {
+    "name": "Urología",
+    "description": "Diagnóstico y tratamiento de enfermedades urinarias y del aparato reproductor masculino."
+  },
+  {
+    "name": "Médico de cabecera",
+    "description": "Atención médica general, seguimiento y coordinación de la salud del paciente."
+  }
+]
