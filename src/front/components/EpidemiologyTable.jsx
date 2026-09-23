@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Icon } from "./Icon";
 
 export const EpidemiologyTable = () => {
   const [data, setData] = useState([]);
@@ -29,7 +30,7 @@ export const EpidemiologyTable = () => {
 
   return (
     <div className="container py-4">
-      <div 
+      <div
         className="card bg-white bg-opacity-10 border border-white border-opacity-25 rounded-4 p-4 shadow-lg text-white"
         style={{ backdropFilter: "blur(12px)" }}
       >
@@ -37,7 +38,7 @@ export const EpidemiologyTable = () => {
         <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
           <div>
             <h4 className="fw-bold text-info mb-1 d-flex align-items-center gap-2">
-              📊 Vigilancia Epidemiológica (Datos Abiertos JCyL)
+              <Icon name="ChartNoAxesCombined" />Vigilancia Epidemiológica (Datos Abiertos JCyL)
             </h4>
             <p className="text-white-50 small mb-0">
               Registro oficial de Enfermedades de Declaración Obligatoria (EDO) — Junta de Castilla y León
@@ -87,13 +88,12 @@ export const EpidemiologyTable = () => {
                     <td className="text-white-50 small">{row.semana} ({row.ano})</td>
                     <td>
                       <span
-                        className={`badge bg-opacity-25 border px-2 py-1 ${
-                          row.estado === "Controlado"
+                        className={`badge bg-opacity-25 border px-2 py-1 ${row.estado === "Controlado"
                             ? "bg-success text-success border-success"
                             : row.estado === "En Seguimiento"
-                            ? "bg-warning text-warning border-warning"
-                            : "bg-info text-info border-info"
-                        }`}
+                              ? "bg-warning text-warning border-warning"
+                              : "bg-info text-info border-info"
+                          }`}
                       >
                         {row.estado}
                       </span>

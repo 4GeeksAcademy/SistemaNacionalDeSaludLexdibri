@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Icon } from "./Icon";
 
 export const ChatModule = () => {
   const [activeChat, setActiveChat] = useState(1);
@@ -28,23 +29,22 @@ export const ChatModule = () => {
 
   return (
     <div className="container py-3">
-      <div 
+      <div
         className="card bg-white bg-opacity-10 border border-white border-opacity-25 rounded-4 shadow-lg text-white overflow-hidden"
         style={{ backdropFilter: "blur(12px)", minHeight: "500px" }}
       >
         <div className="row g-0 h-100">
-          
+
           {/* Columna Izquierda: Lista de Conversaciones */}
           <div className="col-12 col-md-4 border-end border-white border-opacity-10 p-3">
-            <h5 className="fw-bold mb-3 text-info">💬 Mensajería Segura</h5>
+            <h5 className="fw-bold mb-3 text-info"><Icon name="MessageCircle" className="me-2" />Mensajería Segura</h5>
             <div className="list-group list-group-flush bg-transparent">
               {conversations.map((chat) => (
                 <button
                   key={chat.id}
                   onClick={() => setActiveChat(chat.id)}
-                  className={`list-group-item list-group-item-action border-0 rounded-3 p-2 mb-2 text-white bg-transparent ${
-                    activeChat === chat.id ? "bg-white bg-opacity-10 border border-info border-opacity-50" : ""
-                  }`}
+                  className={`list-group-item list-group-item-action border-0 rounded-3 p-2 mb-2 text-white bg-transparent ${activeChat === chat.id ? "bg-white bg-opacity-10 border border-info border-opacity-50" : ""
+                    }`}
                 >
                   <div className="d-flex justify-content-between align-items-center mb-1">
                     <span className="fw-bold small">{chat.doctor}</span>
@@ -59,7 +59,7 @@ export const ChatModule = () => {
 
           {/* Columna Derecha: Pantalla de Chat Activo */}
           <div className="col-12 col-md-8 d-flex flex-column justify-content-between p-3">
-            
+
             {/* Cabecera del Chat */}
             <div className="border-bottom border-white border-opacity-10 pb-2 mb-3 d-flex justify-content-between align-items-center">
               <div>
@@ -77,11 +77,10 @@ export const ChatModule = () => {
                   className={`d-flex flex-column ${msg.sender === "patient" ? "align-items-end" : "align-items-start"}`}
                 >
                   <div
-                    className={`p-2 px-3 rounded-3 small max-w-75 ${
-                      msg.sender === "patient"
+                    className={`p-2 px-3 rounded-3 small max-w-75 ${msg.sender === "patient"
                         ? "bg-primary text-white"
                         : "bg-white bg-opacity-10 text-white border border-white border-opacity-25"
-                    }`}
+                      }`}
                   >
                     {msg.text}
                   </div>

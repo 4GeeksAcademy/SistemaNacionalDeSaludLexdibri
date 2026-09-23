@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { Icon } from "../components/Icon";
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState("");
@@ -17,7 +18,7 @@ const ForgotPassword = () => {
             return;
         }
 
-        
+
         setMensaje("Si el email está registrado, recibirás instrucciones para recuperar tu contraseña.");
     };
 
@@ -34,7 +35,7 @@ const ForgotPassword = () => {
                                     className="d-inline-flex align-items-center justify-content-center bg-info bg-opacity-10 border border-info border-opacity-25 rounded-4 text-info fs-4 mb-3"
                                     style={{ width: "56px", height: "56px" }}
                                 >
-                                    🔑
+                                    <Icon name="KeyRound" size={28} />
                                 </div>
 
                                 <h1 className="h2 fw-bold mb-2">

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { Icon } from "../components/Icon";
 
 // ==========================================================
 // HORARIO PROVISIONAL
@@ -656,7 +657,7 @@ export const NuevaConsulta = () => {
                                             to={`/teleconsulta/${consultaCreada.id}`}
                                             className="btn btn-info rounded-pill mt-3"
                                         >
-                                            🎥 Entrar a teleconsulta
+                                            <Icon name="Video" className="me-1" />Entrar a teleconsulta
                                         </Link>
                                     )}
                                 </div>
@@ -797,9 +798,9 @@ export const NuevaConsulta = () => {
                                                     }
                                                     disabled={
                                                         mesActual ===
-                                                            hoy.getMonth() &&
+                                                        hoy.getMonth() &&
                                                         añoActual ===
-                                                            hoy.getFullYear()
+                                                        hoy.getFullYear()
                                                     }
                                                 >
                                                     ‹
@@ -952,15 +953,14 @@ export const NuevaConsulta = () => {
 
                                                                 <button
                                                                     type="button"
-                                                                    className={`w-100 rounded-3 fw-semibold ${
-                                                                        seleccionada
+                                                                    className={`w-100 rounded-3 fw-semibold ${seleccionada
                                                                             ? "btn btn-info text-dark"
                                                                             : esHoy
                                                                                 ? "btn btn-outline-info"
                                                                                 : deshabilitada
                                                                                     ? "btn btn-outline-secondary text-white-50"
                                                                                     : "btn btn-outline-light"
-                                                                    }`}
+                                                                        }`}
                                                                     style={{
                                                                         width: "100%",
                                                                         height: "52px",
@@ -1089,13 +1089,12 @@ export const NuevaConsulta = () => {
 
                                                                     <button
                                                                         type="button"
-                                                                        className={`btn w-100 rounded-pill ${
-                                                                            seleccionada
+                                                                        className={`btn w-100 rounded-pill ${seleccionada
                                                                                 ? "btn-info text-dark fw-bold"
                                                                                 : yaHaPasado
                                                                                     ? "btn-secondary text-white"
                                                                                     : "btn-outline-light"
-                                                                        }`}
+                                                                            }`}
                                                                         disabled={
                                                                             yaHaPasado
                                                                         }

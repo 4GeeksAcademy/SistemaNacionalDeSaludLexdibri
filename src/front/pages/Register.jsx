@@ -1,98 +1,99 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { Icon } from "../components/Icon";
 
 // Datos de los pacientes pre-registrados en el sistema (sin credenciales ni datos privados)
 const pacientesRegistrados = [
-  {
-    first_name: "Ana",
-    last_name: "García López",
-    dni: "12345678Z",
-    date_of_birth: "1988-04-15",
-    sex: "F",
-    is_active: true,
-    cip: "CIP000001"
-  },
-  {
-    first_name: "Carlos",
-    last_name: "Martínez Ruiz",
-    dni: "23456789D",
-    date_of_birth: "1975-09-22",
-    sex: "M",
-    is_active: true,
-    cip: "CIP000002"
-  },
-  {
-    first_name: "Laura",
-    last_name: "Sánchez Martín",
-    dni: "34567890V",
-    date_of_birth: "1995-02-10",
-    sex: "F",
-    is_active: true,
-    cip: "CIP000003"
-  },
-  {
-    first_name: "Miguel",
-    last_name: "Fernández García",
-    dni: "45678901G",
-    date_of_birth: "1968-11-30",
-    sex: "M",
-    is_active: true,
-    cip: "CIP000004"
-  },
-  {
-    first_name: "Marta",
-    last_name: "López Rodríguez",
-    dni: "56789012B",
-    date_of_birth: "2001-07-18",
-    sex: "F",
-    is_active: true,
-    cip: "CIP000005"
-  },
-  {
-    first_name: "David",
-    last_name: "Navarro Pérez",
-    dni: "67890123N",
-    date_of_birth: "1982-04-03",
-    sex: "M",
-    is_active: true,
-    cip: "CIP000006"
-  },
-  {
-    first_name: "Sofía",
-    last_name: "Romero Díaz",
-    dni: "78901234X",
-    date_of_birth: "1990-12-25",
-    sex: "F",
-    is_active: true,
-    cip: "CIP000007"
-  },
-  {
-    first_name: "Jorge",
-    last_name: "Molina Sánchez",
-    dni: "89012345E",
-    date_of_birth: "1959-06-12",
-    sex: "M",
-    is_active: true,
-    cip: "CIP000008"
-  },
-  {
-    first_name: "Elena",
-    last_name: "Castro Moreno",
-    dni: "90123456W",
-    date_of_birth: "1979-03-27",
-    sex: "F",
-    is_active: true,
-    cip: "CIP000009"
-  },
-  {
-    first_name: "Pablo",
-    last_name: "Ortega Jiménez",
-    dni: "01234567L",
-    date_of_birth: "1998-10-05",
-    sex: "M",
-    is_active: true,
-    cip: "CIP000010"
-  }
+    {
+        first_name: "Ana",
+        last_name: "García López",
+        dni: "12345678Z",
+        date_of_birth: "1988-04-15",
+        sex: "F",
+        is_active: true,
+        cip: "CIP000001"
+    },
+    {
+        first_name: "Carlos",
+        last_name: "Martínez Ruiz",
+        dni: "23456789D",
+        date_of_birth: "1975-09-22",
+        sex: "M",
+        is_active: true,
+        cip: "CIP000002"
+    },
+    {
+        first_name: "Laura",
+        last_name: "Sánchez Martín",
+        dni: "34567890V",
+        date_of_birth: "1995-02-10",
+        sex: "F",
+        is_active: true,
+        cip: "CIP000003"
+    },
+    {
+        first_name: "Miguel",
+        last_name: "Fernández García",
+        dni: "45678901G",
+        date_of_birth: "1968-11-30",
+        sex: "M",
+        is_active: true,
+        cip: "CIP000004"
+    },
+    {
+        first_name: "Marta",
+        last_name: "López Rodríguez",
+        dni: "56789012B",
+        date_of_birth: "2001-07-18",
+        sex: "F",
+        is_active: true,
+        cip: "CIP000005"
+    },
+    {
+        first_name: "David",
+        last_name: "Navarro Pérez",
+        dni: "67890123N",
+        date_of_birth: "1982-04-03",
+        sex: "M",
+        is_active: true,
+        cip: "CIP000006"
+    },
+    {
+        first_name: "Sofía",
+        last_name: "Romero Díaz",
+        dni: "78901234X",
+        date_of_birth: "1990-12-25",
+        sex: "F",
+        is_active: true,
+        cip: "CIP000007"
+    },
+    {
+        first_name: "Jorge",
+        last_name: "Molina Sánchez",
+        dni: "89012345E",
+        date_of_birth: "1959-06-12",
+        sex: "M",
+        is_active: true,
+        cip: "CIP000008"
+    },
+    {
+        first_name: "Elena",
+        last_name: "Castro Moreno",
+        dni: "90123456W",
+        date_of_birth: "1979-03-27",
+        sex: "F",
+        is_active: true,
+        cip: "CIP000009"
+    },
+    {
+        first_name: "Pablo",
+        last_name: "Ortega Jiménez",
+        dni: "01234567L",
+        date_of_birth: "1998-10-05",
+        sex: "M",
+        is_active: true,
+        cip: "CIP000010"
+    }
 ];
 
 export const Register = () => {
@@ -216,7 +217,7 @@ export const Register = () => {
                                     className="d-inline-flex align-items-center justify-content-center bg-info bg-opacity-10 border border-info border-opacity-25 rounded-4 text-info fs-4 mb-3"
                                     style={{ width: "56px", height: "56px" }}
                                 >
-                                    ✚
+                                    <Icon name="UserPlus" size={28} />
                                 </div>
 
                                 <h1 className="h2 fw-bold mb-2">
@@ -244,22 +245,22 @@ export const Register = () => {
                                         type="button"
                                         onClick={() => setTipoUsuario("paciente")}
                                         className={`btn rounded-start-pill fw-semibold ${tipoUsuario === "paciente"
-                                                ? "btn-info"
-                                                : "btn-outline-secondary text-white"
+                                            ? "btn-info"
+                                            : "btn-outline-secondary text-white"
                                             }`}
                                     >
-                                        🔒 Paciente
+                                        <Icon name="LockKeyhole" className="me-2" />Paciente
                                     </button>
 
                                     <button
                                         type="button"
                                         onClick={() => setTipoUsuario("medico")}
                                         className={`btn rounded-end-pill fw-semibold ${tipoUsuario === "medico"
-                                                ? "btn-info"
-                                                : "btn-outline-secondary text-white"
+                                            ? "btn-info"
+                                            : "btn-outline-secondary text-white"
                                             }`}
                                     >
-                                        👨‍⚕️ Médico
+                                        <Icon name="Stethoscope" className="me-2" />Médico
                                     </button>
                                 </div>
 
@@ -298,7 +299,7 @@ export const Register = () => {
                                     {pacienteValido && (
                                         <div className="col-12">
                                             <div className="alert alert-success bg-success bg-opacity-25 text-success border-success border-opacity-50 py-2 small mb-0">
-                                                ✓ DNI Verificado en el sistema.
+                                                <Icon name="Check" className="me-1" />DNI verificado en el sistema.
                                             </div>
                                         </div>
                                     )}
@@ -387,7 +388,7 @@ export const Register = () => {
                                             Sexo
                                         </label>
 
-                                        <select 
+                                        <select
                                             name="sex"
                                             value={formData.sex}
                                             onChange={handleChange}
@@ -411,7 +412,7 @@ export const Register = () => {
                                             Grupo sanguíneo
                                         </label>
 
-                                        <select 
+                                        <select
                                             name="bloodType"
                                             value={formData.bloodType}
                                             onChange={handleChange}
@@ -478,7 +479,7 @@ export const Register = () => {
                                                     )
                                                 }
                                             >
-                                                {showPassword ? "🙈" : "👁️"}
+                                                <Icon name={showPassword ? "EyeOff" : "Eye"} />
                                             </button>
 
                                         </div>
@@ -514,9 +515,7 @@ export const Register = () => {
                                                     )
                                                 }
                                             >
-                                                {showConfirmPassword
-                                                    ? "🙈"
-                                                    : "👁️"}
+                                                <Icon name={showConfirmPassword ? "EyeOff" : "Eye"} />
                                             </button>
 
                                         </div>
@@ -556,7 +555,7 @@ export const Register = () => {
                             <div className="text-center mt-3">
 
                                 <span className="text-white-50 small">
-                                    🔒 Conexión segura y protegida
+                                    <Icon name="LockKeyhole" className="me-1" />Conexión segura y protegida
                                 </span>
 
                             </div>

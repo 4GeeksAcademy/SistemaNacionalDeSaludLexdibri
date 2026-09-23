@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 import rigoImageUrl from "../assets/img/rigo-baby.jpg";
 import { Link } from "react-router-dom";
+import { Icon } from "../components/Icon";
 
 export const DashboardMedico = () => {
     const { store } = useGlobalReducer();
@@ -103,8 +104,8 @@ export const DashboardMedico = () => {
         typeof rawSpecialty === "string"
             ? rawSpecialty
             : rawSpecialty?.name ||
-              rawSpecialty?.nombre ||
-              "";
+            rawSpecialty?.nombre ||
+            "";
 
     const normalizedSpecialty = doctorSpecialty
         .toLowerCase()
@@ -258,7 +259,7 @@ export const DashboardMedico = () => {
             if (!response.ok) {
                 setSpecialistError(
                     data.error ||
-                        "No se pudieron cargar los especialistas del paciente."
+                    "No se pudieron cargar los especialistas del paciente."
                 );
                 return;
             }
@@ -408,7 +409,7 @@ export const DashboardMedico = () => {
             if (!response.ok) {
                 setSpecialistError(
                     data.error ||
-                        "No se pudo eliminar el especialista."
+                    "No se pudo eliminar el especialista."
                 );
                 return;
             }
@@ -635,9 +636,9 @@ export const DashboardMedico = () => {
                 prevResults.map((patient) =>
                     String(patient.id) === String(patientId)
                         ? {
-                              ...patient,
-                              is_mine: true,
-                          }
+                            ...patient,
+                            is_mine: true,
+                        }
                         : patient
                 )
             );
@@ -696,9 +697,9 @@ export const DashboardMedico = () => {
                 prevResults.map((patient) =>
                     String(patient.id) === String(patientId)
                         ? {
-                              ...patient,
-                              is_mine: false,
-                          }
+                            ...patient,
+                            is_mine: false,
+                        }
                         : patient
                 )
             );
@@ -805,7 +806,7 @@ export const DashboardMedico = () => {
 
                     <div className="col-12 col-md-4">
                         <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
-                            <span className="fs-2">👥</span>
+                            <Icon name="Users" className="fs-2" size="1em" />
 
                             <p className="text-info text-uppercase small fw-semibold mt-3 mb-1">
                                 Mis pacientes
@@ -819,7 +820,7 @@ export const DashboardMedico = () => {
 
                     <div className="col-12 col-md-4">
                         <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
-                            <span className="fs-2">📅</span>
+                            <Icon name="CalendarDays" className="fs-2" size="1em" />
 
                             <p className="text-info text-uppercase small fw-semibold mt-3 mb-1">
                                 Consultas pendientes
@@ -833,7 +834,7 @@ export const DashboardMedico = () => {
 
                     <div className="col-12 col-md-4">
                         <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
-                            <span className="fs-2">💬</span>
+                            <Icon name="MessageCircle" className="fs-2" size="1em" />
 
                             <p className="text-info text-uppercase small fw-semibold mt-3 mb-1">
                                 Mensajes
@@ -880,7 +881,7 @@ export const DashboardMedico = () => {
                 <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 mb-4">
 
                     <div className="d-flex align-items-center gap-2 mb-3">
-                        <span className="fs-4">🔎</span>
+                        <Icon name="Search" className="fs-4" size="1em" />
 
                         <h2 className="h4 fw-bold mb-0">
                             Buscar pacientes
@@ -973,9 +974,7 @@ export const DashboardMedico = () => {
                             searchResults.length === 0 && (
                                 <div className="text-center py-5">
 
-                                    <div className="fs-1 mb-3">
-                                        🔎
-                                    </div>
+                                    <Icon name="SearchX" className="fs-1 mb-3" size="1em" />
 
                                     <h3 className="h5 fw-bold">
                                         No se encontraron pacientes
@@ -1024,11 +1023,10 @@ export const DashboardMedico = () => {
                                                         </div>
 
                                                         <span
-                                                            className={`badge rounded-pill ${
-                                                                alreadyMine
+                                                            className={`badge rounded-pill ${alreadyMine
                                                                     ? "bg-success"
                                                                     : "bg-secondary"
-                                                            }`}
+                                                                }`}
                                                         >
                                                             {alreadyMine
                                                                 ? "Mi paciente"
@@ -1094,10 +1092,10 @@ export const DashboardMedico = () => {
                                                             <span className="text-white-50">
                                                                 {patient.fecha_nacimiento
                                                                     ? new Date(
-                                                                          patient.fecha_nacimiento
-                                                                      ).toLocaleDateString(
-                                                                          "es-ES"
-                                                                      )
+                                                                        patient.fecha_nacimiento
+                                                                    ).toLocaleDateString(
+                                                                        "es-ES"
+                                                                    )
                                                                     : "No disponible"}
                                                             </span>
                                                         </div>
@@ -1142,8 +1140,7 @@ export const DashboardMedico = () => {
                                                                 className="btn btn-success rounded-pill btn-sm"
                                                                 disabled
                                                             >
-                                                                ✓ Ya es mi
-                                                                paciente
+                                                                <Icon name="Check" className="me-1" />Ya es mi paciente
                                                             </button>
                                                         ) : isPrimaryCareDoctor ? (
                                                             <button
@@ -1243,9 +1240,7 @@ export const DashboardMedico = () => {
                         patients.length === 0 && (
                             <div className="text-center py-5">
 
-                                <div className="fs-1 mb-3">
-                                    👥
-                                </div>
+                                <Icon name="Users" className="fs-1 mb-3" size="1em" />
 
                                 <h3 className="h5 fw-bold">
                                     Todavía no tienes pacientes
@@ -1357,10 +1352,10 @@ export const DashboardMedico = () => {
                                                 <span className="text-white-50">
                                                     {patient.fecha_nacimiento
                                                         ? new Date(
-                                                              patient.fecha_nacimiento
-                                                          ).toLocaleDateString(
-                                                              "es-ES"
-                                                          )
+                                                            patient.fecha_nacimiento
+                                                        ).toLocaleDateString(
+                                                            "es-ES"
+                                                        )
                                                         : "No disponible"}
                                                 </span>
                                             </div>
@@ -1437,7 +1432,7 @@ export const DashboardMedico = () => {
                                                 <div className="d-flex justify-content-between align-items-center gap-2 mb-3">
 
                                                     <div className="d-flex align-items-center gap-2">
-                                                        <span>👨‍⚕️</span>
+                                                        <Icon name="UserRound" />
 
                                                         <div>
                                                             <strong className="text-info d-block">
@@ -1447,15 +1442,13 @@ export const DashboardMedico = () => {
                                                             <span className="text-white-50 small">
                                                                 {assignedSpecialists.length === 0
                                                                     ? "Este paciente no tiene especialistas asignados"
-                                                                    : `${assignedSpecialists.length} especialista${
-                                                                          assignedSpecialists.length !== 1
-                                                                              ? "s"
-                                                                              : ""
-                                                                      } asignado${
-                                                                          assignedSpecialists.length !== 1
-                                                                              ? "s"
-                                                                              : ""
-                                                                      }`}
+                                                                    : `${assignedSpecialists.length} especialista${assignedSpecialists.length !== 1
+                                                                        ? "s"
+                                                                        : ""
+                                                                    } asignado${assignedSpecialists.length !== 1
+                                                                        ? "s"
+                                                                        : ""
+                                                                    }`}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -1501,9 +1494,7 @@ export const DashboardMedico = () => {
                                                     assignedSpecialists.length === 0 && (
                                                         <div className="bg-dark bg-opacity-50 border border-secondary border-opacity-50 rounded-3 p-3">
                                                             <div className="d-flex align-items-center gap-2">
-                                                                <span className="fs-5">
-                                                                    ℹ️
-                                                                </span>
+                                                                <Icon name="Info" className="fs-5" size="1em" />
 
                                                                 <span className="text-white-50 small">
                                                                     No hay especialistas asignados actualmente.
@@ -1539,7 +1530,7 @@ export const DashboardMedico = () => {
                                                                                         height: "42px",
                                                                                     }}
                                                                                 >
-                                                                                    🩺
+                                                                                    <Icon name="Stethoscope" />
                                                                                 </div>
 
                                                                                 <div>
@@ -1600,7 +1591,7 @@ export const DashboardMedico = () => {
                                             <div className="w-100 mt-3 pt-3 border-top border-secondary border-opacity-25">
 
                                                 <div className="d-flex align-items-center gap-2 mb-2">
-                                                    <span>➕</span>
+                                                    <Icon name="Plus" />
 
                                                     <div>
                                                         <strong className="text-info d-block">
@@ -1619,7 +1610,7 @@ export const DashboardMedico = () => {
                                                         className="form-select bg-dark text-white border-secondary"
                                                         value={
                                                             selectedSpecialistByPatient[
-                                                                patient.id
+                                                            patient.id
                                                             ] || ""
                                                         }
                                                         onChange={(e) =>
@@ -1634,7 +1625,7 @@ export const DashboardMedico = () => {
                                                         disabled={
                                                             loadingSpecialists ||
                                                             assigningSpecialistId ===
-                                                                patient.id
+                                                            patient.id
                                                         }
                                                     >
                                                         <option value="">
@@ -1648,12 +1639,12 @@ export const DashboardMedico = () => {
 
                                                                 const specialtyName =
                                                                     typeof specialist.especialidad ===
-                                                                    "string"
+                                                                        "string"
                                                                         ? specialist.especialidad
                                                                         : specialist
-                                                                              .especialidad
-                                                                              ?.nombre ||
-                                                                          "Especialidad no disponible";
+                                                                            .especialidad
+                                                                            ?.nombre ||
+                                                                        "Especialidad no disponible";
 
                                                                 return (
                                                                     <option
@@ -1690,15 +1681,15 @@ export const DashboardMedico = () => {
                                                         }
                                                         disabled={
                                                             !selectedSpecialistByPatient[
-                                                                patient.id
+                                                            patient.id
                                                             ] ||
                                                             assigningSpecialistId ===
-                                                                patient.id ||
+                                                            patient.id ||
                                                             loadingSpecialists
                                                         }
                                                     >
                                                         {assigningSpecialistId ===
-                                                        patient.id
+                                                            patient.id
                                                             ? "Asignando..."
                                                             : "Asignar"}
                                                     </button>
@@ -1729,7 +1720,7 @@ export const DashboardMedico = () => {
                                                     }
                                                 >
                                                     {removingPatientId ===
-                                                    patient.id
+                                                        patient.id
                                                         ? "Eliminando..."
                                                         : "Eliminar paciente"}
                                                 </button>
@@ -1834,7 +1825,7 @@ export const DashboardMedico = () => {
 
                                                         <span className="badge text-bg-warning">
                                                             {consultation.status ===
-                                                            "confirmed"
+                                                                "confirmed"
                                                                 ? "Confirmada"
                                                                 : "Programada"}
                                                         </span>
@@ -1847,7 +1838,7 @@ export const DashboardMedico = () => {
                                                         }{" "}
                                                         ·{" "}
                                                         {consultation.modality ===
-                                                        "virtual"
+                                                            "virtual"
                                                             ? "Virtual"
                                                             : "Presencial"}
                                                     </p>
@@ -1855,16 +1846,16 @@ export const DashboardMedico = () => {
                                                     <p className="text-white mb-2">
                                                         {consultation.scheduled_start
                                                             ? new Date(
-                                                                  consultation.scheduled_start
-                                                              ).toLocaleString(
-                                                                  "es-ES",
-                                                                  {
-                                                                      dateStyle:
-                                                                          "medium",
-                                                                      timeStyle:
-                                                                          "short",
-                                                                  }
-                                                              )
+                                                                consultation.scheduled_start
+                                                            ).toLocaleString(
+                                                                "es-ES",
+                                                                {
+                                                                    dateStyle:
+                                                                        "medium",
+                                                                    timeStyle:
+                                                                        "short",
+                                                                }
+                                                            )
                                                             : "Fecha no disponible"}
                                                     </p>
 
@@ -1880,14 +1871,14 @@ export const DashboardMedico = () => {
 
                                                         {consultation.modality ===
                                                             "virtual" && (
-                                                            <Link
-                                                                to={`/teleconsulta/${consultation.id}`}
-                                                                className="btn btn-info rounded-pill btn-sm"
-                                                            >
-                                                                Entrar en
-                                                                teleconsulta
-                                                            </Link>
-                                                        )}
+                                                                <Link
+                                                                    to={`/teleconsulta/${consultation.id}`}
+                                                                    className="btn btn-info rounded-pill btn-sm"
+                                                                >
+                                                                    Entrar en
+                                                                    teleconsulta
+                                                                </Link>
+                                                            )}
 
                                                         <button
                                                             type="button"
@@ -1903,7 +1894,7 @@ export const DashboardMedico = () => {
                                                             }
                                                         >
                                                             {completingConsultationId ===
-                                                            consultation.id
+                                                                consultation.id
                                                                 ? "Completando..."
                                                                 : "Marcar como completada"}
                                                         </button>
@@ -1933,9 +1924,7 @@ export const DashboardMedico = () => {
 
                     <div className="d-flex align-items-center gap-2 mb-4">
 
-                        <span className="fs-4">
-                            💬
-                        </span>
+                        <Icon name="MessageCircle" className="fs-4" size="1em" />
 
                         <h2 className="h4 fw-bold mb-0">
                             Mensajes recientes
@@ -1976,7 +1965,7 @@ export const DashboardMedico = () => {
                 <div className="text-center border-top border-secondary border-opacity-25 mt-5 pt-4 pb-3">
 
                     <span className="text-white-50 small">
-                        🔒 Conexión cifrada SSL · Información sanitaria protegida
+                        <Icon name="LockKeyhole" className="me-1" />Conexión cifrada SSL · Información sanitaria protegida
                     </span>
 
                 </div>

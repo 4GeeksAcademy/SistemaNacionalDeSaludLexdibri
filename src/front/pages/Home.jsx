@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
+import { Icon } from "../components/Icon";
 
 export const Home = () => {
     useEffect(() => {
@@ -71,9 +72,9 @@ export const Home = () => {
                         </div>
 
                         <div className="d-flex justify-content-center flex-wrap gap-4 mt-4 text-white-50 small">
-                            <span>✓ Información sanitaria</span>
-                            <span>✓ Servicios digitales</span>
-                            <span>✓ Acceso seguro</span>
+                            <span><Icon name="Check" className="me-1" />Información sanitaria</span>
+                            <span><Icon name="Check" className="me-1" />Servicios digitales</span>
+                            <span><Icon name="Check" className="me-1" />Acceso seguro</span>
                         </div>
 
                     </div>
@@ -321,9 +322,7 @@ export const Home = () => {
 
                                     <div className="card h-100 bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4">
 
-                                        <span className="text-info fs-2 fw-bold">
-                                            🇪🇸
-                                        </span>
+                                        <Icon name="Map" className="text-info fs-2 fw-bold" size="1em" />
 
                                         <p className="text-white fw-semibold mb-1">
                                             Cobertura nacional

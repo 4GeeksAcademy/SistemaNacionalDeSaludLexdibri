@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { iniciarSesion } from "../services/authServices";
 import useGlobalReducer from "../hooks/useGlobalReducer";
+import { Icon } from "../components/Icon";
 
 export const Login = () => {
     const navigate = useNavigate();
@@ -91,7 +92,7 @@ export const Login = () => {
                                     className="d-inline-flex align-items-center justify-content-center bg-info bg-opacity-10 border border-info border-opacity-25 rounded-4 text-info fs-4 mb-3"
                                     style={{ width: "56px", height: "56px" }}
                                 >
-                                    ✚
+                                    <Icon name="LogIn" size={28} />
                                 </div>
 
                                 <h1 className="h2 fw-bold mb-2">
@@ -121,11 +122,11 @@ export const Login = () => {
                                             setTipoUsuario("paciente")
                                         }
                                         className={`btn rounded-start-pill fw-semibold ${tipoUsuario === "paciente"
-                                                ? "btn-info"
-                                                : "btn-outline-secondary text-white"
+                                            ? "btn-info"
+                                            : "btn-outline-secondary text-white"
                                             }`}
                                     >
-                                        🔒 Paciente
+                                        <Icon name="LockKeyhole" className="me-2" />Paciente
                                     </button>
 
                                     <button
@@ -134,11 +135,11 @@ export const Login = () => {
                                             setTipoUsuario("medico")
                                         }
                                         className={`btn rounded-end-pill fw-semibold ${tipoUsuario === "medico"
-                                                ? "btn-info"
-                                                : "btn-outline-secondary text-white"
+                                            ? "btn-info"
+                                            : "btn-outline-secondary text-white"
                                             }`}
                                     >
-                                        👨‍⚕️ Médico
+                                        <Icon name="Stethoscope" className="me-2" />Médico
                                     </button>
                                 </div>
 
@@ -204,7 +205,7 @@ export const Login = () => {
                                                     : "Mostrar contraseña"
                                             }
                                         >
-                                            {showPassword ? "🙈" : "👁️"}
+                                            <Icon name={showPassword ? "EyeOff" : "Eye"} />
                                         </button>
 
                                     </div>
@@ -260,7 +261,7 @@ export const Login = () => {
                             <div className="text-center mt-4 pt-3 border-top border-secondary">
 
                                 <span className="text-white-50 small">
-                                    🔒 Conexión segura y protegida
+                                    <Icon name="LockKeyhole" className="me-1" />Conexión segura y protegida
                                 </span>
 
                             </div>

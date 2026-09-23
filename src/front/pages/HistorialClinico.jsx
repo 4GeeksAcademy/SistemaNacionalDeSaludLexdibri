@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { Icon } from "../components/Icon";
 
 export const HistorialClinico = () => {
     const { state } = useLocation();
@@ -205,12 +206,12 @@ export const HistorialClinico = () => {
 
         const noHaCumplido =
             hoy.getMonth() <
-                nacimiento.getMonth() ||
+            nacimiento.getMonth() ||
             (
                 hoy.getMonth() ===
-                    nacimiento.getMonth() &&
+                nacimiento.getMonth() &&
                 hoy.getDate() <
-                    nacimiento.getDate()
+                nacimiento.getDate()
             );
 
         if (noHaCumplido) {
@@ -782,15 +783,14 @@ export const HistorialClinico = () => {
                                                     </h3>
 
                                                     <span
-                                                        className={`badge ${
-                                                            consulta.status ===
-                                                            "completed"
+                                                        className={`badge ${consulta.status ===
+                                                                "completed"
                                                                 ? "bg-success"
                                                                 : consulta.status ===
-                                                                  "cancelled"
+                                                                    "cancelled"
                                                                     ? "bg-danger"
                                                                     : "bg-warning text-dark"
-                                                        }`}
+                                                            }`}
                                                     >
                                                         {formatearEstadoConsulta(
                                                             consulta.status
@@ -803,16 +803,16 @@ export const HistorialClinico = () => {
 
                                                     {consulta.scheduled_start
                                                         ? new Date(
-                                                              consulta.scheduled_start
-                                                          ).toLocaleString(
-                                                              "es-ES",
-                                                              {
-                                                                  dateStyle:
-                                                                      "medium",
-                                                                  timeStyle:
-                                                                      "short"
-                                                              }
-                                                          )
+                                                            consulta.scheduled_start
+                                                        ).toLocaleString(
+                                                            "es-ES",
+                                                            {
+                                                                dateStyle:
+                                                                    "medium",
+                                                                timeStyle:
+                                                                    "short"
+                                                            }
+                                                        )
                                                         : "Fecha no disponible"}
 
                                                 </p>
@@ -822,7 +822,7 @@ export const HistorialClinico = () => {
                                                     Modalidad:
                                                     {" "}
                                                     {consulta.modality ===
-                                                    "virtual"
+                                                        "virtual"
                                                         ? "Virtual"
                                                         : "Presencial"}
 
@@ -949,9 +949,7 @@ export const HistorialClinico = () => {
 
                         <div className="text-center py-4">
 
-                            <div className="fs-2 mb-2">
-                                💊
-                            </div>
+                            <Icon name="Pill" className="fs-2 mb-2" size="1em" />
 
                             <h3 className="h6 text-info fw-bold">
                                 No hay recetas registradas
@@ -997,12 +995,11 @@ export const HistorialClinico = () => {
                                                     </div>
 
                                                     <span
-                                                        className={`badge ${
-                                                            receta.status ===
-                                                            "active"
+                                                        className={`badge ${receta.status ===
+                                                                "active"
                                                                 ? "bg-success"
                                                                 : "bg-secondary"
-                                                        }`}
+                                                            }`}
                                                     >
                                                         {formatearEstadoReceta(
                                                             receta.status

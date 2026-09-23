@@ -1,6 +1,7 @@
 import React from "react";
 import { NavLink, Link } from "react-router-dom";
 import useGlobalReducer from "../hooks/useGlobalReducer";
+import { Icon } from "./Icon";
 
 export const Navbar = () => {
   const { store, dispatch } = useGlobalReducer();
@@ -71,8 +72,8 @@ export const Navbar = () => {
         >
           <button
             className={`btn border-0 dropdown-toggle d-flex align-items-center gap-2 px-3 py-1 rounded-pill ${isLoggedIn
-                ? "bg-info text-dark fw-semibold"
-                : "bg-white bg-opacity-10 text-white"
+              ? "bg-info text-dark fw-semibold"
+              : "bg-white bg-opacity-10 text-white"
               }`}
             type="button"
             data-bs-toggle="dropdown"
@@ -114,7 +115,7 @@ export const Navbar = () => {
                     className="dropdown-item py-2 small"
                     to="/login"
                   >
-                    🔐 Iniciar sesión
+                    <Icon name="LockKeyhole" className="me-2" />Iniciar sesión
                   </Link>
                 </li>
 
@@ -124,7 +125,7 @@ export const Navbar = () => {
                     className="dropdown-item py-2 small"
                     to="/register"
                   >
-                    ✨ Registrarse
+                    <Icon name="Sparkles" className="me-2" />Registrarse
                   </Link>
                 </li>
               </>
@@ -137,7 +138,7 @@ export const Navbar = () => {
                       className="dropdown-item py-2 small"
                       to="/dashboard/medico"
                     >
-                      🩺 Dashboard médico
+                      <Icon name="Stethoscope" className="me-2" />Dashboard médico
                     </Link>
                   </li>
                 )}
@@ -149,7 +150,7 @@ export const Navbar = () => {
                       className="dropdown-item py-2 small"
                       to="/dashboard/paciente"
                     >
-                      🏠 Dashboard paciente
+                      <Icon name="House" className="me-2" />Dashboard paciente
                     </Link>
                   </li>
                 )}
@@ -160,7 +161,7 @@ export const Navbar = () => {
                     className="dropdown-item py-2 small"
                     to="/ajustes"
                   >
-                    ⚙️ Ajustes
+                    <Icon name="Settings" className="me-2" />Ajustes
                   </Link>
                 </li>
               </>
@@ -177,7 +178,7 @@ export const Navbar = () => {
                 className="dropdown-item py-2 small"
                 to="/contacto"
               >
-                ❓ Ayuda y soporte
+                <Icon name="CircleHelp" className="me-2" />Ayuda y soporte
               </Link>
             </li>
 
@@ -194,7 +195,7 @@ export const Navbar = () => {
                     className="dropdown-item py-2 small text-danger fw-semibold"
                     onClick={handleLogout}
                   >
-                    🚪 Cerrar sesión
+                    <Icon name="LogOut" className="me-2" />Cerrar sesión
                   </button>
                 </li>
               </>
@@ -252,7 +253,7 @@ export const Navbar = () => {
             }`
           }
         >
-          Urgencias 🚨
+          <Icon name="Siren" className="me-1" />Urgencias
         </NavLink>
       </nav>
     </header>

@@ -79,7 +79,7 @@ export const iniciarSesion = async ({ email, password, tipoUsuario }) => {
       {
         method: "GET",
         headers: { Authorization: `Bearer ${data.access_token}` },
-      }
+      },
     );
 
     const dashboardData = await dashboardResponse.json();
@@ -91,17 +91,17 @@ export const iniciarSesion = async ({ email, password, tipoUsuario }) => {
     const rolEsperado = tipoUsuario === "medico" ? "doctor" : "patient";
 
     if (dashboardData.dashboard !== rolEsperado) {
-      localStorage.removeItem("access_token"); // 🔴 limpiamos el token inválido para ese rol
+      localStorage.removeItem("access_token"); // Limpiamos el token inválido para ese rol
       throw new Error(
         tipoUsuario === "medico"
           ? "Esta cuenta no corresponde a un médico"
-          : "Esta cuenta no corresponde a un paciente"
+          : "Esta cuenta no corresponde a un paciente",
       );
     }
 
     return { ...data, dashboard: dashboardData.dashboard };
   } catch (error) {
-    localStorage.removeItem("access_token"); // 🔴 por si falla cualquier paso intermedio
+    localStorage.removeItem("access_token"); // Por si falla cualquier paso intermedio
     throw error;
   }
 };
