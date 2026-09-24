@@ -47,7 +47,7 @@ export const HistorialClinico = () => {
                     localStorage.getItem("token");
 
                 const response = await fetch(
-                    `${import.meta.env.VITE_BACKEND_URL}/api/medico/pacientes/${patient.id}/enfermedades`,
+                    `${import.meta.env.VITE_BACKEND_URL}api/medico/pacientes/${patient.id}/enfermedades`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -55,6 +55,7 @@ export const HistorialClinico = () => {
                         }
                     }
                 );
+                
 
                 const data = await response.json();
 
@@ -98,7 +99,7 @@ export const HistorialClinico = () => {
                     localStorage.getItem("token");
 
                 const response = await fetch(
-                    `${import.meta.env.VITE_BACKEND_URL}/api/medico/pacientes/${patient.id}/consultas`,
+                    `${import.meta.env.VITE_BACKEND_URL}api/medico/pacientes/${patient.id}/consultas`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
