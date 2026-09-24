@@ -1,3 +1,4 @@
+
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -5,9 +6,25 @@ export const HistorialClinico = () => {
     const { state } = useLocation();
     const patient = state?.patient;
 
+    // ==========================================================
+    // ESTADOS
+    // ==========================================================
+
     const [enfermedades, setEnfermedades] = useState([]);
     const [cargandoEnfermedades, setCargandoEnfermedades] = useState(false);
     const [errorEnfermedades, setErrorEnfermedades] = useState("");
+
+    const [alergias, setAlergias] = useState([]);
+    const [cargandoAlergias, setCargandoAlergias] = useState(false);
+    const [errorAlergias, setErrorAlergias] = useState("");
+
+    const [vacunas, setVacunas] = useState([]);
+    const [cargandoVacunas, setCargandoVacunas] = useState(false);
+    const [errorVacunas, setErrorVacunas] = useState("");
+
+    const [cirugias, setCirugias] = useState([]);
+    const [cargandoCirugias, setCargandoCirugias] = useState(false);
+    const [errorCirugias, setErrorCirugias] = useState("");
 
     const [recetas, setRecetas] = useState([]);
     const [cargandoRecetas, setCargandoRecetas] = useState(false);
@@ -22,6 +39,15 @@ export const HistorialClinico = () => {
     // ==========================================================
 
     const [mostrarTodasEnfermedades, setMostrarTodasEnfermedades] =
+        useState(false);
+
+    const [mostrarTodasAlergias, setMostrarTodasAlergias] =
+        useState(false);
+
+    const [mostrarTodasVacunas, setMostrarTodasVacunas] =
+        useState(false);
+
+    const [mostrarTodasCirugias, setMostrarTodasCirugias] =
         useState(false);
 
     const [mostrarTodasConsultas, setMostrarTodasConsultas] =
@@ -47,7 +73,7 @@ export const HistorialClinico = () => {
                     localStorage.getItem("token");
 
                 const response = await fetch(
-                    `${import.meta.env.VITE_BACKEND_URL}api/medico/pacientes/${patient.id}/enfermedades`,
+                    `${import.meta.env.VITE_BACKEND_URL}/api/medico/pacientes/${patient.id}/enfermedades`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -55,7 +81,6 @@ export const HistorialClinico = () => {
                         }
                     }
                 );
-                
 
                 const data = await response.json();
 
@@ -66,20 +91,160 @@ export const HistorialClinico = () => {
                     );
                 }
 
-                setEnfermedades(
-                    data.enfermedades || []
-                );
+                setEnfermedades(data.enfermedades || []);
 
             } catch (error) {
-                setErrorEnfermedades(
-                    error.message
-                );
+                setErrorEnfermedades(error.message);
             } finally {
                 setCargandoEnfermedades(false);
             }
         };
 
         cargarEnfermedades();
+    }, [patient?.id]);
+
+    // ==========================================================
+    // CARGAR ALERGIAS
+    // ==========================================================
+
+    useEffect(() => {
+        if (!patient?.id) return;
+
+        const cargarAlergias = async () => {
+            setCargandoAlergias(true);
+            setErrorAlergias("");
+
+            try {
+                const token =
+                    localStorage.getItem("access_token") ||
+                    localStorage.getItem("token");
+
+                const response = await fetch(
+                    `${import.meta.env.VITE_BACKEND_URL}/api/medico/pacientes/${patient.id}/alergias`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "application/json"
+                        }
+                    }
+                );
+
+                console.log("URL:", response.url);
+                console.log("STATUS:", response.status)
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.error ||
+                        "No se pudieron cargar las alergias."
+                    );
+                }
+
+                setAlergias(data.alergias || []);
+
+            } catch (error) {
+                setErrorAlergias(error.message);
+            } finally {
+                setCargandoAlergias(false);
+            }
+        };
+
+        cargarAlergias();
+    }, [patient?.id]);
+
+    // ==========================================================
+    // CARGAR VACUNAS
+    // ==========================================================
+
+    useEffect(() => {
+        if (!patient?.id) return;
+
+        const cargarVacunas = async () => {
+            setCargandoVacunas(true);
+            setErrorVacunas("");
+
+            try {
+                const token =
+                    localStorage.getItem("access_token") ||
+                    localStorage.getItem("token");
+
+                const response = await fetch(
+                    `${import.meta.env.VITE_BACKEND_URL}/api/medico/pacientes/${patient.id}/vacunas`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "application/json"
+                        }
+                    }
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.error ||
+                        "No se pudieron cargar las vacunas."
+                    );
+                }
+
+                setVacunas(data.vacunas || []);
+
+            } catch (error) {
+                setErrorVacunas(error.message);
+            } finally {
+                setCargandoVacunas(false);
+            }
+        };
+
+        cargarVacunas();
+    }, [patient?.id]);
+
+    // ==========================================================
+    // CARGAR CIRUGÍAS
+    // ==========================================================
+
+    useEffect(() => {
+        if (!patient?.id) return;
+
+        const cargarCirugias = async () => {
+            setCargandoCirugias(true);
+            setErrorCirugias("");
+
+            try {
+                const token =
+                    localStorage.getItem("access_token") ||
+                    localStorage.getItem("token");
+
+                const response = await fetch(
+                    `${import.meta.env.VITE_BACKEND_URL}/api/medico/pacientes/${patient.id}/cirugias`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "application/json"
+                        }
+                    }
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.error ||
+                        "No se pudieron cargar las cirugías."
+                    );
+                }
+
+                setCirugias(data.cirugias || []);
+
+            } catch (error) {
+                setErrorCirugias(error.message);
+            } finally {
+                setCargandoCirugias(false);
+            }
+        };
+
+        cargarCirugias();
     }, [patient?.id]);
 
     // ==========================================================
@@ -99,7 +264,7 @@ export const HistorialClinico = () => {
                     localStorage.getItem("token");
 
                 const response = await fetch(
-                    `${import.meta.env.VITE_BACKEND_URL}api/medico/pacientes/${patient.id}/consultas`,
+                    `${import.meta.env.VITE_BACKEND_URL}/api/medico/pacientes/${patient.id}/consultas`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -117,14 +282,10 @@ export const HistorialClinico = () => {
                     );
                 }
 
-                setConsultas(
-                    data.consultas || []
-                );
+                setConsultas(data.consultas || []);
 
             } catch (error) {
-                setErrorConsultas(
-                    error.message
-                );
+                setErrorConsultas(error.message);
             } finally {
                 setCargandoConsultas(false);
             }
@@ -177,9 +338,7 @@ export const HistorialClinico = () => {
                 );
 
             } catch (error) {
-                setErrorRecetas(
-                    error.message
-                );
+                setErrorRecetas(error.message);
             } finally {
                 setCargandoRecetas(false);
             }
@@ -244,6 +403,8 @@ export const HistorialClinico = () => {
 
         sexo: patient?.sexo || "No disponible",
 
+        tipoSangre: patient?.grupo_sanguineo || "No disponible",
+
         nacimiento: formatearNacimiento(
             patient?.fecha_nacimiento
         ),
@@ -253,14 +414,10 @@ export const HistorialClinico = () => {
     // ORDEN ENFERMEDADES
     // ==========================================================
 
-    const [orden, setOrden] = useState(
-        "recientes"
-    );
+    const [orden, setOrden] = useState("recientes");
 
     const antecedentesFiltrados = useMemo(() => {
-        const resultado = [
-            ...enfermedades
-        ];
+        const resultado = [...enfermedades];
 
         resultado.sort((a, b) => {
             const fechaA = new Date(a.fecha);
@@ -282,6 +439,21 @@ export const HistorialClinico = () => {
         mostrarTodasEnfermedades
             ? antecedentesFiltrados
             : antecedentesFiltrados.slice(0, 4);
+
+    const alergiasVisibles =
+        mostrarTodasAlergias
+            ? alergias
+            : alergias.slice(0, 4);
+
+    const vacunasVisibles =
+        mostrarTodasVacunas
+            ? vacunas
+            : vacunas.slice(0, 4);
+
+    const cirugiasVisibles =
+        mostrarTodasCirugias
+            ? cirugias
+            : cirugias.slice(0, 4);
 
     const consultasVisibles =
         mostrarTodasConsultas
@@ -438,6 +610,10 @@ export const HistorialClinico = () => {
                                     {paciente.id}
                                 </span>
 
+                                <span className="badge bg-danger bg-opacity-25 text-danger border border-danger">
+                                    Tipo de sangre: {paciente.tipoSangre}
+                                </span>
+
                             </div>
 
                             <div className="text-white-50 mt-2">
@@ -494,20 +670,21 @@ export const HistorialClinico = () => {
 
                             <label
                                 htmlFor="orden"
-                                className="form-label small fw-semibold mb-1"
+                                className="form-label small fw-semibold mb-1 text-light"
                             >
                                 Ordenar por
                             </label>
 
                             <select
                                 id="orden"
-                                className="form-select bg-dark text-white border-secondary"
+                                className="form-select bg-info bg-opacity-10 text-info border-info"
                                 value={orden}
                                 onChange={(e) => {
                                     setOrden(e.target.value);
                                     setMostrarTodasEnfermedades(false);
                                 }}
                             >
+
                                 <option value="recientes">
                                     Más recientes
                                 </option>
@@ -589,7 +766,13 @@ export const HistorialClinico = () => {
 
                                                 <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
 
-                                                    <span className="badge text-bg-danger">
+                                                    <span
+                                                        className="badge"
+                                                        style={{
+                                                            backgroundColor: "#9945ff",
+                                                            color: "#ffffff",
+                                                        }}
+                                                    >
                                                         Enfermedad
                                                     </span>
 
@@ -603,16 +786,16 @@ export const HistorialClinico = () => {
                                                     {antecedente.nombre}
                                                 </h3>
 
-                                                <p className="text-white mb-2">
-                                                    {antecedente.descripcion}
-                                                </p>
-
                                                 <div className="small text-white">
+
                                                     <strong>
-                                                        Detalle:
+                                                        Descripción:
                                                     </strong>
+
                                                     {" "}
+
                                                     {antecedente.detalle}
+
                                                 </div>
 
                                             </div>
@@ -623,10 +806,6 @@ export const HistorialClinico = () => {
 
                                 )
                             )}
-
-                            {/* ==================================================
-                                VER MÁS / VER MENOS
-                            ================================================== */}
 
                             {antecedentesFiltrados.length > 4 && (
 
@@ -688,6 +867,702 @@ export const HistorialClinico = () => {
             </div>
 
             {/* ==================================================
+                ALERGIAS
+            ================================================== */}
+
+            <div className="card bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 shadow-sm mb-4">
+
+                <div className="card-body p-4">
+
+                    <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+
+                        <div>
+
+                            <h2 className="h4 text-info fw-bold mb-1">
+                                Alergias
+                            </h2>
+
+                            <p className="text-white mb-0">
+                                Alergias conocidas registradas para este paciente.
+                            </p>
+
+                        </div>
+
+                        <span className="badge bg-info bg-opacity-25 text-info border border-info">
+
+                            {alergias.length}
+
+                            {" "}
+
+                            {alergias.length === 1
+                                ? "alergia"
+                                : "alergias"}
+
+                        </span>
+
+                    </div>
+
+                    {cargandoAlergias ? (
+
+                        <div className="d-flex align-items-center gap-2 text-white-50">
+
+                            <div
+                                className="spinner-border spinner-border-sm text-info"
+                                role="status"
+                            >
+                                <span className="visually-hidden">
+                                    Cargando...
+                                </span>
+                            </div>
+
+                            Cargando alergias...
+
+                        </div>
+
+                    ) : errorAlergias ? (
+
+                        <div
+                            className="alert alert-warning mb-0"
+                            role="alert"
+                        >
+                            {errorAlergias}
+                        </div>
+
+                    ) : alergias.length === 0 ? (
+
+                        <div className="text-center py-4">
+
+                            <div className="fs-2 mb-2">
+                                🧪
+                            </div>
+
+                            <h3 className="h6 text-info fw-bold">
+                                No hay alergias registradas
+                            </h3>
+
+                            <p className="text-white mb-0">
+                                Este paciente no tiene alergias registradas.
+                            </p>
+
+                        </div>
+
+                    ) : (
+
+                        <div>
+
+                            <div className="row g-3">
+
+                                {alergiasVisibles.map(
+                                    (alergia) => (
+
+                                        <div
+                                            className="col-12 col-xl-6"
+                                            key={alergia.id}
+                                        >
+
+                                            <div className="bg-dark bg-opacity-50 border border-secondary border-opacity-50 rounded-3 p-3 h-100">
+
+                                                <div className="d-flex justify-content-between align-items-start gap-2 mb-3">
+
+                                                    <h3 className="h6 text-info fw-bold mb-0">
+                                                        {alergia.nombre ||
+                                                            alergia.name ||
+                                                            "Alergia"}
+                                                    </h3>
+
+                                                    <span className="badge bg-danger">
+                                                        Alergia
+                                                    </span>
+
+                                                </div>
+
+                                                {alergia.reaccion && (
+
+                                                    <p className="text-white small mb-2">
+
+                                                        <strong>
+                                                            Reacción:
+                                                        </strong>
+
+                                                        {" "}
+
+                                                        {alergia.reaccion}
+
+                                                    </p>
+
+                                                )}
+
+                                                {alergia.reaction && (
+
+                                                    <p className="text-white small mb-2">
+
+                                                        <strong>
+                                                            Reacción:
+                                                        </strong>
+
+                                                        {" "}
+
+                                                        {alergia.reaction}
+
+                                                    </p>
+
+                                                )}
+
+                                                {alergia.gravedad && (
+
+                                                    <p className="text-white small mb-0">
+
+                                                        <strong>
+                                                            Gravedad:
+                                                        </strong>
+
+                                                        {" "}
+
+                                                        {alergia.gravedad}
+
+                                                    </p>
+
+                                                )}
+
+                                                {alergia.severity && (
+
+                                                    <p className="text-white small mb-0">
+
+                                                        <strong>
+                                                            Gravedad:
+                                                        </strong>
+
+                                                        {" "}
+
+                                                        {alergia.severity}
+
+                                                    </p>
+
+                                                )}
+
+                                                {alergia.detalle && (
+
+                                                    <p className="text-white small mt-2 mb-0">
+
+                                                        <strong>
+                                                            Descripción:
+                                                        </strong>
+
+                                                        {" "}
+
+                                                        {alergia.detalle}
+
+                                                    </p>
+
+                                                )}
+
+                                            </div>
+
+                                        </div>
+
+                                    )
+                                )}
+
+                            </div>
+
+                            {alergias.length > 4 && (
+
+                                <div className="d-flex justify-content-center mt-4">
+
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline-info rounded-pill px-4"
+                                        onClick={() =>
+                                            setMostrarTodasAlergias(
+                                                (actual) => !actual
+                                            )
+                                        }
+                                    >
+                                        {mostrarTodasAlergias
+                                            ? "Ver menos"
+                                            : "Ver más"}
+                                    </button>
+
+                                </div>
+
+                            )}
+
+                        </div>
+
+                    )}
+
+                </div>
+
+            </div>
+
+            {/* ==================================================
+                VACUNAS
+            ================================================== */}
+
+            <div className="card bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 shadow-sm mb-4">
+
+                <div className="card-body p-4">
+
+                    <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+
+                        <div>
+
+                            <h2 className="h4 text-info fw-bold mb-1">
+                                Vacunas
+                            </h2>
+
+                            <p className="text-white mb-0">
+                                Historial de vacunas administradas al paciente.
+                            </p>
+
+                        </div>
+
+                        <span className="badge bg-info bg-opacity-25 text-info border border-info">
+
+                            {vacunas.length}
+
+                            {" "}
+
+                            {vacunas.length === 1
+                                ? "vacuna"
+                                : "vacunas"}
+
+                        </span>
+
+                    </div>
+
+                    {cargandoVacunas ? (
+
+                        <div className="d-flex align-items-center gap-2 text-white-50">
+
+                            <div
+                                className="spinner-border spinner-border-sm text-info"
+                                role="status"
+                            >
+                                <span className="visually-hidden">
+                                    Cargando...
+                                </span>
+                            </div>
+
+                            Cargando vacunas...
+
+                        </div>
+
+                    ) : errorVacunas ? (
+
+                        <div
+                            className="alert alert-warning mb-0"
+                            role="alert"
+                        >
+                            {errorVacunas}
+                        </div>
+
+                    ) : vacunas.length === 0 ? (
+
+                        <div className="text-center py-4">
+
+                            <div className="fs-2 mb-2">
+                                💉
+                            </div>
+
+                            <h3 className="h6 text-info fw-bold">
+                                No hay vacunas registradas
+                            </h3>
+
+                            <p className="text-white mb-0">
+                                Este paciente no tiene vacunas registradas.
+                            </p>
+
+                        </div>
+
+                    ) : (
+
+                        <div>
+
+                            <div className="row g-3">
+
+                                {vacunasVisibles.map(
+                                    (vacuna) => (
+
+                                        <div
+                                            className="col-12 col-xl-6"
+                                            key={vacuna.id}
+                                        >
+
+                                            <div className="bg-dark bg-opacity-50 border border-secondary border-opacity-50 rounded-3 p-3 h-100">
+
+                                                <div className="d-flex justify-content-between align-items-start gap-2 mb-3">
+
+                                                    <h3 className="h6 text-info fw-bold mb-0">
+                                                        {vacuna.nombre ||
+                                                            vacuna.name ||
+                                                            vacuna.vaccine_name ||
+                                                            "Vacuna"}
+                                                    </h3>
+
+                                                    <span className="badge bg-success">
+                                                        Vacuna
+                                                    </span>
+
+                                                </div>
+
+                                                {(vacuna.fecha ||
+                                                    vacuna.date ||
+                                                    vacuna.administered_at) && (
+
+                                                    <p className="text-white small mb-2">
+
+                                                        <strong>
+                                                            Fecha:
+                                                        </strong>
+
+                                                        {" "}
+
+                                                        {formatearFecha(
+                                                            vacuna.fecha ||
+                                                            vacuna.date ||
+                                                            vacuna.administered_at
+                                                        )}
+
+                                                    </p>
+
+                                                )}
+
+                                                {vacuna.dosis && (
+
+                                                    <p className="text-white small mb-2">
+
+                                                        <strong>
+                                                            Dosis:
+                                                        </strong>
+
+                                                        {" "}
+
+                                                        {vacuna.dosis}
+
+                                                    </p>
+
+                                                )}
+
+                                                {vacuna.dose && (
+
+                                                    <p className="text-white small mb-2">
+
+                                                        <strong>
+                                                            Dosis:
+                                                        </strong>
+
+                                                        {" "}
+
+                                                        {vacuna.dose}
+
+                                                    </p>
+
+                                                )}
+
+                                                {vacuna.lote && (
+
+                                                    <p className="text-white small mb-0">
+
+                                                        <strong>
+                                                            Lote:
+                                                        </strong>
+
+                                                        {" "}
+
+                                                        {vacuna.lote}
+
+                                                    </p>
+
+                                                )}
+
+                                                {vacuna.batch && (
+
+                                                    <p className="text-white small mb-0">
+
+                                                        <strong>
+                                                            Lote:
+                                                        </strong>
+
+                                                        {" "}
+
+                                                        {vacuna.batch}
+
+                                                    </p>
+
+                                                )}
+
+                                            </div>
+
+                                        </div>
+
+                                    )
+                                )}
+
+                            </div>
+
+                            {vacunas.length > 4 && (
+
+                                <div className="d-flex justify-content-center mt-4">
+
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline-info rounded-pill px-4"
+                                        onClick={() =>
+                                            setMostrarTodasVacunas(
+                                                (actual) => !actual
+                                            )
+                                        }
+                                    >
+                                        {mostrarTodasVacunas
+                                            ? "Ver menos"
+                                            : "Ver más"}
+                                    </button>
+
+                                </div>
+
+                            )}
+
+                        </div>
+
+                    )}
+
+                </div>
+
+            </div>
+
+            {/* ==================================================
+                CIRUGÍAS
+            ================================================== */}
+
+            <div className="card bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 shadow-sm mb-4">
+
+                <div className="card-body p-4">
+
+                    <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+
+                        <div>
+
+                            <h2 className="h4 text-info fw-bold mb-1">
+                                Cirugías
+                            </h2>
+
+                            <p className="text-white mb-0">
+                                Intervenciones quirúrgicas registradas para este paciente.
+                            </p>
+
+                        </div>
+
+                        <span className="badge bg-info bg-opacity-25 text-info border border-info">
+
+                            {cirugias.length}
+
+                            {" "}
+
+                            {cirugias.length === 1
+                                ? "cirugía"
+                                : "cirugías"}
+
+                        </span>
+
+                    </div>
+
+                    {cargandoCirugias ? (
+
+                        <div className="d-flex align-items-center gap-2 text-white-50">
+
+                            <div
+                                className="spinner-border spinner-border-sm text-info"
+                                role="status"
+                            >
+                                <span className="visually-hidden">
+                                    Cargando...
+                                </span>
+                            </div>
+
+                            Cargando cirugías...
+
+                        </div>
+
+                    ) : errorCirugias ? (
+
+                        <div
+                            className="alert alert-warning mb-0"
+                            role="alert"
+                        >
+                            {errorCirugias}
+                        </div>
+
+                    ) : cirugias.length === 0 ? (
+
+                        <div className="text-center py-4">
+
+                            <div className="fs-2 mb-2">
+                                🏥
+                            </div>
+
+                            <h3 className="h6 text-info fw-bold">
+                                No hay cirugías registradas
+                            </h3>
+
+                            <p className="text-white mb-0">
+                                Este paciente no tiene cirugías registradas.
+                            </p>
+
+                        </div>
+
+                    ) : (
+
+                        <div>
+
+                            <div className="row g-3">
+
+                                {cirugiasVisibles.map(
+                                    (cirugia) => (
+
+                                        <div
+                                            className="col-12 col-xl-6"
+                                            key={cirugia.id}
+                                        >
+
+                                            <div className="bg-dark bg-opacity-50 border border-secondary border-opacity-50 rounded-3 p-3 h-100">
+
+                                                <div className="d-flex justify-content-between align-items-start gap-2 mb-3">
+
+                                                    <h3 className="h6 text-info fw-bold mb-0">
+
+                                                        {cirugia.nombre ||
+                                                            cirugia.name ||
+                                                            cirugia.procedimiento ||
+                                                            cirugia.procedure ||
+                                                            "Cirugía"}
+
+                                                    </h3>
+
+                                                    <span className="badge bg-warning text-dark">
+                                                        Cirugía
+                                                    </span>
+
+                                                </div>
+
+                                                {(cirugia.fecha ||
+                                                    cirugia.date ||
+                                                    cirugia.surgery_date) && (
+
+                                                    <p className="text-white small mb-2">
+
+                                                        <strong>
+                                                            Fecha:
+                                                        </strong>
+
+                                                        {" "}
+
+                                                        {formatearFecha(
+                                                            cirugia.fecha ||
+                                                            cirugia.date ||
+                                                            cirugia.surgery_date
+                                                        )}
+
+                                                    </p>
+
+                                                )}
+
+                                                {(cirugia.hospital ||
+                                                    cirugia.hospital_name) && (
+
+                                                    <p className="text-white small mb-2">
+
+                                                        <strong>
+                                                            Hospital:
+                                                        </strong>
+
+                                                        {" "}
+
+                                                        {cirugia.hospital ||
+                                                            cirugia.hospital_name}
+
+                                                    </p>
+
+                                                )}
+
+                                                {(cirugia.cirujano ||
+                                                    cirugia.surgeon) && (
+
+                                                    <p className="text-white small mb-2">
+
+                                                        <strong>
+                                                            Cirujano:
+                                                        </strong>
+
+                                                        {" "}
+
+                                                        {cirugia.cirujano ||
+                                                            cirugia.surgeon}
+
+                                                    </p>
+
+                                                )}
+
+                                                {(cirugia.detalle ||
+                                                    cirugia.description ||
+                                                    cirugia.descripcion) && (
+
+                                                    <p className="text-white small mb-0">
+
+                                                        <strong>
+                                                            Descripción:
+                                                        </strong>
+
+                                                        {" "}
+
+                                                        {cirugia.detalle ||
+                                                            cirugia.description ||
+                                                            cirugia.descripcion}
+
+                                                    </p>
+
+                                                )}
+
+                                            </div>
+
+                                        </div>
+
+                                    )
+                                )}
+
+                            </div>
+
+                            {cirugias.length > 4 && (
+
+                                <div className="d-flex justify-content-center mt-4">
+
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline-info rounded-pill px-4"
+                                        onClick={() =>
+                                            setMostrarTodasCirugias(
+                                                (actual) => !actual
+                                            )
+                                        }
+                                    >
+                                        {mostrarTodasCirugias
+                                            ? "Ver menos"
+                                            : "Ver más"}
+                                    </button>
+
+                                </div>
+
+                            )}
+
+                        </div>
+
+                    )}
+
+                </div>
+
+            </div>
+
+            {/* ==================================================
                 HISTORIAL DE CONSULTAS
             ================================================== */}
 
@@ -699,11 +1574,7 @@ export const HistorialClinico = () => {
 
                         <div>
 
-                            <span className="text-info text-uppercase small fw-semibold">
-                                Agenda médica
-                            </span>
-
-                            <h2 className="h4 text-info fw-bold mb-1 mt-1">
+                            <h2 className="h4 text-info fw-bold mb-1">
                                 Historial de consultas
                             </h2>
 
@@ -713,7 +1584,7 @@ export const HistorialClinico = () => {
 
                         </div>
 
-                        <span className="badge bg-warning bg-opacity-25 text-warning border border-warning">
+                        <span className="badge bg-info bg-opacity-25 text-info border border-info">
 
                             {consultas.length}
 
@@ -778,8 +1649,10 @@ export const HistorialClinico = () => {
                                                 <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
 
                                                     <h3 className="h6 text-info fw-bold mb-0">
+
                                                         {consulta.appointment_type ||
                                                             "Consulta médica"}
+
                                                     </h3>
 
                                                     <span
@@ -822,6 +1695,7 @@ export const HistorialClinico = () => {
 
                                                     Modalidad:
                                                     {" "}
+
                                                     {consulta.modality ===
                                                     "virtual"
                                                         ? "Virtual"
@@ -845,10 +1719,6 @@ export const HistorialClinico = () => {
                                 )}
 
                             </div>
-
-                            {/* ==================================================
-                                VER MÁS / VER MENOS
-                            ================================================== */}
 
                             {consultas.length > 4 && (
 
@@ -892,11 +1762,7 @@ export const HistorialClinico = () => {
 
                         <div>
 
-                            <span className="text-info text-uppercase small fw-semibold">
-                                Tratamientos
-                            </span>
-
-                            <h2 className="h4 text-info fw-bold mb-1 mt-1">
+                            <h2 className="h4 text-info fw-bold mb-1">
                                 Historial de recetas
                             </h2>
 
@@ -1012,7 +1878,7 @@ export const HistorialClinico = () => {
 
                                                 </div>
 
-                                                {receta.medications.map(
+                                                {receta.medications?.map(
                                                     (medicamento) => (
 
                                                         <div
@@ -1103,10 +1969,6 @@ export const HistorialClinico = () => {
 
                             </div>
 
-                            {/* ==================================================
-                                VER MÁS / VER MENOS
-                            ================================================== */}
-
                             {recetas.length > 4 && (
 
                                 <div className="d-flex justify-content-center mt-4">
@@ -1140,3 +2002,4 @@ export const HistorialClinico = () => {
         </div>
     );
 };
+

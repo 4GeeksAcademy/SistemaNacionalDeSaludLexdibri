@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 import rigoImageUrl from "../assets/img/rigo-baby.jpg";
@@ -30,25 +31,6 @@ export const DashboardMedico = () => {
     const [consultationError, setConsultationError] = useState("");
     const [completingConsultationId, setCompletingConsultationId] =
         useState(null);
-
-    // =====================================================
-    // MENSAJES
-    // =====================================================
-
-    const [messages] = useState([
-        {
-            id: 1,
-            sender: "Ana Torres",
-            message: "Buenos días doctor, quería consultar una duda.",
-            time: "10:30",
-        },
-        {
-            id: 2,
-            sender: "Luis Gómez",
-            message: "¿Podría revisar mi última analítica?",
-            time: "09:45",
-        },
-    ]);
 
     // =====================================================
     // TOKEN
@@ -520,7 +502,7 @@ export const DashboardMedico = () => {
 
                 <div className="row g-4 mb-4">
 
-                    <div className="col-12 col-md-4">
+                    <div className="col-12 col-md-6">
                         <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
 
                             <span className="fs-2">
@@ -538,7 +520,7 @@ export const DashboardMedico = () => {
                         </div>
                     </div>
 
-                    <div className="col-12 col-md-4">
+                    <div className="col-12 col-md-6">
                         <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
 
                             <span className="fs-2">
@@ -551,24 +533,6 @@ export const DashboardMedico = () => {
 
                             <h2 className="display-6 fw-bold mb-0">
                                 {consultations.length}
-                            </h2>
-
-                        </div>
-                    </div>
-
-                    <div className="col-12 col-md-4">
-                        <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
-
-                            <span className="fs-2">
-                                💬
-                            </span>
-
-                            <p className="text-info text-uppercase small fw-semibold mt-3 mb-1">
-                                Mensajes
-                            </p>
-
-                            <h2 className="display-6 fw-bold mb-0">
-                                {messages.length}
                             </h2>
 
                         </div>
@@ -1245,7 +1209,7 @@ export const DashboardMedico = () => {
 
                                 <div>
 
-                                    <span className="text-warning text-uppercase small fw-semibold">
+                                    <span className="text-info text-uppercase small fw-semibold">
                                         Agenda médica
                                     </span>
 
@@ -1257,7 +1221,7 @@ export const DashboardMedico = () => {
 
                                 <button
                                     type="button"
-                                    className="btn btn-outline-warning rounded-pill btn-sm"
+                                    className="btn btn-outline-info rounded-pill btn-sm"
                                     onClick={loadConsultations}
                                     disabled={loadingConsultations}
                                 >
@@ -1408,51 +1372,6 @@ export const DashboardMedico = () => {
                         </div>
 
                     </div>
-
-                </div>
-
-                {/* =====================================================
-                    MENSAJES
-                ===================================================== */}
-
-                <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 mb-4">
-
-                    <div className="d-flex align-items-center gap-2 mb-4">
-
-                        <span className="fs-4">
-                            💬
-                        </span>
-
-                        <h2 className="h4 fw-bold mb-0">
-                            Mensajes recientes
-                        </h2>
-
-                    </div>
-
-                    {messages.map((message) => (
-                        <div
-                            key={message.id}
-                            className="d-flex justify-content-between align-items-start gap-3 py-3 border-bottom border-secondary border-opacity-25"
-                        >
-
-                            <div>
-
-                                <strong className="d-block">
-                                    {message.sender}
-                                </strong>
-
-                                <span className="text-white-50 small">
-                                    {message.message}
-                                </span>
-
-                            </div>
-
-                            <span className="text-white-50 small flex-shrink-0">
-                                {message.time}
-                            </span>
-
-                        </div>
-                    ))}
 
                 </div>
 

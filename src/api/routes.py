@@ -17,6 +17,9 @@ from api.models import (
     Medication,
     Prescription,
     PrescriptionMedication,
+    Allergy,
+    Vaccination,
+    Surgery,
 )
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
@@ -675,8 +678,8 @@ def obtener_enfermedades_paciente(patient_id):
             "error": "Usuario no encontrado"
         }), 404
 
-    if user.role != UserRole.DOCTOR :
-        print(UserRole.DOCTOR ==   user.role)
+    if user.role != UserRole.DOCTOR:
+        print(UserRole.DOCTOR == user.role)
         return jsonify({
             "error": "No tienes permisos para consultar enfermedades"
         }), 403
@@ -726,6 +729,52 @@ def obtener_enfermedades_paciente(patient_id):
                 "detalle": diagnosis.notes or "Sin observaciones"
             }
             for diagnosis in diagnoses
+        ]
+    }), 200
+
+# =========================================================
+# OBTENER HISTORIAL DE CONSULTAS - MÉDICO
+# =========================================================
+
+
+@api.route(
+    "/medico/pacientes/<int:patient_id>/consultas",
+    methods=["GET"]
+)
+@jwt_required()
+def obtener_consultas_paciente_medico(patient_id):
+
+    user_id = get_jwt_identity()
+
+    user = db.session.get(User, int(user_id))
+
+    if not user:
+        return jsonify({
+            "error": "Usuario no encontrado"
+        }), 404
+
+    if user.role != UserRole.DOCTOR or not user.doctor:
+        return jsonify({
+            "error": "No tienes permisos para consultar el historial"
+        }), 403
+
+    # Obtener todas las consultas del paciente.
+    # No comprobamos que el paciente esté asignado
+    # al médico que realiza la petición.
+    consultas = db.session.execute(
+        db.select(Appointment)
+        .where(
+            Appointment.patient_id == patient_id
+        )
+        .order_by(
+            Appointment.scheduled_start.desc()
+        )
+    ).scalars().all()
+
+    return jsonify({
+        "consultas": [
+            consulta.serialize()
+            for consulta in consultas
         ]
     }), 200
 
@@ -1013,6 +1062,7 @@ def crear_consulta_medico(patient_id):
 # OBTENER CONSULTAS DEL MÉDICO
 # =========================================================
 
+
 @api.route("/medico/consultas", methods=["GET"])
 @jwt_required()
 def obtener_consultas_pendientes():
@@ -1057,6 +1107,7 @@ def obtener_consultas_pendientes():
 # =========================================================
 # COMPLETAR CONSULTA
 # =========================================================
+
 
 @api.route(
     "/medico/consultas/<int:appointment_id>/completar",
@@ -1120,7 +1171,6 @@ def completar_consulta(appointment_id):
         "message": "Consulta completada correctamente",
         "consulta": consultation.serialize()
     }), 200
-
 
 
 # =========================================================
@@ -1369,6 +1419,7 @@ def crear_consulta_paciente():
 # =========================================================
 # CANCELAR CONSULTA - PACIENTE
 # =========================================================
+
 
 @api.route(
     "/paciente/consultas/<int:appointment_id>/cancelar",
@@ -1710,11 +1761,11 @@ def buscar_pacientes():
 
     }), 200
 
-
- #=========================================================
+ # =========================================================
 # AGREGAR PACIENTE
 # SOLO MÉDICO DE CABECERA
 # =========================================================
+
 
 @api.route(
     "/medico/pacientes/<int:patient_id>",
@@ -3121,6 +3172,7 @@ def obtener_especialistas():
         "total": len(especialistas)
     }), 200
 
+
 @api.route(
     "/medico/pacientes/<int:patient_id>/especialistas",
     methods=["GET"]
@@ -3220,86 +3272,6 @@ def obtener_especialistas_paciente(patient_id):
     }), 200
 
 
-@api.route(
-    "/medico/pacientes/<int:patient_id>/especialista/<int:specialist_id>",
-    methods=["DELETE"]
-)
-@jwt_required()
-def eliminar_especialista_paciente(patient_id, specialist_id):
-
-    user_id = get_jwt_identity()
-    user = db.session.get(User, int(user_id))
-
-    if not user:
-        return jsonify({
-            "error": "Usuario no encontrado"
-        }), 404
-
-    if user.role != UserRole.DOCTOR or not user.doctor:
-        return jsonify({
-            "error": "No tienes permisos"
-        }), 403
-
-    doctor_cabecera = user.doctor
-
-    if not doctor_cabecera.specialty:
-        return jsonify({
-            "error": "El médico no tiene una especialidad asignada"
-        }), 403
-
-    specialty_name = (
-        doctor_cabecera.specialty.name or ""
-    ).strip().lower()
-
-    if specialty_name != "médico de cabecera":
-        return jsonify({
-            "error": "Solo el médico de cabecera puede eliminar especialistas"
-        }), 403
-
-    patient = db.session.get(Patient, patient_id)
-
-    if not patient:
-        return jsonify({
-            "error": "Paciente no encontrado"
-        }), 404
-
-    # Comprobar que el paciente pertenece al médico de cabecera
-    patient_relation = db.session.execute(
-        db.select(DoctorPatient).where(
-            DoctorPatient.doctor_id == doctor_cabecera.id,
-            DoctorPatient.patient_id == patient.id,
-            DoctorPatient.is_active.is_(True)
-        )
-    ).scalar_one_or_none()
-
-    if not patient_relation:
-        return jsonify({
-            "error": "El paciente no está en tu lista de pacientes"
-        }), 403
-
-    # Buscar la relación con el especialista
-    specialist_relation = db.session.execute(
-        db.select(DoctorPatient).where(
-            DoctorPatient.doctor_id == specialist_id,
-            DoctorPatient.patient_id == patient.id,
-            DoctorPatient.is_active.is_(True)
-        )
-    ).scalar_one_or_none()
-
-    if not specialist_relation:
-        return jsonify({
-            "error": "El especialista no está asignado a este paciente"
-        }), 404
-
-    # Desactivar la relación, no borrarla físicamente
-    specialist_relation.is_active = False
-
-    db.session.commit()
-
-    return jsonify({
-        "message": "Especialista eliminado correctamente"
-    }), 200
-
 @api.route("/paciente/consultas/disponibilidad", methods=["GET"])
 @jwt_required()
 def obtener_disponibilidad_consultas():
@@ -3372,4 +3344,235 @@ def obtener_disponibilidad_consultas():
     return jsonify({
         "doctor_id": doctor_id,
         "ocupadas": ocupadas
+    }), 200
+
+# ====================
+# OBTENER ALERGIAS
+# ===================
+
+
+@api.route(
+    '/medico/pacientes/<int:patient_id>/alergias',
+    methods=['GET']
+)
+@jwt_required()
+def obtener_alergias_paciente(patient_id):
+
+    user_id = get_jwt_identity()
+
+    user = db.session.get(
+        User,
+        int(user_id)
+    )
+
+    if not user:
+        return jsonify({
+            "error": "Usuario no encontrado."
+        }), 404
+
+    if user.role != UserRole.DOCTOR:
+        return jsonify({
+            "error": "No tienes permisos para consultar este historial."
+        }), 403
+
+    doctor = user.doctor
+
+    if not doctor:
+        return jsonify({
+            "error": "Perfil médico no encontrado."
+        }), 404
+
+    patient = db.session.get(
+        Patient,
+        patient_id
+    )
+
+    if not patient:
+        return jsonify({
+            "error": "Paciente no encontrado."
+        }), 404
+
+    alergias = db.session.execute(
+        db.select(Allergy)
+        .where(
+            Allergy.patient_id == patient.id
+        )
+        .order_by(
+            Allergy.created_at.desc()
+        )
+    ).scalars().all()
+
+    resultado = []
+
+    for alergia in alergias:
+        resultado.append({
+            "id": alergia.id,
+            "patient_id": alergia.patient_id,
+            "allergen": alergia.allergen,
+            "reaction": alergia.reaction,
+            "severity": alergia.severity,
+            "notes": alergia.notes,
+            "created_at": (
+                alergia.created_at.isoformat()
+                if alergia.created_at
+                else None
+            ),
+        })
+
+    return jsonify({
+        "alergias": resultado
+    }), 200
+
+
+# ====================
+# OBTENER VACUNAS
+# ===================
+
+@api.route(
+    '/medico/pacientes/<int:patient_id>/vacunas',
+    methods=['GET']
+)
+@jwt_required()
+def obtener_vacunas_paciente(patient_id):
+
+    user_id = get_jwt_identity()
+
+    user = db.session.get(
+        User,
+        int(user_id)
+    )
+
+    if not user:
+        return jsonify({
+            "error": "Usuario no encontrado."
+        }), 404
+
+    if user.role != UserRole.DOCTOR:
+        return jsonify({
+            "error": "No tienes permisos para consultar este historial."
+        }), 403
+
+    doctor = user.doctor
+
+    if not doctor:
+        return jsonify({
+            "error": "Perfil médico no encontrado."
+        }), 404
+
+    patient = db.session.get(
+        Patient,
+        patient_id
+    )
+
+    if not patient:
+        return jsonify({
+            "error": "Paciente no encontrado."
+        }), 404
+
+    vacunas = db.session.execute(
+        db.select(Vaccination)
+        .where(
+            Vaccination.patient_id == patient.id
+        )
+        .order_by(
+            Vaccination.vaccination_date.desc()
+        )
+    ).scalars().all()
+
+    resultado = []
+
+    for vacuna in vacunas:
+        resultado.append({
+            "id": vacuna.id,
+            "patient_id": vacuna.patient_id,
+            "vaccine_name": vacuna.vaccine_name,
+            "vaccination_date": (
+                vacuna.vaccination_date.isoformat()
+                if vacuna.vaccination_date
+                else None
+            ),
+            "dose": vacuna.dose,
+            "lot_number": vacuna.lot_number,
+            "notes": vacuna.notes,
+        })
+
+    return jsonify({
+        "vacunas": resultado
+    }), 200
+
+
+# ====================
+# OBTENER CIRUGÍAS
+# ===================
+
+@api.route(
+    '/medico/pacientes/<int:patient_id>/cirugias',
+    methods=['GET']
+)
+@jwt_required()
+def obtener_cirugias_paciente(patient_id):
+
+    user_id = get_jwt_identity()
+
+    user = db.session.get(
+        User,
+        int(user_id)
+    )
+
+    if not user:
+        return jsonify({
+            "error": "Usuario no encontrado."
+        }), 404
+
+    if user.role != UserRole.DOCTOR:
+        return jsonify({
+            "error": "No tienes permisos para consultar este historial."
+        }), 403
+
+    doctor = user.doctor
+
+    if not doctor:
+        return jsonify({
+            "error": "Perfil médico no encontrado."
+        }), 404
+
+    patient = db.session.get(
+        Patient,
+        patient_id
+    )
+
+    if not patient:
+        return jsonify({
+            "error": "Paciente no encontrado."
+        }), 404
+
+    cirugias = db.session.execute(
+        db.select(Surgery)
+        .where(
+            Surgery.patient_id == patient.id
+        )
+        .order_by(
+            Surgery.surgery_date.desc()
+        )
+    ).scalars().all()
+
+    resultado = []
+
+    for cirugia in cirugias:
+        resultado.append({
+            "id": cirugia.id,
+            "patient_id": cirugia.patient_id,
+            "name": cirugia.name,
+            "surgery_date": (
+                cirugia.surgery_date.isoformat()
+                if cirugia.surgery_date
+                else None
+            ),
+            "hospital": cirugia.hospital,
+            "surgeon": cirugia.surgeon,
+            "notes": cirugia.notes,
+        })
+
+    return jsonify({
+        "cirugias": resultado
     }), 200
