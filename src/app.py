@@ -1,5 +1,24 @@
-
 import os
+
+from dotenv import load_dotenv
+
+# =========================================================
+# CARGAR VARIABLES DEL ARCHIVO .env
+# =========================================================
+
+BASE_DIR = os.path.dirname(
+    os.path.dirname(
+        os.path.abspath(__file__)
+    )
+)
+
+load_dotenv(
+    os.path.join(
+        BASE_DIR,
+        ".env"
+    )
+)
+
 from flask import Flask, request, jsonify, url_for, send_from_directory
 from flask_migrate import Migrate
 from flask_swagger import swagger
@@ -12,19 +31,35 @@ from api.admin import setup_admin
 from api.commands import setup_commands
 from flask_jwt_extended import JWTManager
 
+# =========================================================
+# RESEND
+# =========================================================
+
+import resend
+
+resend.api_key = os.getenv("RESEND_API_KEY")
+
+
 ENV = "development" if os.getenv("FLASK_DEBUG") == "1" else "production"
+
 
 static_file_dir = os.path.join(
     os.path.dirname(os.path.realpath(__file__)),
     "../dist/"
 )
 
+
 app = Flask(__name__)
 app.url_map.strict_slashes = False
 
+
 CORS(app)
 
-# database configuration
+
+# =========================================================
+# DATABASE CONFIGURATION
+# =========================================================
+
 db_url = os.getenv("DATABASE_URL")
 
 if db_url is not None:
@@ -35,52 +70,116 @@ if db_url is not None:
 else:
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:////tmp/test.db"
 
+
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+
+# =========================================================
+# JWT
+# =========================================================
 
 app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
 
 jwt = JWTManager(app)
 
-MIGRATE = Migrate(app, db, compare_type=True)
+
+# =========================================================
+# DATABASE / MIGRATIONS
+# =========================================================
+
+MIGRATE = Migrate(
+    app,
+    db,
+    compare_type=True
+)
 
 db.init_app(app)
+
+
+# =========================================================
+# ADMIN / COMMANDS
+# =========================================================
 
 setup_admin(app)
 setup_commands(app)
 
-app.register_blueprint(api, url_prefix="/api")
 
+# =========================================================
+# API
+# =========================================================
+
+app.register_blueprint(
+    api,
+    url_prefix="/api"
+)
+
+
+# =========================================================
+# ERROR HANDLER
+# =========================================================
 
 @app.errorhandler(APIException)
 def handle_invalid_usage(error):
-    return jsonify(error.to_dict()), error.status_code
+    return jsonify(
+        error.to_dict()
+    ), error.status_code
 
+
+# =========================================================
+# FRONTEND
+# =========================================================
 
 @app.route("/")
 def sitemap():
+
     if ENV == "development":
         return generate_sitemap(app)
 
-    return send_from_directory(static_file_dir, "index.html")
+    return send_from_directory(
+        static_file_dir,
+        "index.html"
+    )
 
 
-@app.route("/<path:path>", methods=["GET"])
+@app.route(
+    "/<path:path>",
+    methods=["GET"]
+)
 def serve_any_other_file(path):
-    if not os.path.isfile(os.path.join(static_file_dir, path)):
+
+    if not os.path.isfile(
+        os.path.join(
+            static_file_dir,
+            path
+        )
+    ):
         path = "index.html"
 
-    response = send_from_directory(static_file_dir, path)
+    response = send_from_directory(
+        static_file_dir,
+        path
+    )
+
     response.cache_control.max_age = 0
 
     return response
 
 
+# =========================================================
+# START FLASK
+# =========================================================
+
 if __name__ == "__main__":
-    PORT = int(os.environ.get("PORT", 3001))
+
+    PORT = int(
+        os.environ.get(
+            "PORT",
+            3001
+        )
+    )
 
     app.run(
         host="0.0.0.0",
         port=PORT,
         debug=True
     )
-
