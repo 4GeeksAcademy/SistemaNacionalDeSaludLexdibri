@@ -181,7 +181,10 @@ class Patient(db.Model):
 class Specialty(db.Model):
 
     id: Mapped[int] = mapped_column(
-        Integer, primary_key=True, autoincrement=True)
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+    )
 
     name: Mapped[str] = mapped_column(
         String(150),
@@ -189,9 +192,18 @@ class Specialty(db.Model):
         nullable=False,
     )
 
-    description: Mapped[str | None] = mapped_column(Text)
+    description: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
 
+    # Relación 1:N con Doctor
     doctors: Mapped[list["Doctor"]] = relationship(
+        back_populates="specialty",
+    )
+
+    # Relación 1:N con Appointment
+    appointments: Mapped[list["Appointment"]] = relationship(
         back_populates="specialty",
     )
 
@@ -201,7 +213,6 @@ class Specialty(db.Model):
             "name": self.name,
             "description": self.description,
         }
-
 
 # Centros de salud
 
@@ -438,7 +449,8 @@ class PatientHealthCenter(db.Model):
 class Appointment(db.Model):
 
     id: Mapped[int] = mapped_column(
-        Integer, primary_key=True, autoincrement=True)
+        Integer, primary_key=True, autoincrement=True
+    )
 
     patient_id: Mapped[int] = mapped_column(
         ForeignKey("patient.id"),
@@ -450,12 +462,19 @@ class Appointment(db.Model):
         nullable=False,
     )
 
+    specialty_id: Mapped[int | None] = mapped_column(
+        ForeignKey("specialty.id"),
+        nullable=True,
+    )
+
     health_center_id: Mapped[int | None] = mapped_column(
         ForeignKey("health_center.id"),
         nullable=True,
     )
 
-    appointment_type: Mapped[str | None] = mapped_column(String(50))
+    appointment_type: Mapped[str | None] = mapped_column(
+        String(50)
+    )
 
     modality: Mapped[str] = mapped_column(
         String(20),
@@ -463,12 +482,21 @@ class Appointment(db.Model):
         default="presencial",
     )
 
-    scheduled_start: Mapped[datetime | None] = mapped_column(DateTime)
-    scheduled_end: Mapped[datetime | None] = mapped_column(DateTime)
+    scheduled_start: Mapped[datetime | None] = mapped_column(
+        DateTime
+    )
 
-    status: Mapped[str | None] = mapped_column(String(50))
+    scheduled_end: Mapped[datetime | None] = mapped_column(
+        DateTime
+    )
 
-    reason: Mapped[str | None] = mapped_column(Text)
+    status: Mapped[str | None] = mapped_column(
+        String(50)
+    )
+
+    reason: Mapped[str | None] = mapped_column(
+        Text
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
@@ -488,6 +516,10 @@ class Appointment(db.Model):
     )
 
     doctor: Mapped["Doctor"] = relationship(
+        back_populates="appointments",
+    )
+
+    specialty: Mapped["Specialty | None"] = relationship(
         back_populates="appointments",
     )
 
@@ -516,6 +548,7 @@ class Appointment(db.Model):
             "id": self.id,
             "patient_id": self.patient_id,
             "doctor_id": self.doctor_id,
+            "specialty_id": self.specialty_id,
             "health_center_id": self.health_center_id,
             "appointment_type": self.appointment_type,
             "modality": self.modality,
@@ -538,7 +571,6 @@ class Appointment(db.Model):
                 if self.updated_at else None
             ),
         }
-
 
 # Enfermedades
 

@@ -20,10 +20,11 @@ from api.models import (
 )
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 import json
 import requests
+import random
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import (
     create_access_token,
@@ -674,7 +675,8 @@ def obtener_enfermedades_paciente(patient_id):
             "error": "Usuario no encontrado"
         }), 404
 
-    if user.role != UserRole.DOCTOR or not user.doctor:
+    if user.role != UserRole.DOCTOR :
+        print(UserRole.DOCTOR ==   user.role)
         return jsonify({
             "error": "No tienes permisos para consultar enfermedades"
         }), 403
@@ -687,10 +689,10 @@ def obtener_enfermedades_paciente(patient_id):
         )
     ).scalar_one_or_none()
 
-    if not patient_is_assigned:
-        return jsonify({
-            "error": "El paciente no está asignado a este médico"
-        }), 403
+    # if not patient_is_assigned:
+    #     return jsonify({
+    #         "error": "El paciente no está asignado a este médico"
+    #     }), 403
 
     diagnoses = db.session.execute(
         db.select(Diagnosis)
@@ -817,10 +819,8 @@ def crear_diagnostico_paciente(patient_id):
 def crear_consulta_medico(patient_id):
 
     user_id = get_jwt_identity()
-    user = db.session.get(
-        User,
-        int(user_id)
-    )
+
+    user = db.session.get(User, int(user_id))
 
     if not user:
         return jsonify({
@@ -832,9 +832,12 @@ def crear_consulta_medico(patient_id):
             "error": "No tienes permisos para crear consultas"
         }), 403
 
+    medico_creador = user.doctor
+
+    # Comprobar que el paciente está asignado al médico que crea la cita
     patient_is_assigned = db.session.execute(
         db.select(DoctorPatient).where(
-            DoctorPatient.doctor_id == user.doctor.id,
+            DoctorPatient.doctor_id == medico_creador.id,
             DoctorPatient.patient_id == patient_id,
             DoctorPatient.is_active.is_(True)
         )
@@ -847,16 +850,33 @@ def crear_consulta_medico(patient_id):
 
     data = request.get_json() or {}
 
-    scheduled_start_value = data.get(
-        "scheduled_start"
-    )
-
+    specialty_id = data.get("specialty_id")
+    scheduled_start_value = data.get("scheduled_start")
+    scheduled_end_value = data.get("scheduled_end")
     modality = data.get("modality")
 
-    if modality not in (
-        "virtual",
-        "presencial"
-    ):
+    # Validar especialidad
+    if not specialty_id:
+        return jsonify({
+            "error": "Debes seleccionar una especialidad"
+        }), 400
+
+    try:
+        specialty_id = int(specialty_id)
+    except (TypeError, ValueError):
+        return jsonify({
+            "error": "La especialidad seleccionada no es válida"
+        }), 400
+
+    specialty = db.session.get(Specialty, specialty_id)
+
+    if not specialty:
+        return jsonify({
+            "error": "La especialidad seleccionada no existe"
+        }), 404
+
+    # Validar modalidad
+    if modality not in ("virtual", "presencial"):
         return jsonify({
             "error": (
                 "Debes seleccionar si la consulta "
@@ -864,48 +884,98 @@ def crear_consulta_medico(patient_id):
             )
         }), 400
 
+    # Validar fecha
     if not scheduled_start_value:
         return jsonify({
             "error": "Debes indicar la fecha y hora de la consulta"
         }), 400
 
     try:
-
         scheduled_start = datetime.fromisoformat(
-            scheduled_start_value.replace(
-                "Z",
-                "+00:00"
-            )
+            scheduled_start_value.replace("Z", "+00:00")
         )
-
     except (TypeError, ValueError):
-
         return jsonify({
             "error": "La fecha y hora de la consulta no son válidas"
         }), 400
 
+    # Obtener fecha de finalización
     scheduled_end = None
 
-    if data.get("scheduled_end"):
-
+    if scheduled_end_value:
         try:
-
             scheduled_end = datetime.fromisoformat(
-                data["scheduled_end"].replace(
-                    "Z",
-                    "+00:00"
-                )
+                scheduled_end_value.replace("Z", "+00:00")
             )
-
         except (TypeError, ValueError):
-
             return jsonify({
                 "error": "La hora de finalización no es válida"
             }), 400
 
+    # Si no llega scheduled_end, la consulta dura 30 minutos
+    if not scheduled_end:
+        scheduled_end = scheduled_start + timedelta(minutes=30)
+
+    if scheduled_end <= scheduled_start:
+        return jsonify({
+            "error": (
+                "La hora de finalización debe ser posterior "
+                "a la hora de inicio"
+            )
+        }), 400
+
+    # Buscar médicos de la especialidad
+    medicos_especialidad = db.session.execute(
+        db.select(Doctor).where(
+            Doctor.specialty_id == specialty_id
+        )
+    ).scalars().all()
+
+    if not medicos_especialidad:
+        return jsonify({
+            "error": (
+                f"No hay médicos disponibles para "
+                f"la especialidad {specialty.name}"
+            )
+        }), 409
+
+    # Comprobar disponibilidad de cada médico
+    medicos_disponibles = []
+
+    for medico in medicos_especialidad:
+
+        cita_conflictiva = db.session.execute(
+            db.select(Appointment).where(
+                Appointment.doctor_id == medico.id,
+
+                Appointment.status.notin_(
+                    ["cancelled", "completed"]
+                ),
+
+                Appointment.scheduled_start < scheduled_end,
+                Appointment.scheduled_end > scheduled_start
+            )
+        ).scalars().first()
+
+        if not cita_conflictiva:
+            medicos_disponibles.append(medico)
+
+    if not medicos_disponibles:
+        return jsonify({
+            "error": (
+                "No hay médicos disponibles de esta especialidad "
+                "para la fecha y hora seleccionadas"
+            )
+        }), 409
+
+    # Elegir médico aleatoriamente
+    medico_asignado = random.choice(medicos_disponibles)
+
+    # Crear consulta
     consultation = Appointment(
         patient_id=patient_id,
-        doctor_id=user.doctor.id,
+        doctor_id=medico_asignado.id,
+        specialty_id=specialty_id,
         appointment_type=(
             data.get("appointment_type")
             or "Consulta médica"
@@ -920,14 +990,27 @@ def crear_consulta_medico(patient_id):
     db.session.add(consultation)
     db.session.commit()
 
+    doctor_user = medico_asignado.user
+
     return jsonify({
         "message": "Consulta creada correctamente",
-        "consulta": consultation.serialize()
+
+        "consulta": consultation.serialize(),
+
+        "doctor_asignado": {
+            "id": medico_asignado.id,
+            "user_id": medico_asignado.user_id,
+            "first_name": doctor_user.first_name,
+            "last_name": doctor_user.last_name,
+            "medical_license": medico_asignado.medical_license,
+            "specialty_id": medico_asignado.specialty_id,
+        },
+
+        "specialty_name": specialty.name
     }), 201
 
-
 # =========================================================
-# CONSULTAS DEL MÉDICO
+# OBTENER CONSULTAS DEL MÉDICO
 # =========================================================
 
 @api.route("/medico/consultas", methods=["GET"])
@@ -935,10 +1018,8 @@ def crear_consulta_medico(patient_id):
 def obtener_consultas_pendientes():
 
     user_id = get_jwt_identity()
-    user = db.session.get(
-        User,
-        int(user_id)
-    )
+
+    user = db.session.get(User, int(user_id))
 
     if not user:
         return jsonify({
@@ -952,24 +1033,13 @@ def obtener_consultas_pendientes():
 
     consultations = db.session.execute(
         db.select(Appointment)
-        .join(
-            Patient,
-            Appointment.patient_id == Patient.id
-        )
-        .join(
-            User,
-            Patient.user_id == User.id
-        )
+        .join(Patient, Appointment.patient_id == Patient.id)
+        .join(User, Patient.user_id == User.id)
         .where(
             Appointment.doctor_id == user.doctor.id,
-            Appointment.status.notin_([
-                "cancelled",
-                "completed"
-            ])
+            Appointment.status.notin_(["cancelled", "completed"])
         )
-        .order_by(
-            Appointment.scheduled_start.asc()
-        )
+        .order_by(Appointment.scheduled_start.asc())
     ).scalars().all()
 
     return jsonify({
@@ -984,8 +1054,6 @@ def obtener_consultas_pendientes():
             for consultation in consultations
         ]
     }), 200
-
-
 # =========================================================
 # COMPLETAR CONSULTA
 # =========================================================
@@ -1054,63 +1122,7 @@ def completar_consulta(appointment_id):
     }), 200
 
 
-@api.route(
-    "/medico/pacientes/<int:patient_id>/consultas",
-    methods=["GET"]
-)
-@jwt_required()
-def obtener_consultas_paciente_para_historial(patient_id):
 
-    user_id = get_jwt_identity()
-
-    user = db.session.get(
-        User,
-        int(user_id)
-    )
-
-    if not user:
-        return jsonify({
-            "error": "Usuario no encontrado"
-        }), 404
-
-    if user.role != UserRole.DOCTOR or not user.doctor:
-        return jsonify({
-            "error": "No tienes permisos para consultar este historial"
-        }), 403
-
-    # Comprobar que el paciente está actualmente asignado
-    patient_is_assigned = db.session.execute(
-        db.select(DoctorPatient).where(
-            DoctorPatient.doctor_id == user.doctor.id,
-            DoctorPatient.patient_id == patient_id,
-            DoctorPatient.is_active.is_(True)
-        )
-    ).scalar_one_or_none()
-
-    if not patient_is_assigned:
-        return jsonify({
-            "error": "El paciente no está asignado a este médico"
-        }), 403
-
-    # -----------------------------------------------------
-    # HISTORIAL COMPLETO DEL PACIENTE
-    # -----------------------------------------------------
-    consultations = db.session.execute(
-        db.select(Appointment)
-        .where(
-            Appointment.patient_id == patient_id
-        )
-        .order_by(
-            Appointment.scheduled_start.desc()
-        )
-    ).scalars().all()
-
-    return jsonify({
-        "consultas": [
-            consultation.serialize()
-            for consultation in consultations
-        ]
-    }), 200
 # =========================================================
 # TELECONSULTA
 # =========================================================
@@ -1205,6 +1217,12 @@ def obtener_consultas_paciente():
             "error": "No tienes permisos para consultar tus citas"
         }), 403
 
+    print("======================================")
+    print("CREANDO CONSULTA")
+    print("Paciente:", user.patient.id)
+    print("Doctor asignado:", relation.doctor_id)
+    print("======================================")
+
     consultations = db.session.execute(
         db.select(Appointment)
         .where(
@@ -1237,10 +1255,7 @@ def crear_consulta_paciente():
 
     user_id = get_jwt_identity()
 
-    user = db.session.get(
-        User,
-        int(user_id)
-    )
+    user = db.session.get(User, int(user_id))
 
     if not user:
         return jsonify({
@@ -1249,12 +1264,10 @@ def crear_consulta_paciente():
 
     if user.role != UserRole.PATIENT or not user.patient:
         return jsonify({
-            "error": (
-                "Solo un paciente puede crear "
-                "sus consultas"
-            )
+            "error": "Solo un paciente puede crear sus consultas"
         }), 403
 
+    # Buscar el médico activo asignado al paciente
     relation = db.session.execute(
         db.select(DoctorPatient).where(
             DoctorPatient.patient_id == user.patient.id,
@@ -1270,14 +1283,15 @@ def crear_consulta_paciente():
             )
         }), 409
 
+    # Comprobar si ya existe una consulta activa
     active_consultation = db.session.execute(
         db.select(Appointment).where(
             Appointment.patient_id == user.patient.id,
+            Appointment.doctor_id == relation.doctor_id,
             Appointment.status.notin_([
                 "cancelled",
                 "completed"
-            ]),
-            Appointment.doctor_id == relation.doctor_id
+            ])
         )
     ).scalars().first()
 
@@ -1293,23 +1307,17 @@ def crear_consulta_paciente():
         return jsonify({
             "error": (
                 f"Ya tienes una consulta pendiente con "
-                f"{specialty_name}. Cancélala antes de pedir otra."
+                f"{specialty_name}. "
+                "Cancélala antes de pedir otra."
             )
         }), 409
 
-    data = request.get_json(
-        silent=True
-    ) or {}
+    data = request.get_json(silent=True) or {}
 
     modality = data.get("modality")
-    scheduled_start_value = data.get(
-        "scheduled_start"
-    )
+    scheduled_start_value = data.get("scheduled_start")
 
-    if modality not in (
-        "virtual",
-        "presencial"
-    ):
+    if modality not in ("virtual", "presencial"):
         return jsonify({
             "error": (
                 "Debes seleccionar si la consulta "
@@ -1326,16 +1334,10 @@ def crear_consulta_paciente():
         }), 400
 
     try:
-
         scheduled_start = datetime.fromisoformat(
-            scheduled_start_value.replace(
-                "Z",
-                "+00:00"
-            )
+            scheduled_start_value.replace("Z", "+00:00")
         )
-
     except (TypeError, ValueError):
-
         return jsonify({
             "error": (
                 "La fecha y hora de la consulta "
@@ -1363,7 +1365,6 @@ def crear_consulta_paciente():
         "message": "Consulta creada correctamente",
         "consulta": consultation.serialize()
     }), 201
-
 
 # =========================================================
 # CANCELAR CONSULTA - PACIENTE

@@ -1,15 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 // ==========================================================
 // HORARIO PROVISIONAL
-// ==========================================================
-// Mientras no exista un horario real asociado al médico:
-//
-// Lunes - Viernes
-// 08:00 - 18:00
-//
-// Cada 30 minutos.
 // ==========================================================
 
 const HORA_INICIO = 8;
@@ -23,13 +16,16 @@ const INTERVALO_MINUTOS = 30;
 const generarHoras = () => {
     const horas = [];
 
-    for (let hora = HORA_INICIO; hora < HORA_FIN; hora++) {
-        horas.push(
-            `${String(hora).padStart(2, "0")}:00`
-        );
+    for (
+        let minutos = HORA_INICIO * 60;
+        minutos < HORA_FIN * 60;
+        minutos += INTERVALO_MINUTOS
+    ) {
+        const hora = Math.floor(minutos / 60);
+        const minuto = minutos % 60;
 
         horas.push(
-            `${String(hora).padStart(2, "0")}:30`
+            `${String(hora).padStart(2, "0")}:${String(minuto).padStart(2, "0")}`
         );
     }
 
@@ -94,19 +90,15 @@ const generarDiasCalendario = (mes, año) => {
 
     const dias = [];
 
-    // Domingo = 0
-    // Convertimos para que lunes sea la primera columna.
     const diaSemanaPrimerDia =
         primerDia.getDay() === 0
             ? 6
             : primerDia.getDay() - 1;
 
-    // Huecos antes del día 1
     for (let i = 0; i < diaSemanaPrimerDia; i++) {
         dias.push(null);
     }
 
-    // Días reales
     for (
         let dia = 1;
         dia <= ultimoDia.getDate();
@@ -172,17 +164,14 @@ const horaYaHaPasado = (
     const fechaHoy =
         formatearFechaInput(ahora);
 
-    // Día futuro
     if (fechaString > fechaHoy) {
         return false;
     }
 
-    // Día anterior
     if (fechaString < fechaHoy) {
         return true;
     }
 
-    // Hoy
     const [hora, minutos] =
         horaString.split(":").map(Number);
 
@@ -199,15 +188,75 @@ const horaYaHaPasado = (
 };
 
 // ==========================================================
+// OBTENER NOMBRE DEL PACIENTE
+// ==========================================================
+
+const obtenerNombrePaciente = (patient) => {
+    if (!patient) {
+        return "No seleccionado";
+    }
+
+    const firstName =
+        patient.first_name ||
+        patient.firstName ||
+        patient.user?.first_name ||
+        patient.user?.firstName ||
+        "";
+
+    const lastName =
+        patient.last_name ||
+        patient.lastName ||
+        patient.user?.last_name ||
+        patient.user?.lastName ||
+        "";
+
+    const nombreCompleto =
+        `${firstName} ${lastName}`.trim();
+
+    return (
+        nombreCompleto ||
+        patient.nombreCompleto ||
+        patient.full_name ||
+        patient.name ||
+        (
+            patient.nombre
+                ? `${patient.nombre} ${patient.apellidos || ""}`.trim()
+                : "Paciente"
+        )
+    );
+};
+
+// ==========================================================
+// OBTENER DNI DEL PACIENTE
+// ==========================================================
+
+const obtenerDniPaciente = (patient) => {
+    if (!patient) {
+        return "No disponible";
+    }
+
+    return (
+        patient.dni ||
+        patient.user?.dni ||
+        "No disponible"
+    );
+};
+
+// ==========================================================
 // COMPONENTE
 // ==========================================================
 
 export const NuevaConsulta = () => {
     const { state } = useLocation();
 
+    // Paciente seleccionado desde DashboardMedico
     const patient = state?.patient;
 
     const hoy = obtenerHoy();
+
+    // ======================================================
+    // CALENDARIO
+    // ======================================================
 
     const [mesActual, setMesActual] = useState(
         hoy.getMonth()
@@ -223,28 +272,128 @@ export const NuevaConsulta = () => {
     const [horaSeleccionada, setHoraSeleccionada] =
         useState("");
 
+    // ======================================================
+    // ESPECIALIDADES
+    // ======================================================
+
+    const [especialidades, setEspecialidades] =
+        useState([]);
+
+    const [cargandoEspecialidades, setCargandoEspecialidades] =
+        useState(true);
+
+    // ======================================================
+    // FORMULARIO
+    // ======================================================
+
     const [formulario, setFormulario] = useState({
         appointment_type: "Consulta médica",
+        specialty_id: "",
         modality: "presencial",
         scheduled_start: "",
         status: "scheduled",
         reason: ""
     });
 
+    // ======================================================
+    // ESTADOS
+    // ======================================================
+
     const [loading, setLoading] = useState(false);
+
     const [error, setError] = useState("");
+
     const [success, setSuccess] = useState("");
+
     const [consultaCreada, setConsultaCreada] =
         useState(null);
+
+    // ======================================================
+    // CARGAR ESPECIALIDADES
+    // ======================================================
+
+    useEffect(() => {
+        const cargarEspecialidades = async () => {
+            setCargandoEspecialidades(true);
+            setError("");
+
+            try {
+                const token =
+                    localStorage.getItem("access_token") ||
+                    localStorage.getItem("token");
+
+                if (!token) {
+                    throw new Error(
+                        "No hay una sesión iniciada."
+                    );
+                }
+
+                const response = await fetch(
+                    `${import.meta.env.VITE_BACKEND_URL}/api/especialidades`,
+                    {
+                        method: "GET",
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    }
+                );
+
+                const data =
+                    await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.error ||
+                        "No se pudieron cargar las especialidades."
+                    );
+                }
+
+                const listaEspecialidades =
+                    Array.isArray(data)
+                        ? data
+                        : data.especialidades || [];
+
+                setEspecialidades(
+                    listaEspecialidades
+                );
+
+            } catch (errorEspecialidades) {
+                console.error(
+                    "Error cargando especialidades:",
+                    errorEspecialidades
+                );
+
+                setError(
+                    errorEspecialidades.message ||
+                    "No se pudieron cargar las especialidades."
+                );
+            } finally {
+                setCargandoEspecialidades(false);
+            }
+        };
+
+        cargarEspecialidades();
+    }, []);
 
     // ======================================================
     // DÍAS DEL CALENDARIO
     // ======================================================
 
-    const diasCalendario = generarDiasCalendario(
-        mesActual,
-        añoActual
-    );
+    const diasCalendario =
+        generarDiasCalendario(
+            mesActual,
+            añoActual
+        );
+
+    // ======================================================
+    // INFORMACIÓN DEL PACIENTE
+    // ======================================================
+
+    const nombrePaciente =
+        obtenerNombrePaciente(patient);
+
+    const dniPaciente =
+        obtenerDniPaciente(patient);
 
     // ======================================================
     // CAMBIAR MES
@@ -267,8 +416,6 @@ export const NuevaConsulta = () => {
         const mesHoy = hoy.getMonth();
         const añoHoy = hoy.getFullYear();
 
-        // No permitir navegar a meses anteriores
-        // al mes actual.
         if (
             nuevoAño < añoHoy ||
             (
@@ -303,14 +450,13 @@ export const NuevaConsulta = () => {
         const fechaFormateada =
             formatearFechaInput(fecha);
 
-        const hoyActual = obtenerHoy();
+        const hoyActual =
+            obtenerHoy();
 
-        // No permitir días anteriores.
         if (fecha < hoyActual) {
             return;
         }
 
-        // No permitir fines de semana.
         if (esFinDeSemana(fecha)) {
             return;
         }
@@ -367,7 +513,10 @@ export const NuevaConsulta = () => {
     // ======================================================
 
     const actualizarCampo = (event) => {
-        const { name, value } = event.target;
+        const {
+            name,
+            value
+        } = event.target;
 
         setFormulario((actual) => ({
             ...actual,
@@ -376,6 +525,7 @@ export const NuevaConsulta = () => {
 
         setError("");
         setSuccess("");
+        setConsultaCreada(null);
     };
 
     // ======================================================
@@ -389,6 +539,10 @@ export const NuevaConsulta = () => {
         setSuccess("");
         setConsultaCreada(null);
 
+        // --------------------------------------------------
+        // PACIENTE
+        // --------------------------------------------------
+
         if (!patient?.id) {
             setError(
                 "No se ha seleccionado ningún paciente."
@@ -396,12 +550,31 @@ export const NuevaConsulta = () => {
             return;
         }
 
+        // --------------------------------------------------
+        // ESPECIALIDAD
+        // --------------------------------------------------
+
+        if (!formulario.specialty_id) {
+            setError(
+                "Selecciona una especialidad para la consulta."
+            );
+            return;
+        }
+
+        // --------------------------------------------------
+        // FECHA
+        // --------------------------------------------------
+
         if (!fechaSeleccionada) {
             setError(
                 "Selecciona un día para la consulta."
             );
             return;
         }
+
+        // --------------------------------------------------
+        // HORA
+        // --------------------------------------------------
 
         if (!horaSeleccionada) {
             setError(
@@ -411,21 +584,26 @@ export const NuevaConsulta = () => {
         }
 
         // --------------------------------------------------
-        // Comprobar fecha
+        // COMPROBAR FECHA
         // --------------------------------------------------
 
-        const hoyActual = obtenerHoy();
+        const hoyActual =
+            obtenerHoy();
 
-        const [year, month, day] =
-            fechaSeleccionada
-                .split("-")
-                .map(Number);
-
-        const fechaCita = crearFechaLocal(
+        const [
             year,
-            month - 1,
+            month,
             day
-        );
+        ] = fechaSeleccionada
+            .split("-")
+            .map(Number);
+
+        const fechaCita =
+            crearFechaLocal(
+                year,
+                month - 1,
+                day
+            );
 
         if (fechaCita < hoyActual) {
             setError(
@@ -435,7 +613,7 @@ export const NuevaConsulta = () => {
         }
 
         // --------------------------------------------------
-        // Comprobar fin de semana
+        // FIN DE SEMANA
         // --------------------------------------------------
 
         if (esFinDeSemana(fechaCita)) {
@@ -446,7 +624,7 @@ export const NuevaConsulta = () => {
         }
 
         // --------------------------------------------------
-        // Comprobar hora
+        // HORA
         // --------------------------------------------------
 
         if (
@@ -468,6 +646,12 @@ export const NuevaConsulta = () => {
                 localStorage.getItem("access_token") ||
                 localStorage.getItem("token");
 
+            if (!token) {
+                throw new Error(
+                    "No hay una sesión iniciada."
+                );
+            }
+
             const response = await fetch(
                 `${import.meta.env.VITE_BACKEND_URL}/api/medico/pacientes/${patient.id}/consultas`,
                 {
@@ -476,11 +660,19 @@ export const NuevaConsulta = () => {
                         Authorization: `Bearer ${token}`,
                         "Content-Type": "application/json"
                     },
-                    body: JSON.stringify(formulario)
+                    body: JSON.stringify({
+                        ...formulario,
+
+                        specialty_id:
+                            Number(
+                                formulario.specialty_id
+                            )
+                    })
                 }
             );
 
-            const data = await response.json();
+            const data =
+                await response.json();
 
             if (!response.ok) {
                 throw new Error(
@@ -489,7 +681,8 @@ export const NuevaConsulta = () => {
                 );
             }
 
-            const consulta = data.consulta;
+            const consulta =
+                data.consulta;
 
             if (!consulta?.id) {
                 throw new Error(
@@ -497,13 +690,21 @@ export const NuevaConsulta = () => {
                 );
             }
 
-            setConsultaCreada(consulta);
+            setConsultaCreada({
+                ...consulta,
+                doctor_asignado:
+                    data.doctor_asignado || null
+            });
 
             setSuccess(
                 consulta.modality === "virtual"
                     ? "Consulta virtual creada correctamente."
                     : "Consulta creada correctamente."
             );
+
+            // --------------------------------------------------
+            // LIMPIAR FECHA/HORA/MOTIVO
+            // --------------------------------------------------
 
             setFechaSeleccionada("");
             setHoraSeleccionada("");
@@ -521,12 +722,36 @@ export const NuevaConsulta = () => {
             );
 
             setError(
-                submitError.message
+                submitError.message ||
+                "No se pudo crear la consulta."
             );
         } finally {
             setLoading(false);
         }
     };
+
+    // ======================================================
+    // SI NO HAY PACIENTE
+    // ======================================================
+
+    if (!patient) {
+        return (
+            <div className="container py-5 text-white">
+
+                <div className="alert alert-warning">
+                    No se ha seleccionado ningún paciente.
+                </div>
+
+                <Link
+                    to="/dashboard/medico"
+                    className="btn btn-outline-light rounded-pill"
+                >
+                    Volver al dashboard médico
+                </Link>
+
+            </div>
+        );
+    }
 
     // ======================================================
     // RENDER
@@ -559,7 +784,7 @@ export const NuevaConsulta = () => {
                             </div>
 
                             <span className="text-info text-uppercase small fw-semibold">
-                                Agenda
+                                Agenda médica
                             </span>
 
                             <h1 className="h2 fw-bold mb-1 mt-1">
@@ -577,29 +802,31 @@ export const NuevaConsulta = () => {
                 </div>
 
                 {/* ==================================================
-                    CONTENIDO PRINCIPAL
+                    CONTENIDO
                 ================================================== */}
 
                 <div className="row justify-content-center">
 
                     <div className="col-12 col-xl-9">
 
-                        <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 shadow-sm">
+                        {/* ==================================================
+                            PACIENTE
+                        ================================================== */}
 
-                            {/* ==================================================
-                                PACIENTE
-                            ================================================== */}
+                        <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 mb-4 shadow-sm">
 
-                            <div className="d-flex align-items-center gap-3 border-bottom border-secondary border-opacity-50 pb-3 mb-4">
+                            <div className="d-flex align-items-center gap-3">
 
                                 <div
-                                    className="rounded-circle bg-success bg-opacity-25 text-success d-flex align-items-center justify-content-center fs-4"
+                                    className="rounded-circle bg-info bg-opacity-25 text-info d-flex align-items-center justify-content-center fw-bold"
                                     style={{
-                                        width: "48px",
-                                        height: "48px"
+                                        width: "56px",
+                                        height: "56px"
                                     }}
                                 >
-                                    +
+                                    {nombrePaciente
+                                        .charAt(0)
+                                        .toUpperCase()}
                                 </div>
 
                                 <div>
@@ -608,30 +835,29 @@ export const NuevaConsulta = () => {
                                         Paciente
                                     </span>
 
-                                    <h2 className="h5 fw-bold mb-0">
-                                        {patient
-                                            ? `${patient.nombre} ${patient.apellidos || ""}`
-                                            : "No seleccionado"}
+                                    <h2 className="h4 fw-bold mb-1">
+                                        {nombrePaciente}
                                     </h2>
 
-                                    {patient && (
-                                        <span className="text-white-50 small">
-                                            Paciente #{patient.id}
-                                        </span>
-                                    )}
+                                    <div className="text-white-50 small">
+                                        DNI: {dniPaciente}
+                                    </div>
+
+                                    <div className="text-white-50 small">
+                                        Paciente #{patient.id}
+                                    </div>
 
                                 </div>
 
                             </div>
 
-                            {!patient && (
-                                <div
-                                    className="alert alert-warning"
-                                    role="alert"
-                                >
-                                    Accede a esta página desde el botón Nueva consulta de un paciente.
-                                </div>
-                            )}
+                        </div>
+
+                        {/* ==================================================
+                            FORMULARIO
+                        ================================================== */}
+
+                        <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 shadow-sm">
 
                             {error && (
                                 <div
@@ -647,24 +873,117 @@ export const NuevaConsulta = () => {
                                     className="alert alert-success"
                                     role="alert"
                                 >
-                                    <div>
+
+                                    <div className="fw-semibold">
                                         {success}
                                     </div>
 
-                                    {consultaCreada?.modality === "virtual" && (
-                                        <Link
-                                            to={`/teleconsulta/${consultaCreada.id}`}
-                                            className="btn btn-info rounded-pill mt-3"
-                                        >
-                                            🎥 Entrar a teleconsulta
-                                        </Link>
+                                    {consultaCreada?.id && (
+                                        <div className="small mt-1">
+                                            Consulta #{consultaCreada.id}
+                                        </div>
                                     )}
+
+                                    {consultaCreada?.doctor_asignado && (
+                                        <div className="small mt-2">
+                                            <strong>
+                                                Médico asignado:
+                                            </strong>{" "}
+                                            {consultaCreada.doctor_asignado.first_name}{" "}
+                                            {consultaCreada.doctor_asignado.last_name}
+                                        </div>
+                                    )}
+
+                                    {consultaCreada?.doctor_asignado?.specialty_name && (
+                                        <div className="small">
+                                            <strong>
+                                                Especialidad:
+                                            </strong>{" "}
+                                            {consultaCreada.doctor_asignado.specialty_name}
+                                        </div>
+                                    )}
+
+                                    {consultaCreada?.modality ===
+                                        "virtual" &&
+                                        consultaCreada?.id && (
+                                            <Link
+                                                to={`/teleconsulta/${consultaCreada.id}`}
+                                                className="btn btn-info rounded-pill mt-3"
+                                            >
+                                                🎥 Entrar a teleconsulta
+                                            </Link>
+                                        )}
+
                                 </div>
                             )}
 
-                            <form onSubmit={handleSubmit}>
+                            <form
+                                onSubmit={handleSubmit}
+                            >
 
                                 <div className="row g-4">
+
+                                    {/* ==================================================
+                                        ESPECIALIDAD
+                                    ================================================== */}
+
+                                    <div className="col-12 col-md-6">
+
+                                        <label
+                                            htmlFor="specialty_id"
+                                            className="form-label fw-semibold"
+                                        >
+                                            Especialidad
+                                        </label>
+
+                                        <select
+                                            id="specialty_id"
+                                            name="specialty_id"
+                                            className="form-select bg-dark text-white border-secondary"
+                                            value={
+                                                formulario.specialty_id
+                                            }
+                                            onChange={
+                                                actualizarCampo
+                                            }
+                                            required
+                                            disabled={
+                                                cargandoEspecialidades ||
+                                                loading
+                                            }
+                                        >
+
+                                            <option value="">
+                                                {cargandoEspecialidades
+                                                    ? "Cargando especialidades..."
+                                                    : "Selecciona una especialidad"}
+                                            </option>
+
+                                            {especialidades.map(
+                                                (especialidad) => (
+                                                    <option
+                                                        key={
+                                                            especialidad.id
+                                                        }
+                                                        value={
+                                                            especialidad.id
+                                                        }
+                                                    >
+                                                        {
+                                                            especialidad.name
+                                                        }
+                                                    </option>
+                                                )
+                                            )}
+
+                                        </select>
+
+                                        <div className="form-text text-white-50">
+                                            El sistema asignará un médico
+                                            disponible de esta especialidad.
+                                        </div>
+
+                                    </div>
 
                                     {/* ==================================================
                                         TIPO DE CONSULTA
@@ -690,6 +1009,7 @@ export const NuevaConsulta = () => {
                                                 actualizarCampo
                                             }
                                             required
+                                            disabled={loading}
                                         />
 
                                     </div>
@@ -718,7 +1038,9 @@ export const NuevaConsulta = () => {
                                                 actualizarCampo
                                             }
                                             required
+                                            disabled={loading}
                                         >
+
                                             <option value="presencial">
                                                 Presencial
                                             </option>
@@ -754,7 +1076,9 @@ export const NuevaConsulta = () => {
                                             onChange={
                                                 actualizarCampo
                                             }
+                                            disabled={loading}
                                         >
+
                                             <option value="scheduled">
                                                 Programada
                                             </option>
@@ -796,10 +1120,14 @@ export const NuevaConsulta = () => {
                                                         cambiarMes(-1)
                                                     }
                                                     disabled={
-                                                        mesActual ===
-                                                            hoy.getMonth() &&
-                                                        añoActual ===
+                                                        (
+                                                            mesActual ===
+                                                            hoy.getMonth()
+                                                        ) &&
+                                                        (
+                                                            añoActual ===
                                                             hoy.getFullYear()
+                                                        )
                                                     }
                                                 >
                                                     ‹
@@ -828,9 +1156,7 @@ export const NuevaConsulta = () => {
 
                                             </div>
 
-                                            {/* ==================================================
-                                                CABECERA DE LOS DÍAS
-                                            ================================================== */}
+                                            {/* CABECERA */}
 
                                             <div
                                                 className="mb-2"
@@ -850,32 +1176,20 @@ export const NuevaConsulta = () => {
                                                     "Vie",
                                                     "Sáb",
                                                     "Dom"
-                                                ].map((dia) => (
-                                                    <div
-                                                        key={dia}
-                                                        style={{
-                                                            minWidth: 0
-                                                        }}
-                                                    >
+                                                ].map(
+                                                    (dia) => (
                                                         <div
+                                                            key={dia}
                                                             className="text-center text-white-50 small fw-semibold"
-                                                            style={{
-                                                                height: "32px",
-                                                                display: "flex",
-                                                                alignItems: "center",
-                                                                justifyContent: "center"
-                                                            }}
                                                         >
                                                             {dia}
                                                         </div>
-                                                    </div>
-                                                ))}
+                                                    )
+                                                )}
 
                                             </div>
 
-                                            {/* ==================================================
-                                                DÍAS DEL MES
-                                            ================================================== */}
+                                            {/* DÍAS */}
 
                                             <div
                                                 style={{
@@ -887,11 +1201,10 @@ export const NuevaConsulta = () => {
                                             >
 
                                                 {diasCalendario.map(
-                                                    (fecha, index) => {
-
-                                                        // ------------------------------------------
-                                                        // HUECO
-                                                        // ------------------------------------------
+                                                    (
+                                                        fecha,
+                                                        index
+                                                    ) => {
 
                                                         if (!fecha) {
                                                             return (
@@ -904,10 +1217,6 @@ export const NuevaConsulta = () => {
                                                                 />
                                                             );
                                                         }
-
-                                                        // ------------------------------------------
-                                                        // DATOS DEL DÍA
-                                                        // ------------------------------------------
 
                                                         const fechaString =
                                                             formatearFechaInput(
@@ -972,7 +1281,8 @@ export const NuevaConsulta = () => {
                                                                         justifyContent: "center"
                                                                     }}
                                                                     disabled={
-                                                                        deshabilitada
+                                                                        deshabilitada ||
+                                                                        loading
                                                                     }
                                                                     onClick={() =>
                                                                         seleccionarFecha(
@@ -1008,10 +1318,6 @@ export const NuevaConsulta = () => {
                                                 )}
 
                                             </div>
-
-                                            {/* ==================================================
-                                                LEYENDA
-                                            ================================================== */}
 
                                             <div className="d-flex flex-wrap gap-3 mt-4 text-white-50 small">
 
@@ -1097,7 +1403,8 @@ export const NuevaConsulta = () => {
                                                                                     : "btn-outline-light"
                                                                         }`}
                                                                         disabled={
-                                                                            yaHaPasado
+                                                                            yaHaPasado ||
+                                                                            loading
                                                                         }
                                                                         onClick={() =>
                                                                             seleccionarHora(
@@ -1115,16 +1422,14 @@ export const NuevaConsulta = () => {
 
                                                 </div>
 
-                                                <div className="d-flex flex-wrap gap-3 mt-3 text-white-50 small">
-
-                                                    <div>
-                                                        Horario provisional:
-                                                        {" "}
-                                                        08:00 - 18:00
-                                                        {" · "}
-                                                        Lunes a viernes
-                                                    </div>
-
+                                                <div className="text-white-50 small mt-3">
+                                                    Horario provisional:
+                                                    {" "}
+                                                    08:00 - 18:00
+                                                    {" · "}
+                                                    Lunes a viernes
+                                                    {" · "}
+                                                    Duración: 30 minutos
                                                 </div>
 
                                             </div>
@@ -1146,12 +1451,37 @@ export const NuevaConsulta = () => {
                                                         Cita seleccionada
                                                     </span>
 
-                                                    <p className="mb-0 mt-1 text-white text-capitalize">
+                                                    <div className="fw-semibold mt-1">
+                                                        {nombrePaciente}
+                                                    </div>
+
+                                                    <p className="mb-0 text-white-50 text-capitalize">
                                                         {formatearFechaBonita(
                                                             fechaSeleccionada
                                                         )}
                                                         {" · "}
                                                         {horaSeleccionada}
+                                                        {" · "}
+                                                        {formulario.specialty_id &&
+                                                            (
+                                                                especialidades.find(
+                                                                    (
+                                                                        especialidad
+                                                                    ) =>
+                                                                        String(
+                                                                            especialidad.id
+                                                                        ) ===
+                                                                        String(
+                                                                            formulario.specialty_id
+                                                                        )
+                                                                )?.name ||
+                                                                "Especialidad"
+                                                            )}
+                                                        {" · "}
+                                                        {formulario.modality ===
+                                                        "virtual"
+                                                            ? "Consulta virtual"
+                                                            : "Consulta presencial"}
                                                     </p>
 
                                                 </div>
@@ -1184,6 +1514,7 @@ export const NuevaConsulta = () => {
                                                 actualizarCampo
                                             }
                                             placeholder="Describe el motivo de la consulta"
+                                            disabled={loading}
                                         />
 
                                     </div>
@@ -1208,7 +1539,8 @@ export const NuevaConsulta = () => {
                                         className="btn btn-success rounded-pill fw-semibold"
                                         disabled={
                                             loading ||
-                                            !patient ||
+                                            cargandoEspecialidades ||
+                                            !formulario.specialty_id ||
                                             !fechaSeleccionada ||
                                             !horaSeleccionada
                                         }
