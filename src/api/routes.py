@@ -28,6 +28,7 @@ import os
 import json
 import requests
 import random
+import resend
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import (
     create_access_token,
@@ -3576,3 +3577,66 @@ def obtener_cirugias_paciente(patient_id):
     return jsonify({
         "cirugias": resultado
     }), 200
+
+# =========================================================
+# FORMULARIO DE CONTACTO
+# =========================================================
+
+@api.route('/contacto', methods=['POST'])
+def enviar_contacto():
+
+    data = request.get_json()
+
+    if not data:
+        return jsonify({
+            "error": "No se recibieron datos."
+        }), 400
+
+    nombre = data.get("nombre")
+    email = data.get("email")
+    mensaje = data.get("mensaje")
+
+    if not nombre or not email or not mensaje:
+        return jsonify({
+            "error": "Todos los campos son obligatorios."
+        }), 400
+
+    try:
+
+        resend.Emails.send({
+            "from": "Lexdibri <onboarding@resend.dev>",
+            "to": ["briancafee7@gmail.com"],
+            "reply_to": email,
+            "subject": f"Nuevo mensaje de contacto - {nombre}",
+            "html": f"""
+                <h2>Nuevo mensaje de contacto</h2>
+
+                <p>
+                    <strong>Nombre:</strong> {nombre}
+                </p>
+
+                <p>
+                    <strong>Email:</strong> {email}
+                </p>
+
+                <p>
+                    <strong>Mensaje:</strong>
+                </p>
+
+                <p>
+                    {mensaje}
+                </p>
+            """
+        })
+
+        return jsonify({
+            "message": "Mensaje enviado correctamente."
+        }), 200
+
+    except Exception as error:
+
+        print("Error enviando email:", error)
+
+        return jsonify({
+            "error": "No se pudo enviar el mensaje."
+        }), 500

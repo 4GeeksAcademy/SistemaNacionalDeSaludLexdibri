@@ -1,6 +1,16 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 export const Contacto = () => {
+  const [formulario, setFormulario] = useState({
+    nombre: "",
+    email: "",
+    mensaje: "",
+  });
+
+  const [enviando, setEnviando] = useState(false);
+  const [mensajeExito, setMensajeExito] = useState("");
+  const [mensajeError, setMensajeError] = useState("");
+
   useEffect(() => {
     const elements = document.querySelectorAll(".scroll-reveal");
 
@@ -26,8 +36,79 @@ export const Contacto = () => {
     };
   }, []);
 
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+
+    setFormulario((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    setMensajeExito("");
+    setMensajeError("");
+
+    if (
+      !formulario.nombre.trim() ||
+      !formulario.email.trim() ||
+      !formulario.mensaje.trim()
+    ) {
+      setMensajeError("Por favor, completa todos los campos.");
+      return;
+    }
+
+    setEnviando(true);
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL.replace(/\/$/, "")}/api/contacto`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            nombre: formulario.nombre,
+            email: formulario.email,
+            mensaje: formulario.mensaje,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || "No se pudo enviar el mensaje."
+        );
+      }
+
+      setMensajeExito(
+        "Tu consulta se ha enviado correctamente. Te responderemos lo antes posible."
+      );
+
+      setFormulario({
+        nombre: "",
+        email: "",
+        mensaje: "",
+      });
+    } catch (error) {
+      console.error("Error enviando formulario:", error);
+
+      setMensajeError(
+        error.message ||
+          "Ha ocurrido un error al enviar la consulta. Inténtalo de nuevo."
+      );
+    } finally {
+      setEnviando(false);
+    }
+  };
+
   return (
-    <div className=" text-white min-vh-100">
+    <div className="text-white min-vh-100">
 
       {/* HERO */}
       <section className="container py-5">
@@ -84,7 +165,8 @@ export const Contacto = () => {
 
               <div className="d-flex align-items-center gap-3 mb-4">
 
-                <div className="d-flex align-items-center justify-content-center bg-info bg-opacity-10 border border-info border-opacity-25 rounded-4 text-info fs-4"
+                <div
+                  className="d-flex align-items-center justify-content-center bg-info bg-opacity-10 border border-info border-opacity-25 rounded-4 text-info fs-4"
                   style={{ width: "56px", height: "56px" }}
                 >
                   ✉
@@ -102,7 +184,7 @@ export const Contacto = () => {
 
               </div>
 
-              <form>
+              <form onSubmit={handleSubmit}>
 
                 <div className="mb-3">
                   <label className="form-label text-white-50 small">
@@ -111,8 +193,12 @@ export const Contacto = () => {
 
                   <input
                     type="text"
+                    name="nombre"
                     className="form-control bg-dark text-white border-secondary"
                     placeholder="Ej. Juan Pérez"
+                    value={formulario.nombre}
+                    onChange={handleChange}
+                    disabled={enviando}
                   />
                 </div>
 
@@ -123,8 +209,12 @@ export const Contacto = () => {
 
                   <input
                     type="email"
+                    name="email"
                     className="form-control bg-dark text-white border-secondary"
                     placeholder="nombre@correo.com"
+                    value={formulario.email}
+                    onChange={handleChange}
+                    disabled={enviando}
                   />
                 </div>
 
@@ -134,17 +224,36 @@ export const Contacto = () => {
                   </label>
 
                   <textarea
+                    name="mensaje"
                     className="form-control bg-dark text-white border-secondary"
                     rows="5"
                     placeholder="Escribe aquí tu consulta..."
+                    value={formulario.mensaje}
+                    onChange={handleChange}
+                    disabled={enviando}
                   ></textarea>
                 </div>
 
+                {mensajeError && (
+                  <div className="alert alert-danger mb-3">
+                    {mensajeError}
+                  </div>
+                )}
+
+                {mensajeExito && (
+                  <div className="alert alert-success mb-3">
+                    {mensajeExito}
+                  </div>
+                )}
+
                 <button
-                  type="button"
+                  type="submit"
                   className="btn btn-info rounded-pill w-100 fw-bold py-2"
+                  disabled={enviando}
                 >
-                  Enviar consulta →
+                  {enviando
+                    ? "Enviando..."
+                    : "Enviar consulta →"}
                 </button>
 
               </form>
@@ -162,7 +271,8 @@ export const Contacto = () => {
 
                 <div className="d-flex align-items-center gap-3 mb-4">
 
-                  <div className="d-flex align-items-center justify-content-center bg-info bg-opacity-10 border border-info border-opacity-25 rounded-4 text-info fs-4"
+                  <div
+                    className="d-flex align-items-center justify-content-center bg-info bg-opacity-10 border border-info border-opacity-25 rounded-4 text-info fs-4"
                     style={{ width: "56px", height: "56px" }}
                   >
                     ☎
@@ -196,7 +306,8 @@ export const Contacto = () => {
 
                 <div className="d-flex align-items-center gap-3 mb-4">
 
-                  <div className="d-flex align-items-center justify-content-center bg-info bg-opacity-10 border border-info border-opacity-25 rounded-4 text-info fs-4"
+                  <div
+                    className="d-flex align-items-center justify-content-center bg-info bg-opacity-10 border border-info border-opacity-25 rounded-4 text-info fs-4"
                     style={{ width: "56px", height: "56px" }}
                   >
                     @
