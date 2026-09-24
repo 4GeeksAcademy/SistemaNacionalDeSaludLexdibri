@@ -1,9 +1,10 @@
 import React from "react";
-import { NavLink, Link } from "react-router-dom";
+import { NavLink, Link, useNavigate } from "react-router-dom";
 import useGlobalReducer from "../hooks/useGlobalReducer";
 
 export const Navbar = () => {
   const { store, dispatch } = useGlobalReducer();
+  const navigate = useNavigate();
 
   const isLoggedIn = store.isAuthenticated;
   const user = store.user;
@@ -14,9 +15,13 @@ export const Navbar = () => {
   const isPatient = userRole === "PATIENT";
 
   const handleLogout = () => {
+    // Primero cerramos la sesión
     dispatch({
       type: "logout",
     });
+
+    // Después llevamos siempre al login
+    navigate("/login", { replace: true });
   };
 
   const defaultAvatar =
@@ -34,6 +39,7 @@ export const Navbar = () => {
     >
       {/* BARRA SUPERIOR PRINCIPAL */}
       <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+
         {/* LOGO */}
         <Link
           to="/"
@@ -70,10 +76,11 @@ export const Navbar = () => {
           style={{ zIndex: 1050 }}
         >
           <button
-            className={`btn border-0 dropdown-toggle d-flex align-items-center gap-2 px-3 py-1 rounded-pill ${isLoggedIn
+            className={`btn border-0 dropdown-toggle d-flex align-items-center gap-2 px-3 py-1 rounded-pill ${
+              isLoggedIn
                 ? "bg-info text-dark fw-semibold"
                 : "bg-white bg-opacity-10 text-white"
-              }`}
+            }`}
             type="button"
             data-bs-toggle="dropdown"
             aria-expanded="false"
@@ -171,7 +178,7 @@ export const Navbar = () => {
               <hr className="dropdown-divider border-secondary" />
             </li>
 
-            {/* AYUDA Y SOPORTE - PARA TODOS */}
+            {/* AYUDA Y SOPORTE */}
             <li>
               <Link
                 className="dropdown-item py-2 small"
@@ -205,10 +212,12 @@ export const Navbar = () => {
 
       {/* NAVEGACIÓN SECUNDARIA */}
       <nav className="d-flex gap-3 gap-md-4 small flex-wrap pt-2 border-top border-white border-opacity-10">
+
         <NavLink
           to="/especialidades"
           className={({ isActive }) =>
-            `navbar-link text-white text-decoration-none ${isActive ? "active text-info fw-bold" : "opacity-75"
+            `navbar-link text-white text-decoration-none ${
+              isActive ? "active text-info fw-bold" : "opacity-75"
             }`
           }
         >
@@ -218,7 +227,8 @@ export const Navbar = () => {
         <NavLink
           to="/diagnostico"
           className={({ isActive }) =>
-            `navbar-link text-white text-decoration-none ${isActive ? "active text-info fw-bold" : "opacity-75"
+            `navbar-link text-white text-decoration-none ${
+              isActive ? "active text-info fw-bold" : "opacity-75"
             }`
           }
         >
@@ -228,7 +238,8 @@ export const Navbar = () => {
         <NavLink
           to="/el-sistema"
           className={({ isActive }) =>
-            `navbar-link text-white text-decoration-none ${isActive ? "active text-info fw-bold" : "opacity-75"
+            `navbar-link text-white text-decoration-none ${
+              isActive ? "active text-info fw-bold" : "opacity-75"
             }`
           }
         >
@@ -238,7 +249,8 @@ export const Navbar = () => {
         <NavLink
           to="/contacto"
           className={({ isActive }) =>
-            `navbar-link text-white text-decoration-none ${isActive ? "active text-info fw-bold" : "opacity-75"
+            `navbar-link text-white text-decoration-none ${
+              isActive ? "active text-info fw-bold" : "opacity-75"
             }`
           }
         >
@@ -248,12 +260,14 @@ export const Navbar = () => {
         <NavLink
           to="/urgencias"
           className={({ isActive }) =>
-            `navbar-link navbar-link-emergency text-danger fw-bold text-decoration-none ${isActive ? "active" : ""
+            `navbar-link navbar-link-emergency text-danger fw-bold text-decoration-none ${
+              isActive ? "active" : ""
             }`
           }
         >
           Urgencias 🚨
         </NavLink>
+
       </nav>
     </header>
   );

@@ -106,9 +106,9 @@ export const NuevoDiagnostico = () => {
                                     Volver al dashboard médico
                                 </Link>
                             </div>
-                            <h1 className="h2 fw-bold mb-1">Crear diagnóstico</h1>
+                            <h1 className="h2 fw-bold mb-1 text-info">Crear diagnóstico</h1>
                             <p className="text-white-50 mb-0">
-                                Añade una enfermedad al historial del paciente.
+                                Añade un nuevo diagnostico al paciente seleccionado.
                             </p>
                         </div>
                     </div>

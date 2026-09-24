@@ -93,7 +93,10 @@ class User(db.Model):
 class Patient(db.Model):
 
     id: Mapped[int] = mapped_column(
-        Integer, primary_key=True, autoincrement=True)
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+    )
 
     user_id: Mapped[int] = mapped_column(
         ForeignKey("user.id"),
@@ -118,51 +121,78 @@ class Patient(db.Model):
         nullable=False,
     )
 
+    # =========================
     # 1:1
+    # =========================
+
     user: Mapped["User"] = relationship(
         back_populates="patient",
     )
 
+    # =========================
     # N:M
+    # =========================
+
     health_centers: Mapped[list["PatientHealthCenter"]] = relationship(
         back_populates="patient",
         cascade="all, delete-orphan",
     )
 
+    # =========================
     # 1:N
+    # =========================
+
     appointments: Mapped[list["Appointment"]] = relationship(
         back_populates="patient",
     )
 
-    # 1:N
     diagnoses: Mapped[list["Diagnosis"]] = relationship(
         back_populates="patient",
     )
 
-    # 1:N
     prescriptions: Mapped[list["Prescription"]] = relationship(
         back_populates="patient",
     )
 
-    # 1:N
     medical_records: Mapped[list["MedicalRecord"]] = relationship(
         back_populates="patient",
     )
 
-    # 1:N
     conversations: Mapped[list["Conversation"]] = relationship(
         back_populates="patient",
     )
 
-    # 1:N
     access_logs: Mapped[list["MedicalRecordAccessLog"]] = relationship(
         back_populates="patient",
     )
 
+    # =========================
+    # Historial clínico
+    # =========================
+
+    allergies: Mapped[list["Allergy"]] = relationship(
+        back_populates="patient",
+        cascade="all, delete-orphan",
+    )
+
+    vaccinations: Mapped[list["Vaccination"]] = relationship(
+        back_populates="patient",
+        cascade="all, delete-orphan",
+    )
+
+    surgeries: Mapped[list["Surgery"]] = relationship(
+        back_populates="patient",
+        cascade="all, delete-orphan",
+    )
+
+    # =========================
+    # Médicos asociados
+    # =========================
+
     doctors: Mapped[list["DoctorPatient"]] = relationship(
-    back_populates="patient",
-    cascade="all, delete-orphan",
-)
+        back_populates="patient",
+        cascade="all, delete-orphan",
+    )
 
     def serialize(self):
         return {
@@ -170,11 +200,13 @@ class Patient(db.Model):
             "user_id": self.user_id,
             "cip": self.cip,
             "blood_type": self.blood_type,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "created_at": (
+                self.created_at.isoformat()
+                if self.created_at
+                else None
+            ),
             "doctors": self.doctors,
         }
-
-
 # Especialidades
 
 
@@ -1097,4 +1129,137 @@ class DoctorPatient(db.Model):
         back_populates="doctors",
     )
 
+
+
+class Allergy(db.Model):
+    __tablename__ = "allergy"
+
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+    )
+
+    patient_id: Mapped[int] = mapped_column(
+        ForeignKey("patient.id"),
+        nullable=False,
+    )
+
+    allergen: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+    )
+
+    reaction: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+    )
+
+    severity: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True,
+    )
+
+    notes: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+    )
+
+    patient: Mapped["Patient"] = relationship(
+        back_populates="allergies",
+    )
+
+
+class Vaccination(db.Model):
+    __tablename__ = "vaccination"
+
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+    )
+
+    patient_id: Mapped[int] = mapped_column(
+        ForeignKey("patient.id"),
+        nullable=False,
+    )
+
+    vaccine_name: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+    )
+
+    vaccination_date: Mapped[date] = mapped_column(
+        Date,
+        nullable=False,
+    )
+
+    dose: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+    )
+
+    lot_number: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+    )
+
+    notes: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+
+    patient: Mapped["Patient"] = relationship(
+        back_populates="vaccinations",
+    )
+
+
+class Surgery(db.Model):
+    __tablename__ = "surgery"
+
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+    )
+
+    patient_id: Mapped[int] = mapped_column(
+        ForeignKey("patient.id"),
+        nullable=False,
+    )
+
+    name: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+    )
+
+    surgery_date: Mapped[date | None] = mapped_column(
+        Date,
+        nullable=True,
+    )
+
+    hospital: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+    )
+
+    surgeon: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+    )
+
+    notes: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+
+    patient: Mapped["Patient"] = relationship(
+        back_populates="surgeries",
+    )
 

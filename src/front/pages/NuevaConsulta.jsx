@@ -783,11 +783,9 @@ export const NuevaConsulta = () => {
 
                             </div>
 
-                            <span className="text-info text-uppercase small fw-semibold">
-                                Agenda médica
-                            </span>
+                            
 
-                            <h1 className="h2 fw-bold mb-1 mt-1">
+                            <h1 className="h2 fw-bold mb-1 mt-1 text-info">
                                 Nueva consulta
                             </h1>
 
