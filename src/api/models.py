@@ -21,6 +21,12 @@ class UserRole(Enum):
     DOCTOR = "doctor"
     ADMIN = "admin"
 
+class DoctorStatus(Enum): 
+    ACTIVE = "active" 
+    VACATION = "vacation" 
+    TEMPORARY_LEAVE = "temporary_leave" 
+    INACTIVE = "inactive"
+
 ### =====================================  DB    ==============================================================###
 
 
@@ -76,6 +82,14 @@ class User(db.Model):
         SQLEnum(UserRole),
         nullable=False,
     )
+    hospital_id: Mapped[int | None] = mapped_column(
+        ForeignKey("hospital.id"),
+        nullable=True,
+    )
+
+    hospital: Mapped["Hospital | None"] = relationship(
+        back_populates="admins",
+    )
 
     def serialize(self):
         return {
@@ -88,8 +102,9 @@ class User(db.Model):
             # do not serialize the password, its a security breach
         }
 
+#=================
 # Pacientes
-
+#===============
 
 class Patient(db.Model):
 
@@ -293,10 +308,14 @@ class HealthCenter(db.Model):
 # Doctores
 
 
+
 class Doctor(db.Model):
 
     id: Mapped[int] = mapped_column(
-        Integer, primary_key=True, autoincrement=True)
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+    )
 
     user_id: Mapped[int] = mapped_column(
         ForeignKey("user.id"),
@@ -318,6 +337,13 @@ class Doctor(db.Model):
     years_experience: Mapped[int | None] = mapped_column(
         Integer,
         nullable=True,
+    )
+
+    # Estado laboral/disponibilidad del médico
+    status: Mapped[DoctorStatus] = mapped_column(
+        SQLEnum(DoctorStatus),
+        default=DoctorStatus.ACTIVE,
+        nullable=False,
     )
 
     created_at: Mapped[datetime] = mapped_column(
@@ -372,18 +398,21 @@ class Doctor(db.Model):
         back_populates="doctor",
     )
 
+    # N:M
     patients: Mapped[list["DoctorPatient"]] = relationship(
-    back_populates="doctor",
-    cascade="all, delete-orphan",
-)
-    hospital_id: Mapped[int] = mapped_column(
-    ForeignKey("hospital.id"),
-    nullable=True,
-)
+        back_populates="doctor",
+        cascade="all, delete-orphan",
+    )
 
-    hospital: Mapped["Hospital"] = relationship(
-    back_populates="doctors",
-)
+    # N:1
+    hospital_id: Mapped[int | None] = mapped_column(
+        ForeignKey("hospital.id"),
+        nullable=True,
+    )
+
+    hospital: Mapped["Hospital | None"] = relationship(
+        back_populates="doctors",
+    )
 
     def serialize(self):
         return {
@@ -392,6 +421,8 @@ class Doctor(db.Model):
             "medical_license": self.medical_license,
             "specialty_id": self.specialty_id,
             "years_experience": self.years_experience,
+            "status": self.status.value if self.status else None,
+            "hospital_id": self.hospital_id,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "patients": self.patients,
         }
@@ -1139,6 +1170,10 @@ class DoctorPatient(db.Model):
     )
 
 
+#=============
+#Alergias
+#==============
+
 
 class Allergy(db.Model):
     __tablename__ = "allergy"
@@ -1284,4 +1319,9 @@ class Hospital(db.Model):
     doctors: Mapped[list["Doctor"]] = relationship(
         back_populates="hospital",
     )
+
+    admins: Mapped[list["User"]] = relationship(
+        back_populates="hospital",
+    )
+
 

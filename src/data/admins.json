@@ -1,0 +1,15 @@
+[
+  {
+    "email": "admin@lexdibri.com",
+    "password": "1234",
+    "first_name": "Administrador",
+    "last_name": "LEXDIBRI",
+    "dni": "00000000A",
+    "phone": "+34600000000",
+    "date_of_birth": "1990-01-01",
+    "sex": "M",
+    "is_active": true,
+    "role": "admin",
+    "hospital_id": 2
+  }
+]

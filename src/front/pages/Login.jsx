@@ -33,6 +33,11 @@ export const Login = () => {
         try {
             const usuario = JSON.parse(usuarioGuardado);
 
+            if (usuario.role === "admin") {
+                navigate("/dashboard/admin", { replace: true });
+                return;
+            }
+
             if (usuario.role === "doctor") {
                 navigate("/dashboard/medico", { replace: true });
                 return;
@@ -104,16 +109,22 @@ export const Login = () => {
             });
 
             /*
-            Guardamos el usuario
+            ========================================================
+            GUARDAMOS EL USUARIO
+            ========================================================
             */
+
             localStorage.setItem(
                 "user",
                 JSON.stringify(data.user)
             );
 
             /*
-            Guardamos también el token explícitamente
+            ========================================================
+            GUARDAMOS EL TOKEN
+            ========================================================
             */
+
             if (data.access_token) {
                 localStorage.setItem(
                     "access_token",
@@ -122,8 +133,11 @@ export const Login = () => {
             }
 
             /*
-            Actualizamos el estado global
+            ========================================================
+            ACTUALIZAMOS EL ESTADO GLOBAL
+            ========================================================
             */
+
             dispatch({
                 type: "login",
                 payload: {
@@ -133,8 +147,19 @@ export const Login = () => {
             });
 
             /*
-            Redirección según el rol
+            ========================================================
+            REDIRECCIÓN SEGÚN EL ROL
+            ========================================================
             */
+
+            if (data.user?.role === "admin") {
+                navigate("/dashboard/admin", {
+                    replace: true,
+                });
+
+                return;
+            }
+
             if (data.user?.role === "doctor") {
                 navigate("/dashboard/medico", {
                     replace: true,
@@ -152,20 +177,37 @@ export const Login = () => {
             }
 
             /*
-            Fallback por si el backend devuelve dashboard
+            ========================================================
+            FALLBACK
+            ========================================================
             */
-            navigate(
-                data.dashboard === "doctor"
-                    ? "/dashboard/medico"
-                    : "/dashboard/paciente",
-                {
+
+            if (data.dashboard === "admin") {
+                navigate("/dashboard/admin", {
                     replace: true,
-                }
-            );
+                });
+
+                return;
+            }
+
+            if (data.dashboard === "doctor") {
+                navigate("/dashboard/medico", {
+                    replace: true,
+                });
+
+                return;
+            }
+
+            navigate("/dashboard/paciente", {
+                replace: true,
+            });
 
         } catch (error) {
             console.error(error);
-            setError(error.message);
+            setError(
+                error.message ||
+                "No se pudo iniciar sesión"
+            );
         }
     };
 
@@ -173,6 +215,7 @@ export const Login = () => {
         <div className="text-white min-vh-100 d-flex align-items-center">
 
             <section className="container py-5">
+
                 <div className="row justify-content-center">
 
                     <div className="col-12 col-sm-10 col-md-8 col-lg-5">
@@ -180,7 +223,8 @@ export const Login = () => {
                         <div className="card bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 p-md-5 scroll-reveal">
 
                             {/* CABECERA */}
-                            <div className="text-center mb-4">
+
+                            <div className="text-center text-light mb-4">
 
                                 <div
                                     className="d-inline-flex align-items-center justify-content-center bg-info bg-opacity-10 border border-info border-opacity-25 rounded-4 text-info fs-4 mb-3"
@@ -202,7 +246,8 @@ export const Login = () => {
 
                             </div>
 
-                            {/* SELECTOR PACIENTE / MÉDICO */}
+                            {/* SELECTOR DE TIPO DE USUARIO */}
+
                             <div className="mb-4">
 
                                 <span className="text-info small fw-semibold text-uppercase d-block mb-2">
@@ -213,6 +258,8 @@ export const Login = () => {
                                     className="btn-group w-100"
                                     role="group"
                                 >
+
+                                    {/* PACIENTE */}
 
                                     <button
                                         type="button"
@@ -228,12 +275,14 @@ export const Login = () => {
                                         🔒 Paciente
                                     </button>
 
+                                    {/* MÉDICO */}
+
                                     <button
                                         type="button"
                                         onClick={() =>
                                             setTipoUsuario("medico")
                                         }
-                                        className={`btn rounded-end-pill fw-semibold ${
+                                        className={`btn fw-semibold ${
                                             tipoUsuario === "medico"
                                                 ? "btn-info"
                                                 : "btn-outline-secondary text-white"
@@ -242,12 +291,31 @@ export const Login = () => {
                                         👨‍⚕️ Médico
                                     </button>
 
+                                    {/* ADMINISTRADOR */}
+
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setTipoUsuario("admin")
+                                        }
+                                        className={`btn rounded-end-pill fw-semibold ${
+                                            tipoUsuario === "admin"
+                                                ? "btn-info"
+                                                : "btn-outline-secondary text-white"
+                                        }`}
+                                    >
+                                        🛡️ Admin
+                                    </button>
+
                                 </div>
 
                             </div>
 
                             {/* FORMULARIO */}
+
                             <form onSubmit={handleLogin}>
+
+                                {/* EMAIL / IDENTIFICADOR */}
 
                                 <div className="mb-3">
 
@@ -270,6 +338,8 @@ export const Login = () => {
                                     />
 
                                 </div>
+
+                                {/* CONTRASEÑA */}
 
                                 <div className="mb-3">
 
@@ -321,6 +391,7 @@ export const Login = () => {
                                 </div>
 
                                 {/* ERROR */}
+
                                 {error && (
                                     <div className="alert alert-danger py-2 small">
                                         {error}
@@ -328,6 +399,7 @@ export const Login = () => {
                                 )}
 
                                 {/* BOTÓN */}
+
                                 <button
                                     type="submit"
                                     className="btn btn-info rounded-pill fw-bold w-100 py-2 mt-2"
@@ -338,6 +410,7 @@ export const Login = () => {
                             </form>
 
                             {/* RECUPERAR CONTRASEÑA */}
+
                             <div className="text-center mt-4">
 
                                 <button
@@ -353,6 +426,7 @@ export const Login = () => {
                             </div>
 
                             {/* REGISTRO */}
+
                             <div className="text-center mt-3 small">
 
                                 <span className="text-white-50">
@@ -369,6 +443,7 @@ export const Login = () => {
                             </div>
 
                             {/* SEGURIDAD */}
+
                             <div className="text-center mt-4 pt-3 border-top border-secondary">
 
                                 <span className="text-white-50 small">
@@ -382,6 +457,7 @@ export const Login = () => {
                     </div>
 
                 </div>
+
             </section>
 
         </div>

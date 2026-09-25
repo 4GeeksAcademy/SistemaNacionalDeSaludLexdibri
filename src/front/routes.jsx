@@ -31,6 +31,7 @@ import PrivateRoute from "./components/PrivateRoute";
 import OlvideContraseña from "./pages/OlvideContraseña";
 import { CrearVacunacion } from "./pages/CrearVacunacion";
 import {CrearCirugia} from "./pages/CrearCirugia";
+import { DashboardAdmin } from "./pages/DashboardAdmin";
 
 
 export const router = createBrowserRouter(
@@ -70,6 +71,8 @@ export const router = createBrowserRouter(
                     </PrivateRoute>
                 }
             />
+
+            <Route path="dashboard/admin" element={<DashboardAdmin />} />
 
             <Route
                 path="dashboard/medico"

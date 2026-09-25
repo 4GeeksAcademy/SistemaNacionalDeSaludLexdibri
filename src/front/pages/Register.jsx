@@ -314,7 +314,7 @@ export const Register = () => {
                         <div className="card bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 p-md-5 scroll-reveal">
 
                             {/* CABECERA */}
-                            <div className="text-center mb-4">
+                            <div className="text-center text-light mb-4">
                                 <div
                                     className="d-inline-flex align-items-center justify-content-center bg-info bg-opacity-10 border border-info border-opacity-25 rounded-4 text-info fs-4 mb-3"
                                     style={{

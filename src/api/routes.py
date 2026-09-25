@@ -20,6 +20,8 @@ from api.models import (
     Allergy,
     Vaccination,
     Surgery,
+    Hospital,
+    DoctorStatus
 )
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
@@ -137,6 +139,7 @@ def seed_doctors():
 
     existing = 0
     created = 0
+    updated = 0
 
     for data in doctors:
 
@@ -144,13 +147,37 @@ def seed_doctors():
             email=data["email"]
         ).first()
 
+        # =====================================================
+        # MÉDICO YA EXISTENTE
+        # =====================================================
+
         if user:
+
             existing += 1
+
+            doctor = Doctor.query.filter_by(
+                user_id=user.id
+            ).first()
+
+            if doctor:
+                doctor.hospital_id = data["hospital_id"]
+                doctor.specialty_id = data["specialty_id"]
+                doctor.years_experience = data["years_experience"]
+                doctor.medical_license = data["medical_license"]
+
+                updated += 1
+
             continue
+
+        # =====================================================
+        # CREAR USUARIO
+        # =====================================================
 
         user = User(
             email=data["email"],
-            password_hash=generate_password_hash(data["password"]),
+            password_hash=generate_password_hash(
+                data["password"]
+            ),
             first_name=data["first_name"],
             last_name=data["last_name"],
             dni=data["dni"],
@@ -164,25 +191,113 @@ def seed_doctors():
             role=UserRole(data["role"])
         )
 
+        # =====================================================
+        # CREAR MÉDICO
+        # =====================================================
+
         doctor = Doctor(
             medical_license=data["medical_license"],
             specialty_id=data["specialty_id"],
-            years_experience=data["years_experience"]
+            years_experience=data["years_experience"],
+            hospital_id=data["hospital_id"]
         )
 
         user.doctor = doctor
 
         db.session.add(user)
+
         created += 1
 
     db.session.commit()
 
     return jsonify({
-        "message": "Doctores creados correctamente",
+        "message": "Médicos procesados correctamente",
         "creados": created,
-        "ya_existian": existing
+        "ya_existian": existing,
+        "actualizados": updated
     }), 200
 
+# =========================================================
+# SEED ADMINISTRADORES
+# =========================================================
+
+@api.route("/seed/admins", methods=["GET"])
+def seed_admins():
+
+    json_route = os.path.join(
+        os.path.dirname(__file__),
+        "../data/admins.json"
+    )
+
+    with open(
+        json_route,
+        "r",
+        encoding="utf-8"
+    ) as file:
+
+        admins = json.load(file)
+
+    existing = 0
+    created = 0
+    updated = 0
+
+    for data in admins:
+
+        user = User.query.filter_by(
+            email=data["email"]
+        ).first()
+
+        # ==========================================
+        # ADMIN YA EXISTENTE
+        # ==========================================
+
+        if user:
+
+            existing += 1
+
+            if user.role == UserRole.ADMIN:
+
+                user.hospital_id = data["hospital_id"]
+
+                updated += 1
+
+            continue
+
+        # ==========================================
+        # CREAR ADMIN
+        # ==========================================
+
+        user = User(
+            email=data["email"],
+            password_hash=generate_password_hash(
+                data["password"]
+            ),
+            first_name=data["first_name"],
+            last_name=data["last_name"],
+            dni=data["dni"],
+            phone=data["phone"],
+            date_of_birth=datetime.strptime(
+                data["date_of_birth"],
+                "%Y-%m-%d"
+            ).date(),
+            sex=data["sex"],
+            is_active=data["is_active"],
+            role=UserRole(data["role"]),
+            hospital_id=data["hospital_id"]
+        )
+
+        db.session.add(user)
+
+        created += 1
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Administradores procesados correctamente",
+        "creados": created,
+        "ya_existian": existing,
+        "actualizados": updated
+    }), 200
 
 # =========================================================
 # SEED ESPECIALIDADES
@@ -215,54 +330,51 @@ def seed_specialties():
         "total": len(specialties)
     }), 200
 
+# =========================================================
+# SEED HOSPITALES
+# =========================================================
 
-@api.route("/seed/especialidades-dos", methods=["GET"])
-def seed_specialties_two():
+@api.route("/seed/hospitales", methods=["GET"])
+def seed_hospitals():
 
     json_route = os.path.join(
         os.path.dirname(__file__),
-        "../data/especialidades_dos.json"
+        "../data/hospitales.json"
     )
 
-    try:
-        with open(json_route, "r", encoding="utf-8") as file:
-            specialties = json.load(file)
+    with open(json_route, "r", encoding="utf-8") as file:
+        hospitals = json.load(file)
 
-    except (FileNotFoundError, json.JSONDecodeError):
-        return jsonify({
-            "error": "No se pudo leer el archivo de especialidades"
-        }), 500
-
-    created = 0
     existing = 0
+    created = 0
 
-    for data in specialties:
+    for data in hospitals:
 
-        specialty = Specialty.query.filter_by(
+        hospital = Hospital.query.filter_by(
             name=data["name"]
         ).first()
 
-        if specialty:
+        if hospital:
             existing += 1
             continue
 
-        db.session.add(
-            Specialty(
-                name=data["name"],
-                description=data.get("description")
-            )
+        hospital = Hospital(
+            name=data["name"],
+            city=data.get("city"),
+            address=data.get("address")
         )
 
+        db.session.add(hospital)
         created += 1
 
     db.session.commit()
 
     return jsonify({
-        "message": "Especialidades adicionales creadas correctamente",
-        "total": len(specialties),
-        "creadas": created,
+        "message": "Hospitales procesados correctamente",
+        "creados": created,
         "ya_existian": existing
     }), 200
+
 
 
 # =========================================================
@@ -434,6 +546,7 @@ def registro_usuario():
 # LOGIN
 # =========================================================
 
+
 @api.route("/login", methods=["POST"])
 def login():
 
@@ -475,6 +588,8 @@ def login():
         }), 403
 
     especialidad = None
+    hospital = None
+    hospital_id = None
 
     if user.role.value == "doctor":
 
@@ -482,8 +597,14 @@ def login():
             user_id=user.id
         ).first()
 
-        if doctor and doctor.specialty:
-            especialidad = doctor.specialty.name
+        if doctor:
+
+            if doctor.specialty:
+                especialidad = doctor.specialty.name
+
+            if doctor.hospital:
+                hospital = doctor.hospital.name
+                hospital_id = doctor.hospital.id
 
     access_token = create_access_token(
         identity=str(user.id)
@@ -498,9 +619,12 @@ def login():
             "first_name": user.first_name,
             "last_name": user.last_name,
             "role": user.role.value,
-            "especialidad": especialidad
+            "especialidad": especialidad,
+            "hospital": hospital,
+            "hospital_id": hospital_id
         }
     }), 200
+
 
 
 # =========================================================
@@ -512,6 +636,7 @@ def login():
 def entrar_en_dashboard():
 
     user_id = get_jwt_identity()
+
     user = db.session.get(
         User,
         int(user_id)
@@ -522,7 +647,15 @@ def entrar_en_dashboard():
             "error": "Usuario no encontrado"
         }), 404
 
-    if user.role == UserRole.DOCTOR:
+    if user.role == UserRole.ADMIN:
+
+        return jsonify({
+            "message": "Acceso permitido",
+            "dashboard": "admin",
+            "redirect": "/dashboard/admin"
+        }), 200
+
+    elif user.role == UserRole.DOCTOR:
 
         return jsonify({
             "message": "Acceso permitido",
@@ -3706,4 +3839,509 @@ def enviar_contacto():
 
         return jsonify({
             "error": "No se pudo enviar el mensaje."
+        }), 500
+
+# ============================================================
+# ADMINISTRACIÓN DEL HOSPITAL
+# ============================================================
+
+def get_admin_actual():
+
+    user_id = get_jwt_identity()
+
+    user = db.session.get(
+        User,
+        int(user_id)
+    )
+
+    if not user:
+        return None, jsonify({
+            "error": "Usuario no encontrado"
+        }), 404
+
+    if user.role != UserRole.ADMIN:
+        return None, jsonify({
+            "error": "Acceso exclusivo para administradores"
+        }), 403
+
+    if not user.hospital_id:
+        return None, jsonify({
+            "error": "El administrador no tiene un hospital asignado"
+        }), 400
+
+    return user, None, None
+
+
+# ============================================================
+# 1. OBTENER HOSPITAL DEL ADMIN
+# ============================================================
+
+@api.route("/admin/hospital", methods=["GET"])
+@jwt_required()
+def admin_hospital():
+
+    user, error, status = get_admin_actual()
+
+    if error:
+        return error, status
+
+    hospital = db.session.get(
+        Hospital,
+        user.hospital_id
+    )
+
+    if not hospital:
+        return jsonify({
+            "error": "Hospital no encontrado"
+        }), 404
+
+    return jsonify({
+        "id": hospital.id,
+        "name": hospital.name,
+        "city": hospital.city,
+        "address": hospital.address
+    }), 200
+
+
+# ============================================================
+# 2. OBTENER DOCTORES DEL HOSPITAL
+# ============================================================
+
+
+@api.route("/admin/doctores", methods=["GET"])
+@jwt_required()
+def admin_doctores():
+    user, error, status = get_admin_actual()
+    if error:
+        return error, status
+
+    doctores = Doctor.query.filter_by(
+        hospital_id=user.hospital_id
+    ).all()
+
+    resultado = []
+
+    for doctor in doctores:
+        resultado.append({
+            "id": doctor.id,
+            "user_id": doctor.user_id,
+
+            "first_name": doctor.user.first_name,
+            "last_name": doctor.user.last_name,
+            "email": doctor.user.email,
+            "dni": doctor.user.dni,
+            "phone": doctor.user.phone,
+
+            "medical_license": doctor.medical_license,
+
+            "specialty": (
+                doctor.specialty.name
+                if doctor.specialty
+                else None
+            ),
+
+            "specialty_id": doctor.specialty_id,
+            "years_experience": doctor.years_experience,
+
+            # Estado profesional del médico
+            "status": (
+                doctor.status.value
+                if doctor.status
+                else None
+            ),
+
+            # Estado de la cuenta del usuario
+            "is_active": doctor.user.is_active,
+
+            "hospital_id": doctor.hospital_id,
+        })
+
+    return jsonify({
+        "doctores": resultado,
+        "total": len(resultado)
+    }), 200
+
+
+
+# ============================================================
+# 3. OBTENER PACIENTES
+# ============================================================
+
+@api.route("/admin/pacientes", methods=["GET"])
+@jwt_required()
+def admin_pacientes():
+
+    user, error, status = get_admin_actual()
+
+    if error:
+        return error, status
+
+    pacientes = Patient.query.all()
+
+    resultado = []
+
+    for patient in pacientes:
+
+        relaciones = (
+            DoctorPatient.query
+            .join(Doctor)
+            .filter(
+                DoctorPatient.patient_id == patient.id,
+                DoctorPatient.is_active.is_(True),
+                Doctor.hospital_id == user.hospital_id
+            )
+            .all()
+        )
+
+        medicos = []
+
+        for relacion in relaciones:
+
+            doctor = relacion.doctor
+
+            medicos.append({
+                "id": doctor.id,
+                "first_name": doctor.user.first_name,
+                "last_name": doctor.user.last_name,
+                "specialty": (
+                    doctor.specialty.name
+                    if doctor.specialty
+                    else None
+                ),
+                "assigned_at": (
+                    relacion.assigned_at.isoformat()
+                    if relacion.assigned_at
+                    else None
+                )
+            })
+
+        resultado.append({
+            "id": patient.id,
+            "user_id": patient.user_id,
+            "first_name": patient.user.first_name,
+            "last_name": patient.user.last_name,
+            "email": patient.user.email,
+            "dni": patient.user.dni,
+            "cip": patient.cip,
+            "blood_type": patient.blood_type,
+            "doctores": medicos
+        })
+
+    return jsonify({
+        "pacientes": resultado,
+        "total": len(resultado)
+    }), 200
+
+
+# ============================================================
+# 4. ASIGNAR MÉDICO A PACIENTE
+# ============================================================
+
+@api.route("/admin/asignar-medico", methods=["POST"])
+@jwt_required()
+def asignar_medico():
+
+    user, error, status = get_admin_actual()
+
+    if error:
+        return error, status
+
+    data = request.get_json()
+
+    if not data:
+        return jsonify({
+            "error": "No se han enviado datos"
+        }), 400
+
+    patient_id = data.get("patient_id")
+    doctor_id = data.get("doctor_id")
+
+    if not patient_id or not doctor_id:
+        return jsonify({
+            "error": "patient_id y doctor_id son obligatorios"
+        }), 400
+
+    patient = db.session.get(
+        Patient,
+        patient_id
+    )
+
+    if not patient:
+        return jsonify({
+            "error": "Paciente no encontrado"
+        }), 404
+
+    doctor = db.session.get(
+        Doctor,
+        doctor_id
+    )
+
+    if not doctor:
+        return jsonify({
+            "error": "Médico no encontrado"
+        }), 404
+
+    # El médico debe pertenecer al hospital
+    # del administrador autenticado
+    if doctor.hospital_id != user.hospital_id:
+        return jsonify({
+            "error": "El médico no pertenece a tu hospital"
+        }), 403
+
+    relacion = DoctorPatient.query.filter_by(
+        doctor_id=doctor.id,
+        patient_id=patient.id
+    ).first()
+
+    if relacion:
+
+        if relacion.is_active:
+            return jsonify({
+                "error": "El médico ya está asignado a este paciente"
+            }), 409
+
+        # Reactivar una relación anterior
+        relacion.is_active = True
+
+    else:
+
+        relacion = DoctorPatient(
+            doctor_id=doctor.id,
+            patient_id=patient.id,
+            is_active=True
+        )
+
+        db.session.add(relacion)
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Médico asignado correctamente",
+        "doctor_id": doctor.id,
+        "patient_id": patient.id
+    }), 200
+
+
+# ============================================================
+# 5. DESASIGNAR MÉDICO DE PACIENTE
+# ============================================================
+
+@api.route(
+    "/admin/desasignar-medico/<int:doctor_id>/<int:patient_id>",
+    methods=["PUT"]
+)
+@jwt_required()
+def desasignar_medico(doctor_id, patient_id):
+
+    user, error, status = get_admin_actual()
+
+    if error:
+        return error, status
+
+    doctor = db.session.get(
+        Doctor,
+        doctor_id
+    )
+
+    if not doctor:
+        return jsonify({
+            "error": "Médico no encontrado"
+        }), 404
+
+    # El médico debe pertenecer al hospital
+    # del administrador autenticado
+    if doctor.hospital_id != user.hospital_id:
+        return jsonify({
+            "error": "El médico no pertenece a tu hospital"
+        }), 403
+
+    relacion = DoctorPatient.query.filter_by(
+        doctor_id=doctor_id,
+        patient_id=patient_id
+    ).first()
+
+    if not relacion:
+        return jsonify({
+            "error": "La asignación no existe"
+        }), 404
+
+    relacion.is_active = False
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Médico desasignado correctamente"
+    }), 200
+
+
+
+
+@api.route("/admin/doctores/<int:doctor_id>/estado", methods=["PUT"])
+@jwt_required()
+def admin_cambiar_estado_doctor(doctor_id):
+    print("\n================ CAMBIAR ESTADO MÉDICO ================")
+    print(">>> ENTRÓ AL ENDPOINT")
+    print(">>> doctor_id:", doctor_id)
+
+    try:
+        # --------------------------------------------------
+        # 1. Comprobar administrador
+        # --------------------------------------------------
+        print(">>> Comprobando administrador...")
+
+        user, error, status = get_admin_actual()
+
+        if error:
+            print(">>> ERROR EN get_admin_actual()")
+            print(">>> error:", error)
+            print(">>> status:", status)
+            return error, status
+
+        print(">>> Admin correcto")
+        print(">>> admin user_id:", user.id)
+        print(">>> admin hospital_id:", user.hospital_id)
+
+        # --------------------------------------------------
+        # 2. Buscar médico
+        # --------------------------------------------------
+        print(">>> Buscando médico...")
+
+        doctor = db.session.get(Doctor, doctor_id)
+
+        if not doctor:
+            print(">>> MÉDICO NO ENCONTRADO")
+            return jsonify({
+                "error": "Médico no encontrado"
+            }), 404
+
+        print(">>> Médico encontrado")
+        print(">>> doctor.id:", doctor.id)
+        print(">>> doctor.user_id:", doctor.user_id)
+        print(">>> doctor.hospital_id:", doctor.hospital_id)
+        print(">>> doctor.status actual:", doctor.status)
+
+        # --------------------------------------------------
+        # 3. Comprobar hospital
+        # --------------------------------------------------
+        print(">>> Comprobando hospital...")
+
+        if doctor.hospital_id != user.hospital_id:
+            print(">>> ERROR: el médico no pertenece al hospital del admin")
+            print(">>> doctor.hospital_id:", doctor.hospital_id)
+            print(">>> admin.hospital_id:", user.hospital_id)
+
+            return jsonify({
+                "error": "El médico no pertenece a tu hospital"
+            }), 403
+
+        print(">>> Hospital correcto")
+
+        # --------------------------------------------------
+        # 4. Leer JSON
+        # --------------------------------------------------
+        print(">>> Leyendo JSON de la petición...")
+
+        data = request.get_json(silent=True)
+
+        print(">>> data recibida:", data)
+
+        if not data:
+            print(">>> ERROR: no se recibió JSON")
+
+            return jsonify({
+                "error": "No se recibió ningún JSON"
+            }), 400
+
+        nuevo_estado = data.get("status")
+
+        print(">>> nuevo_estado:", nuevo_estado)
+        print(">>> tipo nuevo_estado:", type(nuevo_estado))
+
+        # --------------------------------------------------
+        # 5. Comprobar status
+        # --------------------------------------------------
+        if not nuevo_estado:
+            print(">>> ERROR: falta el campo status")
+
+            return jsonify({
+                "error": "El campo 'status' es obligatorio"
+            }), 400
+
+        # --------------------------------------------------
+        # 6. Convertir al Enum
+        # --------------------------------------------------
+        print(">>> Estados permitidos:")
+
+        for estado in DoctorStatus:
+            print(
+                "    -",
+                estado.name,
+                "=",
+                estado.value
+            )
+
+        print(">>> Intentando asignar nuevo estado...")
+
+        try:
+            doctor.status = DoctorStatus(nuevo_estado)
+
+            print(">>> Estado asignado correctamente")
+            print(">>> doctor.status:", doctor.status)
+            print(">>> doctor.status.value:", doctor.status.value)
+
+        except (ValueError, TypeError) as e:
+            print(">>> ERROR AL CONVERTIR EL ESTADO")
+            print(">>> excepción:", repr(e))
+
+            return jsonify({
+                "error": "Estado de médico no válido",
+                "estados_permitidos": [
+                    estado.value
+                    for estado in DoctorStatus
+                ]
+            }), 400
+
+        # --------------------------------------------------
+        # 7. Guardar en BD
+        # --------------------------------------------------
+        print(">>> Haciendo commit en la base de datos...")
+
+        db.session.commit()
+
+        print(">>> COMMIT CORRECTO")
+        print(">>> Nuevo estado guardado:", doctor.status.value)
+
+        # --------------------------------------------------
+        # 8. Respuesta
+        # --------------------------------------------------
+        respuesta = {
+            "message": "Estado del médico actualizado correctamente",
+            "doctor_id": doctor.id,
+            "status": doctor.status.value
+        }
+
+        print(">>> RESPUESTA:", respuesta)
+        print("========================================================\n")
+
+        return jsonify(respuesta), 200
+
+    except Exception as e:
+        # --------------------------------------------------
+        # ERROR INESPERADO
+        # --------------------------------------------------
+        print("\n!!!!!!!!!!!!!!!! ERROR INESPERADO !!!!!!!!!!!!!!!!")
+        print(">>> Tipo:", type(e).__name__)
+        print(">>> Error:", str(e))
+        print(">>> repr:", repr(e))
+
+        import traceback
+        traceback.print_exc()
+
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
+
+        db.session.rollback()
+
+        return jsonify({
+            "error": "Error interno al cambiar el estado del médico",
+            "detail": str(e)
         }), 500
