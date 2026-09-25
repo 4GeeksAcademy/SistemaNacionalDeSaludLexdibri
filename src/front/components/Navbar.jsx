@@ -1,6 +1,57 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { NavLink, Link } from "react-router-dom";
 import useGlobalReducer from "../hooks/useGlobalReducer";
+ const Weather = () => {
+  const [weather, setWeather] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+
+        try {
+          const response = await fetch(
+            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&timezone=auto`
+          );
+
+          const data = await response.json();
+
+          setWeather({
+            temperature: Math.round(data.current.temperature_2m),
+            code: data.current.weather_code,
+          });
+        } catch (error) {
+          console.error("Error obteniendo el clima:", error);
+        }
+
+        setLoading(false);
+      },
+      (error) => {
+        console.error("No se pudo obtener la ubicación:", error);
+        setLoading(false);
+      }
+    );
+  }, []);
+
+  if (loading) {
+    return <span className="small">🌡️ Cargando...</span>;
+  }
+
+  if (!weather) {
+    return <span className="small">🌡️ Sin clima</span>;
+  }
+
+  return (
+    <div className="d-flex align-items-center gap-2">
+      <span>🌤️</span>
+      <span className="small fw-semibold">
+        {weather.temperature}°C
+      </span>
+    </div>
+  );
+};
+
 
 export const Navbar = () => {
   const { store, dispatch } = useGlobalReducer();
@@ -63,7 +114,7 @@ export const Navbar = () => {
             </span>
           </div>
         </Link>
-
+            <Weather />
         {/* PERFIL */}
         <div
           className="dropdown position-relative"
