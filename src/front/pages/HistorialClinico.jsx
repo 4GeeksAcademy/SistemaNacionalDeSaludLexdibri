@@ -1,4 +1,3 @@
-
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -128,9 +127,6 @@ export const HistorialClinico = () => {
                         }
                     }
                 );
-
-                console.log("URL:", response.url);
-                console.log("STATUS:", response.status)
 
                 const data = await response.json();
 
@@ -432,6 +428,23 @@ export const HistorialClinico = () => {
     }, [enfermedades, orden]);
 
     // ==========================================================
+    // ORDEN ALERGIAS
+    // ==========================================================
+
+    const alergiasOrdenadas = useMemo(() => {
+        const resultado = [...alergias];
+
+        resultado.sort((a, b) => {
+            const fechaA = new Date(a.created_at);
+            const fechaB = new Date(b.created_at);
+
+            return fechaB - fechaA;
+        });
+
+        return resultado;
+    }, [alergias]);
+
+    // ==========================================================
     // ELEMENTOS VISIBLES
     // ==========================================================
 
@@ -442,8 +455,8 @@ export const HistorialClinico = () => {
 
     const alergiasVisibles =
         mostrarTodasAlergias
-            ? alergias
-            : alergias.slice(0, 4);
+            ? alergiasOrdenadas
+            : alergiasOrdenadas.slice(0, 4);
 
     const vacunasVisibles =
         mostrarTodasVacunas
@@ -670,9 +683,9 @@ export const HistorialClinico = () => {
 
                             <label
                                 htmlFor="orden"
-                                className="form-label small fw-semibold mb-1 text-light"
+                                className="border rounded  bg-info bg-opacity-10 text-info border-info"
                             >
-                                Ordenar por
+                                Ordenar por :
                             </label>
 
                             <select
@@ -685,11 +698,11 @@ export const HistorialClinico = () => {
                                 }}
                             >
 
-                                <option value="recientes">
+                                <option value="recientes" className=" bg-info bg-opacity-10">
                                     Más recientes
                                 </option>
 
-                                <option value="antiguos">
+                                <option value="antiguos" className=" bg-info bg-opacity-10">
                                     Más antiguos
                                 </option>
 
@@ -751,7 +764,7 @@ export const HistorialClinico = () => {
                                             <div className="col-md-3 col-lg-2">
 
                                                 <div className="small text-white">
-                                                    Fecha
+                                                    Detectada
                                                 </div>
 
                                                 <div className="fw-semibold text-white mt-1">
@@ -776,7 +789,7 @@ export const HistorialClinico = () => {
                                                         Enfermedad
                                                     </span>
 
-                                                    <span className="badge bg-info bg-opacity-25 text-info border border-info">
+                                                    <span className="badge bg-danger text-light ">
                                                         {antecedente.estado}
                                                     </span>
 
@@ -874,21 +887,21 @@ export const HistorialClinico = () => {
 
                 <div className="card-body p-4">
 
-                    <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+                    <div className="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-4">
 
                         <div>
 
                             <h2 className="h4 text-info fw-bold mb-1">
-                                Alergias
+                                Alergias del paciente
                             </h2>
 
                             <p className="text-white mb-0">
-                                Alergias conocidas registradas para este paciente.
+                                Consulta las alergias registradas y la fecha en la que fueron detectadas.
                             </p>
 
                         </div>
 
-                        <span className="badge bg-info bg-opacity-25 text-info border border-info">
+                        <span className="badge bg-info bg-opacity-25 text-info border border-info align-self-start">
 
                             {alergias.length}
 
@@ -928,73 +941,73 @@ export const HistorialClinico = () => {
                             {errorAlergias}
                         </div>
 
-                    ) : alergias.length === 0 ? (
-
-                        <div className="text-center py-4">
-
-                            <div className="fs-2 mb-2">
-                                🧪
-                            </div>
-
-                            <h3 className="h6 text-info fw-bold">
-                                No hay alergias registradas
-                            </h3>
-
-                            <p className="text-white mb-0">
-                                Este paciente no tiene alergias registradas.
-                            </p>
-
-                        </div>
-
-                    ) : (
+                    ) : alergiasOrdenadas.length > 0 ? (
 
                         <div>
 
-                            <div className="row g-3">
+                            {alergiasVisibles.map(
+                                (alergia) => (
 
-                                {alergiasVisibles.map(
-                                    (alergia) => (
+                                    <div
+                                        key={alergia.id}
+                                        className="border border-secondary border-opacity-50 rounded-3 p-3 p-md-4 mb-3"
+                                    >
 
-                                        <div
-                                            className="col-12 col-xl-6"
-                                            key={alergia.id}
-                                        >
+                                        <div className="row g-3">
 
-                                            <div className="bg-dark bg-opacity-50 border border-secondary border-opacity-50 rounded-3 p-3 h-100">
+                                            {/* FECHA */}
+                                            <div className="col-md-3 col-lg-2">
 
-                                                <div className="d-flex justify-content-between align-items-start gap-2 mb-3">
+                                                <div className="small text-white">
+                                                    Detectada
+                                                </div>
 
-                                                    <h3 className="h6 text-info fw-bold mb-0">
-                                                        {alergia.nombre ||
-                                                            alergia.name ||
-                                                            "Alergia"}
-                                                    </h3>
+                                                <div className="fw-semibold text-white mt-1">
+                                                    {formatearFecha(
+                                                        alergia.created_at
+                                                    )}
+                                                </div>
 
-                                                    <span className="badge bg-danger">
+                                            </div>
+
+                                            {/* INFORMACIÓN */}
+                                            <div className="col-md-9 col-lg-10">
+
+                                                <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
+
+                                                    <span
+                                                        className="badge"
+                                                        style={{
+                                                            backgroundColor: "#dc3545",
+                                                            color: "#ffffff",
+                                                        }}
+                                                    >
                                                         Alergia
                                                     </span>
 
+                                                    {alergia.severity && (
+                                                        <span
+                                                            className={`badge ${
+                                                                alergia.severity === "Grave"
+                                                                    ? "bg-danger"
+                                                                    : alergia.severity === "Moderada"
+                                                                        ? "bg-warning text-dark"
+                                                                        : "bg-success"
+                                                            }`}
+                                                        >
+                                                            {alergia.severity}
+                                                        </span>
+                                                    )}
+
                                                 </div>
 
-                                                {alergia.reaccion && (
-
-                                                    <p className="text-white small mb-2">
-
-                                                        <strong>
-                                                            Reacción:
-                                                        </strong>
-
-                                                        {" "}
-
-                                                        {alergia.reaccion}
-
-                                                    </p>
-
-                                                )}
+                                                <h3 className="h5 text-info fw-bold mb-2">
+                                                    {alergia.allergen}
+                                                </h3>
 
                                                 {alergia.reaction && (
 
-                                                    <p className="text-white small mb-2">
+                                                    <div className="small text-white mb-2">
 
                                                         <strong>
                                                             Reacción:
@@ -1004,55 +1017,23 @@ export const HistorialClinico = () => {
 
                                                         {alergia.reaction}
 
-                                                    </p>
+                                                    </div>
 
                                                 )}
 
-                                                {alergia.gravedad && (
+                                                {alergia.notes && (
 
-                                                    <p className="text-white small mb-0">
+                                                    <div className="small text-white">
 
                                                         <strong>
-                                                            Gravedad:
+                                                            Observaciones:
                                                         </strong>
 
                                                         {" "}
 
-                                                        {alergia.gravedad}
+                                                        {alergia.notes}
 
-                                                    </p>
-
-                                                )}
-
-                                                {alergia.severity && (
-
-                                                    <p className="text-white small mb-0">
-
-                                                        <strong>
-                                                            Gravedad:
-                                                        </strong>
-
-                                                        {" "}
-
-                                                        {alergia.severity}
-
-                                                    </p>
-
-                                                )}
-
-                                                {alergia.detalle && (
-
-                                                    <p className="text-white small mt-2 mb-0">
-
-                                                        <strong>
-                                                            Descripción:
-                                                        </strong>
-
-                                                        {" "}
-
-                                                        {alergia.detalle}
-
-                                                    </p>
+                                                    </div>
 
                                                 )}
 
@@ -1060,14 +1041,14 @@ export const HistorialClinico = () => {
 
                                         </div>
 
-                                    )
-                                )}
+                                    </div>
 
-                            </div>
+                                )
+                            )}
 
                             {alergias.length > 4 && (
 
-                                <div className="d-flex justify-content-center mt-4">
+                                <div className="d-flex justify-content-center mt-3">
 
                                     <button
                                         type="button"
@@ -1086,6 +1067,35 @@ export const HistorialClinico = () => {
                                 </div>
 
                             )}
+
+                        </div>
+
+                    ) : (
+
+                        <div className="text-center py-5">
+
+                            <div className="mb-3">
+
+                                <span
+                                    className="d-inline-flex align-items-center justify-content-center rounded-circle bg-secondary bg-opacity-50 text-white"
+                                    style={{
+                                        width: "60px",
+                                        height: "60px",
+                                        fontSize: "1.5rem",
+                                    }}
+                                >
+                                    —
+                                </span>
+
+                            </div>
+
+                            <h3 className="h5 text-info fw-bold">
+                                No hay alergias registradas
+                            </h3>
+
+                            <p className="text-white mb-0">
+                                Este paciente no tiene alergias registradas.
+                            </p>
 
                         </div>
 
@@ -1208,7 +1218,8 @@ export const HistorialClinico = () => {
 
                                                 {(vacuna.fecha ||
                                                     vacuna.date ||
-                                                    vacuna.administered_at) && (
+                                                    vacuna.administered_at ||
+                                                    vacuna.vaccination_date) && (
 
                                                     <p className="text-white small mb-2">
 
@@ -1221,7 +1232,8 @@ export const HistorialClinico = () => {
                                                         {formatearFecha(
                                                             vacuna.fecha ||
                                                             vacuna.date ||
-                                                            vacuna.administered_at
+                                                            vacuna.administered_at ||
+                                                            vacuna.vaccination_date
                                                         )}
 
                                                     </p>
@@ -1526,7 +1538,6 @@ export const HistorialClinico = () => {
                                             </div>
 
                                         </div>
-
                                     )
                                 )}
 
@@ -1603,7 +1614,7 @@ export const HistorialClinico = () => {
                         <div className="d-flex align-items-center gap-2 text-white-50">
 
                             <div
-                                className="spinner-border spinner-border-sm text-warning"
+                                className="spinner-border spinner-border-sm text-info"
                                 role="status"
                             >
                                 <span className="visually-hidden">
@@ -2002,4 +2013,3 @@ export const HistorialClinico = () => {
         </div>
     );
 };
-

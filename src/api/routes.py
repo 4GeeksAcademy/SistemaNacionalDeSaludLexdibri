@@ -3426,6 +3426,112 @@ def obtener_alergias_paciente(patient_id):
 
 
 # ====================
+# CREAR ALERGIA
+# ====================
+
+@api.route(
+    '/medico/pacientes/<int:patient_id>/alergias',
+    methods=['POST']
+)
+@jwt_required()
+def crear_alergia_paciente(patient_id):
+
+    user_id = get_jwt_identity()
+
+    user = db.session.get(
+        User,
+        int(user_id)
+    )
+
+    if not user:
+        return jsonify({
+            "error": "Usuario no encontrado."
+        }), 404
+
+    if user.role != UserRole.DOCTOR:
+        return jsonify({
+            "error": "No tienes permisos para registrar alergias."
+        }), 403
+
+    doctor = user.doctor
+
+    if not doctor:
+        return jsonify({
+            "error": "Perfil médico no encontrado."
+        }), 404
+
+    patient = db.session.get(
+        Patient,
+        patient_id
+    )
+
+    if not patient:
+        return jsonify({
+            "error": "Paciente no encontrado."
+        }), 404
+
+    data = request.get_json()
+
+    if not data:
+        return jsonify({
+            "error": "No se recibieron datos."
+        }), 400
+
+    allergen = data.get("allergen")
+    reaction = data.get("reaction")
+    severity = data.get("severity")
+    notes = data.get("notes")
+
+    if not allergen or not allergen.strip():
+        return jsonify({
+            "error": "El alérgeno es obligatorio."
+        }), 400
+
+    alergia = Allergy(
+        patient_id=patient.id,
+        allergen=allergen.strip(),
+        reaction=reaction.strip() if reaction else None,
+        severity=severity.strip() if severity else None,
+        notes=notes.strip() if notes else None,
+    )
+
+    try:
+
+        db.session.add(alergia)
+        db.session.commit()
+
+    except Exception as error:
+
+        db.session.rollback()
+
+        print(
+            "Error creando alergia:",
+            error
+        )
+
+        return jsonify({
+            "error": "No se pudo registrar la alergia."
+        }), 500
+
+    return jsonify({
+        "message": "Alergia registrada correctamente.",
+        "alergia": {
+            "id": alergia.id,
+            "patient_id": alergia.patient_id,
+            "allergen": alergia.allergen,
+            "reaction": alergia.reaction,
+            "severity": alergia.severity,
+            "notes": alergia.notes,
+            "created_at": (
+                alergia.created_at.isoformat()
+                if alergia.created_at
+                else None
+            ),
+        }
+    }), 201
+
+
+# ====================
 # OBTENER VACUNAS
 # ===================
 

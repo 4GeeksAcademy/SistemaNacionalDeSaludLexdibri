@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 
 export const Home = () => {
+
     useEffect(() => {
         const elements = document.querySelectorAll(".scroll-reveal");
 
@@ -28,7 +29,7 @@ export const Home = () => {
     }, []);
 
     return (
-        <div className=" text-white min-vh-100">
+        <div className="text-white min-vh-100">
 
             {/* ========================================
                 HERO
@@ -210,7 +211,6 @@ export const Home = () => {
 
                     <div className="row align-items-center g-5">
 
-                        {/* TEXTO */}
                         <div className="col-lg-6">
 
                             <span className="text-info small fw-semibold text-uppercase">
@@ -245,12 +245,10 @@ export const Home = () => {
                         </div>
 
 
-                        {/* ESTADÍSTICAS */}
                         <div className="col-lg-6">
 
                             <div className="row g-3">
 
-                                {/* COMUNIDADES */}
                                 <div className="col-6 scroll-reveal">
 
                                     <div className="card h-100 bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4">
@@ -272,7 +270,6 @@ export const Home = () => {
                                 </div>
 
 
-                                {/* ATENCIÓN */}
                                 <div className="col-6 scroll-reveal">
 
                                     <div className="card h-100 bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4">
@@ -294,7 +291,6 @@ export const Home = () => {
                                 </div>
 
 
-                                {/* PROFESIONALES */}
                                 <div className="col-6 scroll-reveal">
 
                                     <div className="card h-100 bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4">
@@ -316,7 +312,6 @@ export const Home = () => {
                                 </div>
 
 
-                                {/* COBERTURA */}
                                 <div className="col-6 scroll-reveal">
 
                                     <div className="card h-100 bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4">

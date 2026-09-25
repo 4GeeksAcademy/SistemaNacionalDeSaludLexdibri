@@ -13,6 +13,50 @@ export const Login = () => {
     const [tipoUsuario, setTipoUsuario] = useState("paciente");
     const [showPassword, setShowPassword] = useState(false);
 
+    /*
+    ========================================================
+    REDIRECCIÓN SI YA HAY UNA SESIÓN INICIADA
+    ========================================================
+    */
+
+    useEffect(() => {
+        const token =
+            localStorage.getItem("access_token") ||
+            localStorage.getItem("token");
+
+        const usuarioGuardado = localStorage.getItem("user");
+
+        if (!token || !usuarioGuardado) {
+            return;
+        }
+
+        try {
+            const usuario = JSON.parse(usuarioGuardado);
+
+            if (usuario.role === "doctor") {
+                navigate("/dashboard/medico", { replace: true });
+                return;
+            }
+
+            if (usuario.role === "patient") {
+                navigate("/dashboard/paciente", { replace: true });
+                return;
+            }
+
+        } catch (error) {
+            console.error(
+                "Error leyendo el usuario guardado:",
+                error
+            );
+        }
+    }, [navigate]);
+
+    /*
+    ========================================================
+    ANIMACIONES
+    ========================================================
+    */
+
     useEffect(() => {
         const elements = document.querySelectorAll(".scroll-reveal");
 
@@ -36,6 +80,12 @@ export const Login = () => {
         };
     }, []);
 
+    /*
+    ========================================================
+    LOGIN
+    ========================================================
+    */
+
     const handleLogin = async (e) => {
         e.preventDefault();
 
@@ -53,8 +103,27 @@ export const Login = () => {
                 tipoUsuario,
             });
 
-            localStorage.setItem("user", JSON.stringify(data.user));
+            /*
+            Guardamos el usuario
+            */
+            localStorage.setItem(
+                "user",
+                JSON.stringify(data.user)
+            );
 
+            /*
+            Guardamos también el token explícitamente
+            */
+            if (data.access_token) {
+                localStorage.setItem(
+                    "access_token",
+                    data.access_token
+                );
+            }
+
+            /*
+            Actualizamos el estado global
+            */
             dispatch({
                 type: "login",
                 payload: {
@@ -63,11 +132,37 @@ export const Login = () => {
                 },
             });
 
+            /*
+            Redirección según el rol
+            */
+            if (data.user?.role === "doctor") {
+                navigate("/dashboard/medico", {
+                    replace: true,
+                });
+
+                return;
+            }
+
+            if (data.user?.role === "patient") {
+                navigate("/dashboard/paciente", {
+                    replace: true,
+                });
+
+                return;
+            }
+
+            /*
+            Fallback por si el backend devuelve dashboard
+            */
             navigate(
                 data.dashboard === "doctor"
                     ? "/dashboard/medico"
-                    : "/dashboard/paciente"
+                    : "/dashboard/paciente",
+                {
+                    replace: true,
+                }
             );
+
         } catch (error) {
             console.error(error);
             setError(error.message);
@@ -75,7 +170,7 @@ export const Login = () => {
     };
 
     return (
-        <div className=" text-white min-vh-100 d-flex align-items-center">
+        <div className="text-white min-vh-100 d-flex align-items-center">
 
             <section className="container py-5">
                 <div className="row justify-content-center">
@@ -89,7 +184,10 @@ export const Login = () => {
 
                                 <div
                                     className="d-inline-flex align-items-center justify-content-center bg-info bg-opacity-10 border border-info border-opacity-25 rounded-4 text-info fs-4 mb-3"
-                                    style={{ width: "56px", height: "56px" }}
+                                    style={{
+                                        width: "56px",
+                                        height: "56px"
+                                    }}
                                 >
                                     ✚
                                 </div>
@@ -115,15 +213,17 @@ export const Login = () => {
                                     className="btn-group w-100"
                                     role="group"
                                 >
+
                                     <button
                                         type="button"
                                         onClick={() =>
                                             setTipoUsuario("paciente")
                                         }
-                                        className={`btn rounded-start-pill fw-semibold ${tipoUsuario === "paciente"
+                                        className={`btn rounded-start-pill fw-semibold ${
+                                            tipoUsuario === "paciente"
                                                 ? "btn-info"
                                                 : "btn-outline-secondary text-white"
-                                            }`}
+                                        }`}
                                     >
                                         🔒 Paciente
                                     </button>
@@ -133,13 +233,15 @@ export const Login = () => {
                                         onClick={() =>
                                             setTipoUsuario("medico")
                                         }
-                                        className={`btn rounded-end-pill fw-semibold ${tipoUsuario === "medico"
+                                        className={`btn rounded-end-pill fw-semibold ${
+                                            tipoUsuario === "medico"
                                                 ? "btn-info"
                                                 : "btn-outline-secondary text-white"
-                                            }`}
+                                        }`}
                                     >
                                         👨‍⚕️ Médico
                                     </button>
+
                                 </div>
 
                             </div>
@@ -148,6 +250,7 @@ export const Login = () => {
                             <form onSubmit={handleLogin}>
 
                                 <div className="mb-3">
+
                                     <label
                                         htmlFor="login-email"
                                         className="form-label text-white-50 small"
@@ -165,9 +268,11 @@ export const Login = () => {
                                             setEmail(e.target.value)
                                         }
                                     />
+
                                 </div>
 
                                 <div className="mb-3">
+
                                     <label
                                         htmlFor="login-password"
                                         className="form-label text-white-50 small"
@@ -196,7 +301,9 @@ export const Login = () => {
                                             type="button"
                                             className="btn btn-outline-secondary text-white"
                                             onClick={() =>
-                                                setShowPassword(!showPassword)
+                                                setShowPassword(
+                                                    !showPassword
+                                                )
                                             }
                                             aria-label={
                                                 showPassword
@@ -204,10 +311,13 @@ export const Login = () => {
                                                     : "Mostrar contraseña"
                                             }
                                         >
-                                            {showPassword ? "🙈" : "👁️"}
+                                            {showPassword
+                                                ? "🙈"
+                                                : "👁️"}
                                         </button>
 
                                     </div>
+
                                 </div>
 
                                 {/* ERROR */}
@@ -233,7 +343,9 @@ export const Login = () => {
                                 <button
                                     type="button"
                                     className="btn btn-link p-0 text-info text-decoration-none small"
-                                    onClick={() => navigate("/olvide/Contraseña")}
+                                    onClick={() =>
+                                        navigate("/olvide/Contraseña")
+                                    }
                                 >
                                     ¿Olvidó su contraseña?
                                 </button>

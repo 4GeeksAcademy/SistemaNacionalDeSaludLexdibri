@@ -1166,7 +1166,7 @@ export const DashboardMedico = () => {
 
                                             <button
                                                 type="button"
-                                                className="btn btn-outline-danger rounded-pill btn-sm"
+                                                className="btn btn-outline-danger bg-danger text-light rounded-pill btn-sm"
                                                 onClick={() =>
                                                     removePatient(
                                                         patient.id
