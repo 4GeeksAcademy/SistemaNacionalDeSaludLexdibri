@@ -1,5 +1,6 @@
 
 import React, { useEffect, useMemo, useState } from "react";
+import { Icon } from "../components/Icon";
 
 const API_URL = (
   import.meta.env.VITE_BACKEND_URL || ""
@@ -56,25 +57,25 @@ export const DashboardAdmin = () => {
     active: {
       texto: "Activo",
       clase: "bg-success",
-      icono: "🟢",
+      icono: "CircleCheck",
     },
 
     vacation: {
       texto: "De baja",
       clase: "bg-warning text-dark",
-      icono: "🏖️",
+      icono: "Plane",
     },
 
     temporary_leave: {
       texto: "De baja",
       clase: "bg-secondary",
-      icono: "⏸️",
+      icono: "Circle",
     },
 
     inactive: {
       texto: "De baja",
       clase: "bg-danger",
-      icono: "🔴",
+      icono: "CircleX",
     },
   };
 
@@ -138,21 +139,21 @@ export const DashboardAdmin = () => {
       if (!hospitalResponse.ok) {
         throw new Error(
           hospitalData.error ||
-            "No se ha podido cargar el hospital"
+          "No se ha podido cargar el hospital"
         );
       }
 
       if (!doctoresResponse.ok) {
         throw new Error(
           doctoresData.error ||
-            "No se han podido cargar los médicos"
+          "No se han podido cargar los médicos"
         );
       }
 
       if (!pacientesResponse.ok) {
         throw new Error(
           pacientesData.error ||
-            "No se han podido cargar los pacientes"
+          "No se han podido cargar los pacientes"
         );
       }
 
@@ -164,7 +165,7 @@ export const DashboardAdmin = () => {
 
       setError(
         err.message ||
-          "Ha ocurrido un error al cargar el dashboard"
+        "Ha ocurrido un error al cargar el dashboard"
       );
     } finally {
       setLoading(false);
@@ -364,7 +365,7 @@ export const DashboardAdmin = () => {
       if (!response.ok) {
         throw new Error(
           data.error ||
-            `No se ha podido cambiar el estado del médico (HTTP ${response.status})`
+          `No se ha podido cambiar el estado del médico (HTTP ${response.status})`
         );
       }
 
@@ -396,7 +397,7 @@ export const DashboardAdmin = () => {
 
       setMensaje(
         err.message ||
-          "No se ha podido cambiar el estado del médico."
+        "No se ha podido cambiar el estado del médico."
       );
     } finally {
       setAccionDoctor(null);
@@ -436,7 +437,7 @@ export const DashboardAdmin = () => {
       if (!response.ok) {
         throw new Error(
           data.error ||
-            "No se ha podido asignar el médico"
+          "No se ha podido asignar el médico"
         );
       }
 
@@ -455,7 +456,7 @@ export const DashboardAdmin = () => {
 
       setMensaje(
         err.message ||
-          "No se ha podido asignar el médico."
+        "No se ha podido asignar el médico."
       );
     } finally {
       setAsignando(null);
@@ -501,7 +502,7 @@ export const DashboardAdmin = () => {
         if (!desasignarResponse.ok) {
           throw new Error(
             desasignarData.error ||
-              "No se ha podido desasignar el médico actual"
+            "No se ha podido desasignar el médico actual"
           );
         }
       }
@@ -531,7 +532,7 @@ export const DashboardAdmin = () => {
       if (!asignarResponse.ok) {
         throw new Error(
           asignarData.error ||
-            "No se ha podido asignar el nuevo médico"
+          "No se ha podido asignar el nuevo médico"
         );
       }
 
@@ -550,7 +551,7 @@ export const DashboardAdmin = () => {
 
       setMensaje(
         err.message ||
-          "No se ha podido cambiar el médico de cabecera."
+        "No se ha podido cambiar el médico de cabecera."
       );
     } finally {
       setAsignando(null);
@@ -582,7 +583,7 @@ export const DashboardAdmin = () => {
       if (!response.ok) {
         throw new Error(
           data.error ||
-            "No se ha podido desasignar el médico"
+          "No se ha podido desasignar el médico"
         );
       }
 
@@ -600,7 +601,7 @@ export const DashboardAdmin = () => {
 
       setMensaje(
         err.message ||
-          "No se ha podido desasignar el médico."
+        "No se ha podido desasignar el médico."
       );
     } finally {
       setAsignando(null);
@@ -639,7 +640,7 @@ export const DashboardAdmin = () => {
       if (!response.ok) {
         throw new Error(
           data.error ||
-            "No se ha podido quitar al paciente del hospital"
+          "No se ha podido quitar al paciente del hospital"
         );
       }
 
@@ -657,7 +658,7 @@ export const DashboardAdmin = () => {
 
       setMensaje(
         err.message ||
-          "No se ha podido quitar al paciente del hospital."
+        "No se ha podido quitar al paciente del hospital."
       );
     } finally {
       setAsignando(null);
@@ -697,7 +698,7 @@ export const DashboardAdmin = () => {
       if (!response.ok) {
         throw new Error(
           data.error ||
-            "No se ha podido quitar el médico del hospital"
+          "No se ha podido quitar el médico del hospital"
         );
       }
 
@@ -715,7 +716,7 @@ export const DashboardAdmin = () => {
 
       setMensaje(
         err.message ||
-          "No se ha podido quitar el médico del hospital."
+        "No se ha podido quitar el médico del hospital."
       );
     } finally {
       setAsignando(null);
@@ -841,7 +842,7 @@ export const DashboardAdmin = () => {
                     fontSize: "28px",
                   }}
                 >
-                  🏥
+                  <Icon name="Hospital" />
                 </div>
 
                 <div>
@@ -919,7 +920,7 @@ export const DashboardAdmin = () => {
           <div className="col-12 col-md-3">
             <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
               <span className="fs-2">
-                ✓
+                <Icon name="Check" />
               </span>
 
               <p className="text-info text-uppercase small fw-semibold mt-3 mb-1">
@@ -942,9 +943,7 @@ export const DashboardAdmin = () => {
 
           <div className="col-12 col-md-3">
             <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
-              <span className="fs-2">
-                ⏸️
-              </span>
+              <Icon name="Circle" className="fs-2" size="1em" />
 
               <p className="text-info text-uppercase small fw-semibold mt-3 mb-1">
                 Médicos de baja
@@ -993,7 +992,7 @@ export const DashboardAdmin = () => {
               }}
             >
               <span className="input-group-text bg-dark border-secondary text-white-50">
-                🔎
+                <Icon name="Search" />
               </span>
 
               <input
@@ -1011,7 +1010,7 @@ export const DashboardAdmin = () => {
           {doctoresFiltrados.length === 0 ? (
             <div className="text-center py-5">
               <div className="fs-1 mb-3">
-                👨‍⚕️
+                <Icon name="Stethoscope" />
               </div>
 
               <p className="text-white-50 mb-0">
@@ -1067,7 +1066,7 @@ export const DashboardAdmin = () => {
                           <span
                             className={`badge rounded-pill ${estado.clase}`}
                           >
-                            {estado.icono}{" "}
+                            <Icon name={estado.icono} className="me-1" />
                             {estado.texto}
                           </span>
                         </div>
@@ -1077,22 +1076,22 @@ export const DashboardAdmin = () => {
                         <div className="small text-white-50 mb-3">
 
                           <div className="mb-1">
-                            ✉️ {doctor.email}
+                            <Icon name="Mail" className="me-1" />{doctor.email}
                           </div>
 
                           {doctor.phone && (
                             <div className="mb-1">
-                              📞 {doctor.phone}
+                              <Icon name="Phone" className="me-1" />{doctor.phone}
                             </div>
                           )}
 
                           <div className="mb-1">
-                            🪪 {doctor.medical_license}
+                            <Icon name="ShieldCheck" className="me-1" />{doctor.medical_license}
                           </div>
 
                           {doctor.years_experience != null && (
                             <div>
-                              🕒{" "}
+                              <Icon name="Clock3" className="me-1" />
                               {doctor.years_experience}{" "}
                               años de experiencia
                             </div>
@@ -1143,7 +1142,7 @@ export const DashboardAdmin = () => {
                                     )
                                   }
                                 >
-                                  🟢 Reactivar
+                                  <Icon name="CircleCheck" className="me-1" />Reactivar
                                 </button>
                               </li>
                             )}
@@ -1162,7 +1161,7 @@ export const DashboardAdmin = () => {
                                     )
                                   }
                                 >
-                                  🏖️ Dar de vacaciones
+                                  <Icon name="Plane" className="me-1" />Dar de vacaciones
                                 </button>
                               </li>
                             )}
@@ -1181,7 +1180,7 @@ export const DashboardAdmin = () => {
                                     )
                                   }
                                 >
-                                  ⏸️ Dar de baja temporal
+                                  <Icon name="Circle" className="me-1" />Dar de baja temporal
                                 </button>
                               </li>
                             )}
@@ -1200,7 +1199,7 @@ export const DashboardAdmin = () => {
                                     )
                                   }
                                 >
-                                  🔴 Marcar como inactivo
+                                  <Icon name="CircleX" className="me-1" />Marcar como inactivo
                                 </button>
                               </li>
                             )}
@@ -1223,7 +1222,7 @@ export const DashboardAdmin = () => {
                                   )
                                 }
                               >
-                                🏥 Quitar del hospital
+                                <Icon name="Hospital" className="me-1" />Quitar del hospital
                               </button>
                             </li>
 
@@ -1253,7 +1252,7 @@ export const DashboardAdmin = () => {
                 <div className="text-center mt-4">
 
                   {cantidadDoctoresVisibles <
-                  doctoresFiltrados.length ? (
+                    doctoresFiltrados.length ? (
                     <button
                       type="button"
                       className="btn btn-outline-info rounded-pill btn-sm px-4"
@@ -1305,7 +1304,7 @@ export const DashboardAdmin = () => {
               }}
             >
               <span className="input-group-text bg-dark border-secondary text-white-50">
-                🔎
+                <Icon name="Search" />
               </span>
 
               <input
@@ -1325,7 +1324,7 @@ export const DashboardAdmin = () => {
           {pacientesFiltrados.length === 0 ? (
             <div className="text-center py-5">
               <div className="fs-1 mb-3">
-                👤
+                <Icon name="User" />
               </div>
 
               <p className="text-white-50 mb-0">
@@ -1364,9 +1363,9 @@ export const DashboardAdmin = () => {
                         doctor.is_active === true &&
                         doctor.status === "active" &&
                         especialidad ===
-                          "médico de cabecera" &&
+                        "médico de cabecera" &&
                         doctor.id !==
-                          medicoCabecera?.id
+                        medicoCabecera?.id
                       );
                     });
 
@@ -1395,7 +1394,7 @@ export const DashboardAdmin = () => {
                                   height: "50px",
                                 }}
                               >
-                                👤
+                                <Icon name="User" />
                               </div>
 
                               <div>
@@ -1472,7 +1471,7 @@ export const DashboardAdmin = () => {
                               {/* CAMBIAR / ASIGNAR MÉDICO */}
 
                               {medicoCabecera &&
-                              !mostrandoCambio ? (
+                                !mostrandoCambio ? (
                                 <button
                                   type="button"
                                   className="btn btn-outline-info rounded-pill btn-sm w-100"
@@ -1567,11 +1566,11 @@ export const DashboardAdmin = () => {
 
                                   {doctoresDisponibles.length ===
                                     0 && (
-                                    <small className="text-white-50">
-                                      No hay médicos de cabecera
-                                      activos disponibles.
-                                    </small>
-                                  )}
+                                      <small className="text-white-50">
+                                        No hay médicos de cabecera
+                                        activos disponibles.
+                                      </small>
+                                    )}
                                 </>
                               )}
 
@@ -1616,16 +1615,16 @@ export const DashboardAdmin = () => {
 
                               {asignando ===
                                 patient.id && (
-                                <div className="d-flex align-items-center justify-content-center gap-2 text-white-50 small">
+                                  <div className="d-flex align-items-center justify-content-center gap-2 text-white-50 small">
 
-                                  <div
-                                    className="spinner-border spinner-border-sm text-info"
-                                    role="status"
-                                  />
+                                    <div
+                                      className="spinner-border spinner-border-sm text-info"
+                                      role="status"
+                                    />
 
-                                  Procesando...
-                                </div>
-                              )}
+                                    Procesando...
+                                  </div>
+                                )}
 
                             </div>
                           </div>
@@ -1644,7 +1643,7 @@ export const DashboardAdmin = () => {
                 <div className="text-center mt-4">
 
                   {cantidadPacientesVisibles <
-                  pacientesFiltrados.length ? (
+                    pacientesFiltrados.length ? (
                     <button
                       type="button"
                       className="btn btn-outline-info rounded-pill btn-sm px-4"

@@ -1,4 +1,5 @@
 import React from "react";
+import { Icon } from "../Icon";
 
 export const AppointmentCard = ({ cita, onOpenTeleconsulta }) => {
   const isTeleconsulta = cita.tipo === "Teleconsulta";
@@ -16,19 +17,19 @@ export const AppointmentCard = ({ cita, onOpenTeleconsulta }) => {
 
       <div className="d-flex justify-content-between align-items-center mt-3">
         <div className="small text-white-50">
-          ⏱️ {cita.fecha} — {cita.hora}
+          <Icon name="Clock3" className="me-1" />{cita.fecha} — {cita.hora}
         </div>
 
         {isTeleconsulta ? (
-          <button 
+          <button
             type="button"
             onClick={() => onOpenTeleconsulta ? onOpenTeleconsulta(cita) : window.open(cita.link, "_blank")}
             className="btn btn-info btn-sm rounded-3 text-dark fw-bold d-flex align-items-center gap-1"
           >
-            📹 Unirse
+            <Icon name="Video" className="me-1" />Unirse
           </button>
         ) : (
-          <span className="text-white-50" style={{ fontSize: "0.75rem" }}>📍 {cita.centro}</span>
+          <span className="text-white-50" style={{ fontSize: "0.75rem" }}><Icon name="MapPin" className="me-1" />{cita.centro}</span>
         )}
       </div>
     </div>

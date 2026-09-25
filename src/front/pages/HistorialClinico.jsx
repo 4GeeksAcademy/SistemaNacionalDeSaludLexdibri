@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { Icon } from "../components/Icon";
 
 export const HistorialClinico = () => {
     const { state } = useLocation();
@@ -674,7 +675,7 @@ export const HistorialClinico = () => {
                             </h2>
 
                             <p className="text-white mb-0">
-                               Enfermedades registradas al paciente.
+                                Enfermedades registradas al paciente.
                             </p>
 
                         </div>
@@ -1422,9 +1423,7 @@ export const HistorialClinico = () => {
 
                         <div className="text-center py-4">
 
-                            <div className="fs-2 mb-2">
-                                🏥
-                            </div>
+                            <Icon name="Hospital" className="fs-2 mb-2" size="1em" />
 
                             <h3 className="h6 text-info fw-bold">
                                 No hay cirugías registradas
@@ -1839,9 +1838,7 @@ export const HistorialClinico = () => {
 
                         <div className="text-center py-4">
 
-                            <div className="fs-2 mb-2">
-                                💊
-                            </div>
+                            <Icon name="Pill" className="fs-2 mb-2" size="1em" />
 
                             <h3 className="h6 text-info fw-bold">
                                 No hay recetas registradas
