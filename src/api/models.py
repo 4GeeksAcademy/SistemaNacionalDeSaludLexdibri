@@ -19,6 +19,7 @@ db = SQLAlchemy()
 class UserRole(Enum):
     PATIENT = "patient"
     DOCTOR = "doctor"
+    ADMIN = "admin"
 
 ### =====================================  DB    ==============================================================###
 
@@ -374,6 +375,14 @@ class Doctor(db.Model):
     patients: Mapped[list["DoctorPatient"]] = relationship(
     back_populates="doctor",
     cascade="all, delete-orphan",
+)
+    hospital_id: Mapped[int] = mapped_column(
+    ForeignKey("hospital.id"),
+    nullable=True,
+)
+
+    hospital: Mapped["Hospital"] = relationship(
+    back_populates="doctors",
 )
 
     def serialize(self):
@@ -1182,45 +1191,22 @@ class Allergy(db.Model):
 class Vaccination(db.Model):
     __tablename__ = "vaccination"
 
-    id: Mapped[int] = mapped_column(
-        Integer,
-        primary_key=True,
-        autoincrement=True,
-    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    patient_id: Mapped[int] = mapped_column(ForeignKey("patient.id"), nullable=False)
+    vaccine_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    vaccination_date: Mapped[date] = mapped_column(Date, nullable=False)
+    dose: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    lot_number: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    manufacturer: Mapped[str | None] = mapped_column(String(255), nullable=True)   # NUEVO
+    next_dose_date: Mapped[date | None] = mapped_column(Date, nullable=True)       # NUEVO
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    patient_id: Mapped[int] = mapped_column(
-        ForeignKey("patient.id"),
-        nullable=False,
-    )
+    patient: Mapped["Patient"] = relationship(back_populates="vaccinations")
 
-    vaccine_name: Mapped[str] = mapped_column(
-        String(255),
-        nullable=False,
-    )
 
-    vaccination_date: Mapped[date] = mapped_column(
-        Date,
-        nullable=False,
-    )
-
-    dose: Mapped[str | None] = mapped_column(
-        String(100),
-        nullable=True,
-    )
-
-    lot_number: Mapped[str | None] = mapped_column(
-        String(100),
-        nullable=True,
-    )
-
-    notes: Mapped[str | None] = mapped_column(
-        Text,
-        nullable=True,
-    )
-
-    patient: Mapped["Patient"] = relationship(
-        back_populates="vaccinations",
-    )
+#===================
+#Cirugías
+#====================
 
 
 class Surgery(db.Model):
@@ -1264,5 +1250,38 @@ class Surgery(db.Model):
 
     patient: Mapped["Patient"] = relationship(
         back_populates="surgeries",
+    )
+
+
+#================
+#Hospital
+#================
+
+class Hospital(db.Model):
+    __tablename__ = "hospital"
+
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+    )
+
+    name: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+    )
+
+    city: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+    )
+
+    address: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+    )
+
+    doctors: Mapped[list["Doctor"]] = relationship(
+        back_populates="hospital",
     )
 

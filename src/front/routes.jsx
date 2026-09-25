@@ -29,6 +29,8 @@ import { CrearReceta } from "./pages/CrearReceta";
 import { SolicitarConsulta } from "./pages/SolicitarConsulta";
 import PrivateRoute from "./components/PrivateRoute";
 import OlvideContraseña from "./pages/OlvideContraseña";
+import { CrearVacunacion } from "./pages/CrearVacunacion";
+import {CrearCirugia} from "./pages/CrearCirugia";
 
 
 export const router = createBrowserRouter(
@@ -77,6 +79,9 @@ export const router = createBrowserRouter(
                     </PrivateRoute>
                 }
             />
+
+           <Route path="crear-vacunacion" element={<CrearVacunacion />} />
+           <Route path="crear-cirugia" element={<CrearCirugia/>} />
 
 
             <Route path="register" element={<Register />} />

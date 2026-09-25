@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 import rigoImageUrl from "../assets/img/rigo-baby.jpg";
@@ -12,13 +11,10 @@ export const DashboardMedico = () => {
     // =====================================================
 
     const [patients, setPatients] = useState([]);
-
     const [searchResults, setSearchResults] = useState([]);
     const [searchPatient, setSearchPatient] = useState("");
     const [loadingPatients, setLoadingPatients] = useState(false);
     const [loadingMyPatients, setLoadingMyPatients] = useState(false);
-    const [addingPatientId, setAddingPatientId] = useState(null);
-    const [removingPatientId, setRemovingPatientId] = useState(null);
     const [patientError, setPatientError] = useState("");
     const [searchDone, setSearchDone] = useState(false);
 
@@ -31,6 +27,17 @@ export const DashboardMedico = () => {
     const [consultationError, setConsultationError] = useState("");
     const [completingConsultationId, setCompletingConsultationId] =
         useState(null);
+
+    // =====================================================
+    // BÚSQUEDA DE PACIENTES PARA CIRUGÍA
+    // =====================================================
+
+    const [surgerySearchTerm, setSurgerySearchTerm] = useState("");
+    const [surgerySearchResults, setSurgerySearchResults] = useState([]);
+    const [loadingSurgeryPatients, setLoadingSurgeryPatients] =
+        useState(false);
+    const [surgeryPatientError, setSurgeryPatientError] = useState("");
+    const [surgerySearchDone, setSurgerySearchDone] = useState(false);
 
     // =====================================================
     // TOKEN
@@ -68,11 +75,38 @@ export const DashboardMedico = () => {
               rawSpecialty?.nombre ||
               "";
 
-    const normalizedSpecialty = doctorSpecialty
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .trim();
+    // =====================================================
+    // HOSPITAL DEL MÉDICO
+    // =====================================================
+
+    const rawHospital =
+        store?.user?.hospital ||
+        store?.user?.hospital_name ||
+        store?.user?.hospital_nombre ||
+        store?.user?.hospitalName ||
+        "";
+
+    const doctorHospital =
+        typeof rawHospital === "string"
+            ? rawHospital
+            : rawHospital?.name ||
+              rawHospital?.nombre ||
+              rawHospital?.name_es ||
+              rawHospital?.nombre_hospital ||
+              "";
+
+    // =====================================================
+    // DETERMINAR SI ES MÉDICO DE CABECERA
+    // =====================================================
+
+    const normalizedSpecialty =
+        typeof doctorSpecialty === "string"
+            ? doctorSpecialty
+                  .toLowerCase()
+                  .normalize("NFD")
+                  .replace(/[\u0300-\u036f]/g, "")
+                  .trim()
+            : "";
 
     const isPrimaryCareDoctor = [
         "medicina de familia",
@@ -85,9 +119,15 @@ export const DashboardMedico = () => {
 
     // =====================================================
     // CARGAR MIS PACIENTES
+    // SOLO PARA MÉDICOS DE CABECERA
     // =====================================================
 
     const loadMyPatients = async () => {
+        if (!isPrimaryCareDoctor) {
+            setPatients([]);
+            return;
+        }
+
         setLoadingMyPatients(true);
         setPatientError("");
 
@@ -122,7 +162,6 @@ export const DashboardMedico = () => {
             setPatients(data.pacientes || []);
         } catch (error) {
             console.error("Error cargando mis pacientes:", error);
-
             setPatientError("Error de conexión con el servidor.");
         } finally {
             setLoadingMyPatients(false);
@@ -165,15 +204,9 @@ export const DashboardMedico = () => {
                 return;
             }
 
-            console.log(
-                "CONSULTAS RECIBIDAS DEL BACKEND:",
-                data.consultas
-            );
-
             setConsultations(data.consultas || []);
         } catch (error) {
             console.error("Error cargando consultas:", error);
-
             setConsultationError("Error de conexión con el servidor.");
         } finally {
             setLoadingConsultations(false);
@@ -219,7 +252,6 @@ export const DashboardMedico = () => {
             await loadConsultations();
         } catch (error) {
             console.error("Error completando consulta:", error);
-
             setConsultationError("Error de conexión con el servidor.");
         } finally {
             setCompletingConsultationId(null);
@@ -290,40 +322,37 @@ export const DashboardMedico = () => {
     };
 
     // =====================================================
-    // COMPROBAR SI ES MI PACIENTE
+    // BUSCAR PACIENTES PARA CIRUGÍA
     // =====================================================
 
-    const isMyPatient = (patientId) => {
-        return patients.some(
-            (patient) =>
-                String(patient.id) === String(patientId)
-        );
-    };
-
-    // =====================================================
-    // AGREGAR PACIENTE
-    // =====================================================
-
-    const addPatient = async (patientId) => {
-        if (!isPrimaryCareDoctor) {
+    const searchPatientsForSurgery = async () => {
+        if (!surgerySearchTerm.trim()) {
+            setSurgeryPatientError(
+                "Introduce un nombre, DNI, CIP o email."
+            );
+            setSurgerySearchResults([]);
+            setSurgerySearchDone(false);
             return;
         }
 
-        setAddingPatientId(patientId);
-        setPatientError("");
+        setLoadingSurgeryPatients(true);
+        setSurgeryPatientError("");
+        setSurgerySearchDone(false);
 
         try {
             const token = getToken();
 
             if (!token) {
-                setPatientError("No hay sesión iniciada.");
+                setSurgeryPatientError("No hay sesión iniciada.");
                 return;
             }
 
             const response = await fetch(
-                `${BACKEND_URL}/api/medico/pacientes/${patientId}`,
+                `${BACKEND_URL}/api/medico/pacientes/buscar?q=${encodeURIComponent(
+                    surgerySearchTerm.trim()
+                )}`,
                 {
-                    method: "POST",
+                    method: "GET",
                     headers: {
                         Authorization: `Bearer ${token}`,
                         "Content-Type": "application/json",
@@ -334,104 +363,41 @@ export const DashboardMedico = () => {
             const data = await response.json();
 
             if (!response.ok) {
-                setPatientError(
-                    data.error || "No se pudo agregar el paciente."
+                setSurgeryPatientError(
+                    data.error || "No se pudieron buscar los pacientes."
                 );
+                setSurgerySearchResults([]);
                 return;
             }
 
-            await loadMyPatients();
-
-            setSearchResults((prevResults) =>
-                prevResults.map((patient) =>
-                    String(patient.id) === String(patientId)
-                        ? {
-                              ...patient,
-                              is_mine: true,
-                          }
-                        : patient
-                )
-            );
+            setSurgerySearchResults(data.pacientes || []);
+            setSurgerySearchDone(true);
         } catch (error) {
-            console.error("Error agregando paciente:", error);
+            console.error(
+                "Error buscando pacientes para cirugía:",
+                error
+            );
 
-            setPatientError("Error de conexión con el servidor.");
+            setSurgeryPatientError("Error de conexión con el servidor.");
+            setSurgerySearchResults([]);
         } finally {
-            setAddingPatientId(null);
+            setLoadingSurgeryPatients(false);
         }
     };
 
     // =====================================================
-    // ELIMINAR PACIENTE
+    // LIMPIAR BÚSQUEDA DE CIRUGÍA
     // =====================================================
 
-    const removePatient = async (patientId) => {
-        if (!isPrimaryCareDoctor) {
-            return;
-        }
-
-        const confirmDelete = window.confirm(
-            "¿Seguro que quieres eliminar este paciente de tu lista?"
-        );
-
-        if (!confirmDelete) {
-            return;
-        }
-
-        setRemovingPatientId(patientId);
-        setPatientError("");
-
-        try {
-            const token = getToken();
-
-            if (!token) {
-                setPatientError("No hay sesión iniciada.");
-                return;
-            }
-
-            const response = await fetch(
-                `${BACKEND_URL}/api/medico/pacientes/${patientId}`,
-                {
-                    method: "DELETE",
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json",
-                    },
-                }
-            );
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                setPatientError(
-                    data.error || "No se pudo eliminar el paciente."
-                );
-                return;
-            }
-
-            await loadMyPatients();
-
-            setSearchResults((prevResults) =>
-                prevResults.map((patient) =>
-                    String(patient.id) === String(patientId)
-                        ? {
-                              ...patient,
-                              is_mine: false,
-                          }
-                        : patient
-                )
-            );
-        } catch (error) {
-            console.error("Error eliminando paciente:", error);
-
-            setPatientError("Error de conexión con el servidor.");
-        } finally {
-            setRemovingPatientId(null);
-        }
+    const clearSurgerySearch = () => {
+        setSurgerySearchTerm("");
+        setSurgerySearchResults([]);
+        setSurgeryPatientError("");
+        setSurgerySearchDone(false);
     };
 
     // =====================================================
-    // LIMPIAR BÚSQUEDA
+    // LIMPIAR BÚSQUEDA DE PACIENTES
     // =====================================================
 
     const clearPatients = () => {
@@ -446,9 +412,14 @@ export const DashboardMedico = () => {
     // =====================================================
 
     useEffect(() => {
-        loadMyPatients();
+        if (isPrimaryCareDoctor) {
+            loadMyPatients();
+        } else {
+            setPatients([]);
+        }
+
         loadConsultations();
-    }, []);
+    }, [isPrimaryCareDoctor]);
 
     // =====================================================
     // RENDER
@@ -463,6 +434,7 @@ export const DashboardMedico = () => {
                 ===================================================== */}
 
                 <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 mb-4">
+
                     <div className="d-flex align-items-center gap-3">
 
                         <img
@@ -474,6 +446,7 @@ export const DashboardMedico = () => {
                         />
 
                         <div>
+
                             <span className="text-info text-uppercase small fw-semibold">
                                 Panel médico
                             </span>
@@ -483,17 +456,30 @@ export const DashboardMedico = () => {
                                 {doctorLastName}
                             </h1>
 
-                            <p className="text-white-50 mb-1">
-                                Gestiona tus pacientes y tus consultas desde
-                                un mismo lugar.
+                            <p className="text-white-50 mb-2">
+                                Consulta tus pacientes y gestiona tus
+                                consultas desde un mismo lugar.
                             </p>
 
-                            <span className="badge bg-info text-dark rounded-pill">
-                                {doctorSpecialty ||
-                                    "Especialidad no disponible"}
-                            </span>
+                            <div className="d-flex flex-wrap gap-2">
+
+                                <span className="badge bg-info text-dark rounded-pill">
+                                    {doctorSpecialty ||
+                                        "Especialidad no disponible"}
+                                </span>
+
+                                <span className="badge bg-secondary text-white rounded-pill">
+                                    🏥{" "}
+                                    {doctorHospital ||
+                                        "Hospital no disponible"}
+                                </span>
+
+                            </div>
+
                         </div>
+
                     </div>
+
                 </div>
 
                 {/* =====================================================
@@ -502,25 +488,45 @@ export const DashboardMedico = () => {
 
                 <div className="row g-4 mb-4">
 
-                    <div className="col-12 col-md-6">
-                        <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
+                    {/* SOLO MÉDICOS DE CABECERA */}
 
-                            <span className="fs-2">
-                                👥
-                            </span>
+                    {isPrimaryCareDoctor && (
 
-                            <p className="text-info text-uppercase small fw-semibold mt-3 mb-1">
-                                Mis pacientes
-                            </p>
+                        <div className="col-12 col-md-6">
 
-                            <h2 className="display-6 fw-bold mb-0">
-                                {patients.length}
-                            </h2>
+                            <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
+
+                                <span className="fs-2">
+                                    👥
+                                </span>
+
+                                <p className="text-info text-uppercase small fw-semibold mt-3 mb-1">
+                                    Mis pacientes
+                                </p>
+
+                                <h2 className="display-6 fw-bold mb-0">
+                                    {patients.length}
+                                </h2>
+
+                            </div>
 
                         </div>
-                    </div>
 
-                    <div className="col-12 col-md-6">
+                    )}
+
+                    {/* CONSULTAS
+                        - Cabecera: mitad de la fila
+                        - Especialista: ocupa toda la fila
+                    */}
+
+                    <div
+                        className={
+                            isPrimaryCareDoctor
+                                ? "col-12 col-md-6"
+                                : "col-12"
+                        }
+                    >
+
                         <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
 
                             <span className="fs-2">
@@ -536,42 +542,30 @@ export const DashboardMedico = () => {
                             </h2>
 
                         </div>
+
                     </div>
 
                 </div>
 
                 {/* =====================================================
-                    AVISO MÉDICO
+                    AVISO
                 ===================================================== */}
 
-                {isPrimaryCareDoctor ? (
-                    <div className="alert alert-info bg-info bg-opacity-10 border-info text-white mb-4">
+                <div className="alert alert-secondary bg-white bg-opacity-10 border-secondary text-white mb-4">
 
-                        <strong>
-                            Médico de cabecera
-                        </strong>
+                    <strong>
+                        {isPrimaryCareDoctor
+                            ? "Médico de cabecera"
+                            : "Médico especialista"}
+                    </strong>
 
-                        <div className="small mt-1 text-white-50">
-                            Puedes buscar pacientes, gestionar tu lista de
-                            pacientes y atender las consultas que te hayan
-                            sido asignadas.
-                        </div>
-
+                    <div className="small mt-1 text-white-50">
+                        {isPrimaryCareDoctor
+                            ? "Puedes consultar tus pacientes asignados y atender las consultas que te hayan sido asignadas."
+                            : "Puedes buscar pacientes y atender las consultas que te hayan sido asignadas."}
                     </div>
-                ) : (
-                    <div className="alert alert-secondary bg-white bg-opacity-10 border-secondary text-white mb-4">
 
-                        <strong>
-                            Médico especialista
-                        </strong>
-
-                        <div className="small mt-1 text-white-50">
-                            Puedes consultar tus pacientes y atender las
-                            consultas que te hayan sido asignadas.
-                        </div>
-
-                    </div>
-                )}
+                </div>
 
                 {/* =====================================================
                     BUSCADOR DE PACIENTES
@@ -586,7 +580,7 @@ export const DashboardMedico = () => {
                         </span>
 
                         <h2 className="h4 fw-bold mb-0">
-                            Buscar pacientes
+                            Buscar registro de pacientes
                         </h2>
 
                     </div>
@@ -654,6 +648,7 @@ export const DashboardMedico = () => {
                 ===================================================== */}
 
                 {(searchDone || loadingPatients) && (
+
                     <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 mb-5">
 
                         <h2 className="h4 fw-bold mb-4">
@@ -661,6 +656,7 @@ export const DashboardMedico = () => {
                         </h2>
 
                         {loadingPatients && (
+
                             <div className="text-center py-5">
 
                                 <div
@@ -677,10 +673,12 @@ export const DashboardMedico = () => {
                                 </p>
 
                             </div>
+
                         )}
 
                         {!loadingPatients &&
                             searchResults.length === 0 && (
+
                                 <div className="text-center py-5">
 
                                     <div className="fs-1 mb-3">
@@ -697,503 +695,613 @@ export const DashboardMedico = () => {
                                     </p>
 
                                 </div>
+
                             )}
 
                         {!loadingPatients &&
                             searchResults.length > 0 && (
+
                                 <div className="row g-4">
 
-                                    {searchResults.map((patient) => {
+                                    {searchResults.map((patient) => (
 
-                                        const alreadyMine =
-                                            isMyPatient(patient.id);
+                                        <div
+                                            className="col-12 col-xl-6"
+                                            key={patient.id}
+                                        >
 
-                                        const adding =
-                                            addingPatientId === patient.id;
+                                            <div className="bg-dark bg-opacity-50 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
 
-                                        return (
-                                            <div
-                                                className="col-12 col-xl-6"
-                                                key={patient.id}
-                                            >
+                                                <div className="d-flex justify-content-between align-items-start gap-3 mb-3">
 
-                                                <div className="bg-dark bg-opacity-50 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
+                                                    <div>
 
-                                                    <div className="d-flex justify-content-between align-items-start gap-3 mb-3">
+                                                        <h3 className="h5 fw-bold mb-1">
+                                                            {patient.nombre}{" "}
+                                                            {patient.apellidos}
+                                                        </h3>
 
-                                                        <div>
-
-                                                            <h3 className="h5 fw-bold mb-1">
-                                                                {patient.nombre}{" "}
-                                                                {patient.apellidos}
-                                                            </h3>
-
-                                                            <span className="text-white-50 small">
-                                                                Paciente #
-                                                                {patient.id}
-                                                            </span>
-
-                                                        </div>
-
-                                                        <span
-                                                            className={`badge rounded-pill ${
-                                                                alreadyMine
-                                                                    ? "bg-success"
-                                                                    : "bg-secondary"
-                                                            }`}
-                                                        >
-                                                            {alreadyMine
-                                                                ? "Mi paciente"
-                                                                : "Disponible"}
+                                                        <span className="text-white-50 small">
+                                                            Paciente #
+                                                            {patient.id}
                                                         </span>
-
-                                                    </div>
-
-                                                    <hr className="border-secondary opacity-25" />
-
-                                                    <div className="row g-3">
-
-                                                        <div className="col-12 col-md-6">
-
-                                                            <span className="text-info small d-block">
-                                                                DNI
-                                                            </span>
-
-                                                            <span className="text-white-50 text-break">
-                                                                {patient.dni ||
-                                                                    "No disponible"}
-                                                            </span>
-
-                                                        </div>
-
-                                                        <div className="col-12 col-md-6">
-
-                                                            <span className="text-info small d-block">
-                                                                CIP
-                                                            </span>
-
-                                                            <span className="text-white-50 text-break">
-                                                                {patient.cip ||
-                                                                    "No disponible"}
-                                                            </span>
-
-                                                        </div>
-
-                                                        <div className="col-12 col-md-6">
-
-                                                            <span className="text-info small d-block">
-                                                                Email
-                                                            </span>
-
-                                                            <span className="text-white-50 text-break">
-                                                                {patient.email ||
-                                                                    "No disponible"}
-                                                            </span>
-
-                                                        </div>
-
-                                                        <div className="col-12 col-md-6">
-
-                                                            <span className="text-info small d-block">
-                                                                Teléfono
-                                                            </span>
-
-                                                            <span className="text-white-50">
-                                                                {patient.telefono ||
-                                                                    "No disponible"}
-                                                            </span>
-
-                                                        </div>
-
-                                                        <div className="col-12 col-md-6">
-
-                                                            <span className="text-info small d-block">
-                                                                Fecha de
-                                                                nacimiento
-                                                            </span>
-
-                                                            <span className="text-white-50">
-                                                                {patient.fecha_nacimiento
-                                                                    ? new Date(
-                                                                          patient.fecha_nacimiento
-                                                                      ).toLocaleDateString(
-                                                                          "es-ES"
-                                                                      )
-                                                                    : "No disponible"}
-                                                            </span>
-
-                                                        </div>
-
-                                                        <div className="col-12 col-md-6">
-
-                                                            <span className="text-info small d-block">
-                                                                Sexo
-                                                            </span>
-
-                                                            <span className="text-white-50">
-                                                                {patient.sexo ||
-                                                                    "No disponible"}
-                                                            </span>
-
-                                                        </div>
-
-                                                        <div className="col-12 col-md-6">
-
-                                                            <span className="text-info small d-block">
-                                                                Grupo sanguíneo
-                                                            </span>
-
-                                                            <span className="text-white-50">
-                                                                {patient.grupo_sanguineo ||
-                                                                    "No disponible"}
-                                                            </span>
-
-                                                        </div>
-
-                                                    </div>
-
-                                                    <div className="mt-4 d-flex flex-wrap gap-2">
-
-                                                        <Link
-                                                            to="/historial/clinico"
-                                                            state={{ patient }}
-                                                            className="btn btn-outline-info rounded-pill btn-sm"
-                                                        >
-                                                            Ver historial
-                                                        </Link>
-
-                                                        {alreadyMine ? (
-                                                            <button
-                                                                type="button"
-                                                                className="btn btn-success rounded-pill btn-sm"
-                                                                disabled
-                                                            >
-                                                                ✓ Ya es mi
-                                                                paciente
-                                                            </button>
-                                                        ) : isPrimaryCareDoctor ? (
-                                                            <button
-                                                                type="button"
-                                                                className="btn btn-info rounded-pill btn-sm fw-semibold"
-                                                                onClick={() =>
-                                                                    addPatient(
-                                                                        patient.id
-                                                                    )
-                                                                }
-                                                                disabled={adding}
-                                                            >
-                                                                {adding
-                                                                    ? "Agregando..."
-                                                                    : "Agregar a mis pacientes"}
-                                                            </button>
-                                                        ) : (
-                                                            <span className="text-white-50 small fst-italic align-self-center">
-                                                                El paciente será
-                                                                atendido por el
-                                                                especialista
-                                                                correspondiente
-                                                                según su consulta.
-                                                            </span>
-                                                        )}
 
                                                     </div>
 
                                                 </div>
 
+                                                <hr className="border-secondary opacity-25" />
+
+                                                <div className="row g-3">
+
+                                                    <div className="col-12 col-md-6">
+
+                                                        <span className="text-info small d-block">
+                                                            DNI
+                                                        </span>
+
+                                                        <span className="text-white-50 text-break">
+                                                            {patient.dni ||
+                                                                "No disponible"}
+                                                        </span>
+
+                                                    </div>
+
+                                                    <div className="col-12 col-md-6">
+
+                                                        <span className="text-info small d-block">
+                                                            CIP
+                                                        </span>
+
+                                                        <span className="text-white-50 text-break">
+                                                            {patient.cip ||
+                                                                "No disponible"}
+                                                        </span>
+
+                                                    </div>
+
+                                                    <div className="col-12 col-md-6">
+
+                                                        <span className="text-info small d-block">
+                                                            Email
+                                                        </span>
+
+                                                        <span className="text-white-50 text-break">
+                                                            {patient.email ||
+                                                                "No disponible"}
+                                                        </span>
+
+                                                    </div>
+
+                                                    <div className="col-12 col-md-6">
+
+                                                        <span className="text-info small d-block">
+                                                            Teléfono
+                                                        </span>
+
+                                                        <span className="text-white-50">
+                                                            {patient.telefono ||
+                                                                "No disponible"}
+                                                        </span>
+
+                                                    </div>
+
+                                                    <div className="col-12 col-md-6">
+
+                                                        <span className="text-info small d-block">
+                                                            Fecha de nacimiento
+                                                        </span>
+
+                                                        <span className="text-white-50">
+                                                            {patient.fecha_nacimiento
+                                                                ? new Date(
+                                                                      patient.fecha_nacimiento
+                                                                  ).toLocaleDateString(
+                                                                      "es-ES"
+                                                                  )
+                                                                : "No disponible"}
+                                                        </span>
+
+                                                    </div>
+
+                                                    <div className="col-12 col-md-6">
+
+                                                        <span className="text-info small d-block">
+                                                            Sexo
+                                                        </span>
+
+                                                        <span className="text-white-50">
+                                                            {patient.sexo ||
+                                                                "No disponible"}
+                                                        </span>
+
+                                                    </div>
+
+                                                    <div className="col-12 col-md-6">
+
+                                                        <span className="text-info small d-block">
+                                                            Grupo sanguíneo
+                                                        </span>
+
+                                                        <span className="text-white-50">
+                                                            {patient.grupo_sanguineo ||
+                                                                "No disponible"}
+                                                        </span>
+
+                                                    </div>
+
+                                                </div>
+
+                                                <div className="mt-4 d-flex flex-wrap gap-2">
+
+                                                    <Link
+                                                        to="/historial/clinico"
+                                                        state={{ patient }}
+                                                        className="btn btn-outline-info rounded-pill btn-sm"
+                                                    >
+                                                        Ver historial
+                                                    </Link>
+
+                                                </div>
+
                                             </div>
-                                        );
-                                    })}
+
+                                        </div>
+
+                                    ))}
 
                                 </div>
+
                             )}
 
                     </div>
+
                 )}
 
                 {/* =====================================================
-                    MIS PACIENTES
+                    REGISTRAR CIRUGÍA
                 ===================================================== */}
 
                 <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 mb-5">
 
-                    <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+                    <div className="d-flex align-items-center gap-2 mb-3">
+
+                        <span className="fs-4">
+                            🏥
+                        </span>
 
                         <div>
 
-                            <span className="text-info text-uppercase small fw-semibold">
-                                Gestión
-                            </span>
-
-                            <h2 className="h4 fw-bold mb-0 mt-1">
-                                Mis pacientes
+                            <h2 className="h4 fw-bold mb-0">
+                                Registrar cirugía de un paciente ingresado
                             </h2>
+
+                            <p className="text-white-50 small mb-0">
+                                Busca a cualquier paciente para registrarle
+                                una intervención quirúrgica.
+                            </p>
 
                         </div>
 
-                        <button
-                            type="button"
-                            className="btn btn-outline-info rounded-pill btn-sm"
-                            onClick={loadMyPatients}
-                            disabled={loadingMyPatients}
-                        >
-                            {loadingMyPatients
-                                ? "Actualizando..."
-                                : "Actualizar"}
-                        </button>
+                    </div>
+
+                    <div className="row g-3">
+
+                        <div className="col-12 col-lg-9">
+
+                            <input
+                                type="text"
+                                className="form-control bg-dark text-white border-secondary"
+                                placeholder="Buscar por nombre, apellidos, DNI, CIP o email..."
+                                value={surgerySearchTerm}
+                                onChange={(e) =>
+                                    setSurgerySearchTerm(e.target.value)
+                                }
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        searchPatientsForSurgery();
+                                    }
+                                }}
+                            />
+
+                        </div>
+
+                        <div className="col-12 col-lg-3">
+
+                            <div className="d-flex gap-2">
+
+                                <button
+                                    type="button"
+                                    className="btn btn-info rounded-pill fw-semibold flex-grow-1"
+                                    onClick={searchPatientsForSurgery}
+                                    disabled={loadingSurgeryPatients}
+                                >
+                                    {loadingSurgeryPatients
+                                        ? "Buscando..."
+                                        : "Buscar"}
+                                </button>
+
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-light rounded-pill"
+                                    onClick={clearSurgerySearch}
+                                >
+                                    Limpiar
+                                </button>
+
+                            </div>
+
+                        </div>
 
                     </div>
 
-                    {loadingMyPatients &&
-                        patients.length === 0 && (
-                            <div className="text-center py-5">
+                    {surgeryPatientError && (
+                        <div className="alert alert-danger mt-3 mb-0">
+                            {surgeryPatientError}
+                        </div>
+                    )}
 
-                                <div
-                                    className="spinner-border text-info"
-                                    role="status"
-                                >
-                                    <span className="visually-hidden">
-                                        Cargando...
-                                    </span>
-                                </div>
+                    {surgerySearchDone &&
+                        !loadingSurgeryPatients && (
 
-                                <p className="text-white-50 mt-3 mb-0">
-                                    Cargando tus pacientes...
-                                </p>
+                            <div className="mt-4">
 
-                            </div>
-                        )}
+                                {surgerySearchResults.length === 0 ? (
 
-                    {!loadingMyPatients &&
-                        patients.length === 0 && (
-                            <div className="text-center py-5">
+                                    <div className="text-center py-4">
 
-                                <div className="fs-1 mb-3">
-                                    👥
-                                </div>
-
-                                <h3 className="h5 fw-bold">
-                                    Todavía no tienes pacientes
-                                </h3>
-
-                                <p className="text-white-50 mb-0">
-                                    {isPrimaryCareDoctor
-                                        ? "Utiliza el buscador para encontrar un paciente y agregarlo a tu lista."
-                                        : "No tienes pacientes asignados actualmente."}
-                                </p>
-
-                            </div>
-                        )}
-
-                    <div className="row g-4">
-
-                        {patients.map((patient) => (
-                            <div
-                                className="col-12 col-xl-6"
-                                key={patient.id}
-                            >
-
-                                <div className="bg-dark bg-opacity-50 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
-
-                                    {/* CABECERA */}
-
-                                    <div className="d-flex justify-content-between align-items-start gap-3 mb-3">
-
-                                        <div>
-
-                                            <h3 className="h5 fw-bold mb-1">
-                                                {patient.nombre}{" "}
-                                                {patient.apellidos}
-                                            </h3>
-
-                                            <span className="text-white-50 small">
-                                                Paciente #{patient.id}
-                                            </span>
-
+                                        <div className="fs-1 mb-3">
+                                            🔎
                                         </div>
 
-                                        <span className="badge bg-success rounded-pill">
-                                            Mi paciente
-                                        </span>
+                                        <h3 className="h5 fw-bold">
+                                            No se encontraron pacientes
+                                        </h3>
+
+                                        <p className="text-white-50 mb-0">
+                                            Prueba con otro nombre, DNI, CIP
+                                            o email.
+                                        </p>
 
                                     </div>
 
-                                    <hr className="border-secondary opacity-25" />
-
-                                    {/* DATOS */}
+                                ) : (
 
                                     <div className="row g-3">
 
-                                        <div className="col-12 col-md-6">
+                                        {surgerySearchResults.map(
+                                            (patient) => (
 
-                                            <span className="text-info small d-block">
-                                                DNI
-                                            </span>
+                                                <div
+                                                    className="col-12 col-xl-6"
+                                                    key={patient.id}
+                                                >
 
-                                            <span className="text-white-50">
-                                                {patient.dni ||
-                                                    "No disponible"}
-                                            </span>
+                                                    <div className="bg-dark bg-opacity-50 border border-secondary border-opacity-50 rounded-3 p-3 d-flex justify-content-between align-items-center gap-3">
 
-                                        </div>
+                                                        <div>
 
-                                        <div className="col-12 col-md-6">
+                                                            <h3 className="h6 fw-bold mb-1">
+                                                                {
+                                                                    patient.nombre
+                                                                }{" "}
+                                                                {
+                                                                    patient.apellidos
+                                                                }
+                                                            </h3>
 
-                                            <span className="text-info small d-block">
-                                                CIP
-                                            </span>
+                                                            <span className="text-white-50 small">
+                                                                Paciente #
+                                                                {patient.id}
 
-                                            <span className="text-white-50">
-                                                {patient.cip ||
-                                                    "No disponible"}
-                                            </span>
+                                                                {patient.dni &&
+                                                                    ` · DNI: ${patient.dni}`}
+                                                            </span>
 
-                                        </div>
+                                                        </div>
 
-                                        <div className="col-12 col-md-6">
+                                                        <Link
+                                                            to="/crear-cirugia"
+                                                            state={{
+                                                                patient,
+                                                            }}
+                                                            className="btn btn-info rounded-pill btn-sm fw-semibold"
+                                                        >
+                                                            Registrar cirugía
+                                                        </Link>
 
-                                            <span className="text-info small d-block">
-                                                Email
-                                            </span>
+                                                    </div>
 
-                                            <span className="text-white-50 text-break">
-                                                {patient.email ||
-                                                    "No disponible"}
-                                            </span>
+                                                </div>
 
-                                        </div>
-
-                                        <div className="col-12 col-md-6">
-
-                                            <span className="text-info small d-block">
-                                                Teléfono
-                                            </span>
-
-                                            <span className="text-white-50">
-                                                {patient.telefono ||
-                                                    "No disponible"}
-                                            </span>
-
-                                        </div>
-
-                                        <div className="col-12 col-md-6">
-
-                                            <span className="text-info small d-block">
-                                                Fecha de nacimiento
-                                            </span>
-
-                                            <span className="text-white-50">
-                                                {patient.fecha_nacimiento
-                                                    ? new Date(
-                                                          patient.fecha_nacimiento
-                                                      ).toLocaleDateString(
-                                                          "es-ES"
-                                                      )
-                                                    : "No disponible"}
-                                            </span>
-
-                                        </div>
-
-                                        <div className="col-12 col-md-6">
-
-                                            <span className="text-info small d-block">
-                                                Sexo
-                                            </span>
-
-                                            <span className="text-white-50">
-                                                {patient.sexo ||
-                                                    "No disponible"}
-                                            </span>
-
-                                        </div>
-
-                                        <div className="col-12 col-md-6">
-
-                                            <span className="text-info small d-block">
-                                                Grupo sanguíneo
-                                            </span>
-
-                                            <span className="text-white-50">
-                                                {patient.grupo_sanguineo ||
-                                                    "No disponible"}
-                                            </span>
-
-                                        </div>
+                                            )
+                                        )}
 
                                     </div>
 
-                                    {/* ACCIONES */}
+                                )}
 
-                                    <div className="d-flex flex-wrap gap-2 mt-4">
+                            </div>
 
-                                        <Link
-                                            to="/historial/clinico"
-                                            state={{ patient }}
-                                            className="btn btn-outline-info rounded-pill btn-sm"
-                                        >
-                                            Ver historial
-                                        </Link>
+                        )}
 
-                                        <Link
-                                            to="/nueva-consulta"
-                                            state={{ patient }}
-                                            className="btn btn-outline-info rounded-pill btn-sm"
-                                        >
-                                            Nueva consulta
-                                        </Link>
+                </div>
 
-                                        <Link
-                                            to="/crear-receta"
-                                            state={{ patient }}
-                                            className="btn btn-outline-info rounded-pill btn-sm"
-                                        >
-                                            Crear receta
-                                        </Link>
+                {/* =====================================================
+                    MIS PACIENTES
+                    SOLO MÉDICOS DE CABECERA
+                ===================================================== */}
 
-                                        <Link
-                                            to="/nuevo-diagnostico"
-                                            state={{ patient }}
-                                            className="btn btn-outline-info rounded-pill btn-sm"
-                                        >
-                                            Crear diagnóstico
-                                        </Link>
+                {isPrimaryCareDoctor && (
 
+                    <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 mb-5">
+
+                        <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+
+                            <div>
+
+                                <span className="text-info text-uppercase small fw-semibold">
+                                    Pacientes asignados
+                                </span>
+
+                                <h2 className="h4 fw-bold mb-0 mt-1">
+                                    Mis pacientes
+                                </h2>
+
+                            </div>
+
+                            <button
+                                type="button"
+                                className="btn btn-outline-info rounded-pill btn-sm"
+                                onClick={loadMyPatients}
+                                disabled={loadingMyPatients}
+                            >
+                                {loadingMyPatients
+                                    ? "Actualizando..."
+                                    : "Actualizar"}
+                            </button>
+
+                        </div>
+
+                        {patientError && (
+                            <div className="alert alert-danger">
+                                {patientError}
+                            </div>
+                        )}
+
+                        {loadingMyPatients &&
+                            patients.length === 0 && (
+
+                                <div className="text-center py-5">
+
+                                    <div
+                                        className="spinner-border text-info"
+                                        role="status"
+                                    >
+                                        <span className="visually-hidden">
+                                            Cargando...
+                                        </span>
                                     </div>
 
-                                    {/* ELIMINAR PACIENTE */}
-
-                                    {isPrimaryCareDoctor && (
-                                        <div className="mt-3 pt-3 border-top border-secondary border-opacity-25">
-
-                                            <button
-                                                type="button"
-                                                className="btn btn-outline-danger bg-danger text-light rounded-pill btn-sm"
-                                                onClick={() =>
-                                                    removePatient(
-                                                        patient.id
-                                                    )
-                                                }
-                                                disabled={
-                                                    removingPatientId ===
-                                                    patient.id
-                                                }
-                                            >
-                                                {removingPatientId ===
-                                                patient.id
-                                                    ? "Eliminando..."
-                                                    : "Eliminar paciente"}
-                                            </button>
-
-                                        </div>
-                                    )}
+                                    <p className="text-white-50 mt-3 mb-0">
+                                        Cargando tus pacientes...
+                                    </p>
 
                                 </div>
 
-                            </div>
-                        ))}
+                            )}
+
+                        {!loadingMyPatients &&
+                            patients.length === 0 && (
+
+                                <div className="text-center py-5">
+
+                                    <div className="fs-1 mb-3">
+                                        👥
+                                    </div>
+
+                                    <h3 className="h5 fw-bold">
+                                        Todavía no tienes pacientes
+                                    </h3>
+
+                                    <p className="text-white-50 mb-0">
+                                        No tienes pacientes asignados
+                                        actualmente.
+                                    </p>
+
+                                </div>
+
+                            )}
+
+                        <div className="row g-4">
+
+                            {patients.map((patient) => (
+
+                                <div
+                                    className="col-12 col-xl-6"
+                                    key={patient.id}
+                                >
+
+                                    <div className="bg-dark bg-opacity-50 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
+
+                                        <div className="d-flex justify-content-between align-items-start gap-3 mb-3">
+
+                                            <div>
+
+                                                <h3 className="h5 fw-bold mb-1">
+                                                    {patient.nombre}{" "}
+                                                    {patient.apellidos}
+                                                </h3>
+
+                                                <span className="text-white-50 small">
+                                                    Paciente #{patient.id}
+                                                </span>
+
+                                            </div>
+
+                                            <span className="badge bg-success rounded-pill">
+                                                Mi paciente
+                                            </span>
+
+                                        </div>
+
+                                        <hr className="border-secondary opacity-25" />
+
+                                        <div className="row g-3">
+
+                                            <div className="col-12 col-md-6">
+
+                                                <span className="text-info small d-block">
+                                                    DNI
+                                                </span>
+
+                                                <span className="text-white-50">
+                                                    {patient.dni ||
+                                                        "No disponible"}
+                                                </span>
+
+                                            </div>
+
+                                            <div className="col-12 col-md-6">
+
+                                                <span className="text-info small d-block">
+                                                    CIP
+                                                </span>
+
+                                                <span className="text-white-50">
+                                                    {patient.cip ||
+                                                        "No disponible"}
+                                                </span>
+
+                                            </div>
+
+                                            <div className="col-12 col-md-6">
+
+                                                <span className="text-info small d-block">
+                                                    Email
+                                                </span>
+
+                                                <span className="text-white-50 text-break">
+                                                    {patient.email ||
+                                                        "No disponible"}
+                                                </span>
+
+                                            </div>
+
+                                            <div className="col-12 col-md-6">
+
+                                                <span className="text-info small d-block">
+                                                    Teléfono
+                                                </span>
+
+                                                <span className="text-white-50">
+                                                    {patient.telefono ||
+                                                        "No disponible"}
+                                                </span>
+
+                                            </div>
+
+                                            <div className="col-12 col-md-6">
+
+                                                <span className="text-info small d-block">
+                                                    Fecha de nacimiento
+                                                </span>
+
+                                                <span className="text-white-50">
+                                                    {patient.fecha_nacimiento
+                                                        ? new Date(
+                                                              patient.fecha_nacimiento
+                                                          ).toLocaleDateString(
+                                                              "es-ES"
+                                                          )
+                                                        : "No disponible"}
+                                                </span>
+
+                                            </div>
+
+                                            <div className="col-12 col-md-6">
+
+                                                <span className="text-info small d-block">
+                                                    Sexo
+                                                </span>
+
+                                                <span className="text-white-50">
+                                                    {patient.sexo ||
+                                                        "No disponible"}
+                                                </span>
+
+                                            </div>
+
+                                            <div className="col-12 col-md-6">
+
+                                                <span className="text-info small d-block">
+                                                    Grupo sanguíneo
+                                                </span>
+
+                                                <span className="text-white-50">
+                                                    {patient.grupo_sanguineo ||
+                                                        "No disponible"}
+                                                </span>
+
+                                            </div>
+
+                                        </div>
+
+                                        <div className="d-flex flex-wrap gap-2 mt-4">
+
+                                            <Link
+                                                to="/historial/clinico"
+                                                state={{ patient }}
+                                                className="btn btn-outline-info rounded-pill btn-sm"
+                                            >
+                                                Ver historial
+                                            </Link>
+
+                                            <Link
+                                                to="/nueva-consulta"
+                                                state={{ patient }}
+                                                className="btn btn-outline-info rounded-pill btn-sm"
+                                            >
+                                                Nueva consulta
+                                            </Link>
+
+                                            <Link
+                                                to="/crear-receta"
+                                                state={{ patient }}
+                                                className="btn btn-outline-info rounded-pill btn-sm"
+                                            >
+                                                Crear receta
+                                            </Link>
+
+                                            <Link
+                                                to="/crear-vacunacion"
+                                                state={{ patient }}
+                                                className="btn btn-outline-info rounded-pill btn-sm"
+                                            >
+                                                Nueva vacunación
+                                            </Link>
+
+                                            <Link
+                                                to="/nuevo-diagnostico"
+                                                state={{ patient }}
+                                                className="btn btn-outline-info rounded-pill btn-sm"
+                                            >
+                                                Crear diagnóstico
+                                            </Link>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            ))}
+
+                        </div>
 
                     </div>
 
-                </div>
+                )}
 
                 {/* =====================================================
                     CONSULTAS PENDIENTES
@@ -1203,7 +1311,7 @@ export const DashboardMedico = () => {
 
                     <div className="col-12">
 
-                        <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4">
+                        <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 h-100">
 
                             <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
 
@@ -1240,10 +1348,11 @@ export const DashboardMedico = () => {
 
                             {loadingConsultations &&
                                 consultations.length === 0 && (
+
                                     <div className="text-center py-4">
 
                                         <div
-                                            className="spinner-border text-warning"
+                                            className="spinner-border text-info"
                                             role="status"
                                         >
                                             <span className="visually-hidden">
@@ -1252,21 +1361,26 @@ export const DashboardMedico = () => {
                                         </div>
 
                                     </div>
+
                                 )}
 
                             {!loadingConsultations &&
                                 !consultationError &&
                                 consultations.length === 0 && (
+
                                     <p className="text-white-50 mb-0">
                                         No tienes consultas pendientes.
                                     </p>
+
                                 )}
 
                             {consultations.length > 0 && (
+
                                 <div className="row g-3">
 
                                     {consultations.map(
                                         (consultation) => (
+
                                             <div
                                                 className="col-12 col-md-6 col-xl-4"
                                                 key={consultation.id}
@@ -1319,17 +1433,20 @@ export const DashboardMedico = () => {
                                                     </p>
 
                                                     {consultation.reason && (
+
                                                         <p className="text-white-50 small mb-0">
                                                             {
                                                                 consultation.reason
                                                             }
                                                         </p>
+
                                                     )}
 
                                                     <div className="d-flex flex-wrap gap-2 mt-3">
 
                                                         {consultation.modality ===
                                                             "virtual" && (
+
                                                             <Link
                                                                 to={`/teleconsulta/${consultation.id}`}
                                                                 className="btn btn-info rounded-pill btn-sm"
@@ -1337,6 +1454,7 @@ export const DashboardMedico = () => {
                                                                 Entrar en
                                                                 teleconsulta
                                                             </Link>
+
                                                         )}
 
                                                         <button
@@ -1363,10 +1481,12 @@ export const DashboardMedico = () => {
                                                 </div>
 
                                             </div>
+
                                         )
                                     )}
 
                                 </div>
+
                             )}
 
                         </div>
