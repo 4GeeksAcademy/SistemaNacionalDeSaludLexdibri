@@ -1324,4 +1324,63 @@ class Hospital(db.Model):
         back_populates="hospital",
     )
 
+class RegistrationDNI(db.Model):
+    __tablename__ = "registration_dni"
+
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+
+    dni: Mapped[str] = mapped_column(
+        String(20),
+        unique=True,
+        nullable=False
+    )
+
+    first_name: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False
+    )
+
+    last_name: Mapped[str] = mapped_column(
+        String(150),
+        nullable=False
+    )
+
+    date_of_birth: Mapped[date | None] = mapped_column(
+        Date,
+        nullable=True
+    )
+
+    sex: Mapped[str | None] = mapped_column(
+        String(20),
+        nullable=True
+    )
+
+    cip: Mapped[str | None] = mapped_column(
+        String(50),
+        unique=True,
+        nullable=True
+    )
+
+    role: Mapped[UserRole] = mapped_column(
+        SQLEnum(UserRole),
+        nullable=False,
+        default=UserRole.PATIENT
+    )
+
+    is_registered: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False
+    )
+
 
