@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { registrarUsuario } from "../services/authServices";
+import { Icon } from "../components/Icon";
 
 // Datos de los pacientes pre-registrados en el sistema
 const pacientesRegistrados = [
@@ -322,7 +323,7 @@ export const Register = () => {
                                         height: "56px"
                                     }}
                                 >
-                                    ✚
+                                    <Icon name="UserRound" size={28} />
                                 </div>
 
                                 <h1 className="h2 fw-bold mb-2">
@@ -349,13 +350,12 @@ export const Register = () => {
                                         onClick={() =>
                                             setTipoUsuario("paciente")
                                         }
-                                        className={`btn rounded-start-pill fw-semibold ${
-                                            tipoUsuario === "paciente"
-                                                ? "btn-info"
-                                                : "btn-outline-secondary text-white"
-                                        }`}
+                                        className={`btn rounded-start-pill fw-semibold ${tipoUsuario === "paciente"
+                                            ? "btn-info"
+                                            : "btn-outline-secondary text-white"
+                                            }`}
                                     >
-                                        🔒 Paciente
+                                        <Icon name="LockKeyhole" className="me-2" />Paciente
                                     </button>
 
                                     <button
@@ -363,13 +363,12 @@ export const Register = () => {
                                         onClick={() =>
                                             setTipoUsuario("medico")
                                         }
-                                        className={`btn rounded-end-pill fw-semibold ${
-                                            tipoUsuario === "medico"
-                                                ? "btn-info"
-                                                : "btn-outline-secondary text-white"
-                                        }`}
+                                        className={`btn rounded-end-pill fw-semibold ${tipoUsuario === "medico"
+                                            ? "btn-info"
+                                            : "btn-outline-secondary text-white"
+                                            }`}
                                     >
-                                        👨‍⚕️ Médico
+                                        <Icon name="Stethoscope" className="me-2" />Médico
                                     </button>
                                 </div>
                             </div>
@@ -414,7 +413,7 @@ export const Register = () => {
                                     {pacienteValido && (
                                         <div className="col-12">
                                             <div className="alert alert-success bg-success bg-opacity-25 text-success border-success border-opacity-50 py-2 small mb-0">
-                                                ✓ DNI verificado en el sistema.
+                                                <Icon name="Check" className="me-1" />DNI verificado en el sistema.
                                             </div>
                                         </div>
                                     )}
@@ -689,9 +688,7 @@ export const Register = () => {
                                                     )
                                                 }
                                             >
-                                                {showPassword
-                                                    ? "🙈"
-                                                    : "👁️"}
+                                                <Icon name={showPassword ? "EyeOff" : "Eye"} />
                                             </button>
                                         </div>
                                     </div>
@@ -729,9 +726,7 @@ export const Register = () => {
                                                     )
                                                 }
                                             >
-                                                {showConfirmPassword
-                                                    ? "🙈"
-                                                    : "👁️"}
+                                                <Icon name={showConfirmPassword ? "EyeOff" : "Eye"} />
                                             </button>
                                         </div>
                                     </div>
@@ -776,7 +771,7 @@ export const Register = () => {
 
                             <div className="text-center mt-3">
                                 <span className="text-white-50 small">
-                                    🔒 Conexión segura y protegida
+                                    <Icon name="LockKeyhole" className="me-1" />Conexión segura y protegida
                                 </span>
                             </div>
                         </div>

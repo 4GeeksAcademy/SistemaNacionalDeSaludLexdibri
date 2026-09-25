@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { Icon } from "../components/Icon";
 
 // ==========================================================
 // HORARIO PROVISIONAL
@@ -783,7 +784,7 @@ export const NuevaConsulta = () => {
 
                             </div>
 
-                            
+
 
                             <h1 className="h2 fw-bold mb-1 mt-1 text-info">
                                 Nueva consulta
@@ -908,7 +909,7 @@ export const NuevaConsulta = () => {
                                                 to={`/teleconsulta/${consultaCreada.id}`}
                                                 className="btn btn-info rounded-pill mt-3"
                                             >
-                                                🎥 Entrar a teleconsulta
+                                                <Icon name="Video" className="me-1" />Entrar a teleconsulta
                                             </Link>
                                         )}
 
@@ -1259,15 +1260,14 @@ export const NuevaConsulta = () => {
 
                                                                 <button
                                                                     type="button"
-                                                                    className={`w-100 rounded-3 fw-semibold ${
-                                                                        seleccionada
-                                                                            ? "btn btn-info text-dark"
-                                                                            : esHoy
-                                                                                ? "btn btn-outline-info"
-                                                                                : deshabilitada
-                                                                                    ? "btn btn-outline-secondary text-white-50"
-                                                                                    : "btn btn-outline-light"
-                                                                    }`}
+                                                                    className={`w-100 rounded-3 fw-semibold ${seleccionada
+                                                                        ? "btn btn-info text-dark"
+                                                                        : esHoy
+                                                                            ? "btn btn-outline-info"
+                                                                            : deshabilitada
+                                                                                ? "btn btn-outline-secondary text-white-50"
+                                                                                : "btn btn-outline-light"
+                                                                        }`}
                                                                     style={{
                                                                         width: "100%",
                                                                         height: "52px",
@@ -1393,13 +1393,12 @@ export const NuevaConsulta = () => {
 
                                                                     <button
                                                                         type="button"
-                                                                        className={`btn w-100 rounded-pill ${
-                                                                            seleccionada
-                                                                                ? "btn-info text-dark fw-bold"
-                                                                                : yaHaPasado
-                                                                                    ? "btn-secondary text-white"
-                                                                                    : "btn-outline-light"
-                                                                        }`}
+                                                                        className={`btn w-100 rounded-pill ${seleccionada
+                                                                            ? "btn-info text-dark fw-bold"
+                                                                            : yaHaPasado
+                                                                                ? "btn-secondary text-white"
+                                                                                : "btn-outline-light"
+                                                                            }`}
                                                                         disabled={
                                                                             yaHaPasado ||
                                                                             loading
@@ -1477,7 +1476,7 @@ export const NuevaConsulta = () => {
                                                             )}
                                                         {" · "}
                                                         {formulario.modality ===
-                                                        "virtual"
+                                                            "virtual"
                                                             ? "Consulta virtual"
                                                             : "Consulta presencial"}
                                                     </p>

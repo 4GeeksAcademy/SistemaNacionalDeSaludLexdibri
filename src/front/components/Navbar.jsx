@@ -1,6 +1,7 @@
 import React from "react";
 import { NavLink, Link, useNavigate } from "react-router-dom";
 import useGlobalReducer from "../hooks/useGlobalReducer";
+import { Icon } from "./Icon";
 
 export const Navbar = () => {
   const { store, dispatch } = useGlobalReducer();
@@ -76,11 +77,10 @@ export const Navbar = () => {
           style={{ zIndex: 1050 }}
         >
           <button
-            className={`btn border-0 dropdown-toggle d-flex align-items-center gap-2 px-3 py-1 rounded-pill ${
-              isLoggedIn
-                ? "bg-info text-dark fw-semibold"
-                : "bg-white bg-opacity-10 text-white"
-            }`}
+            className={`btn border-0 dropdown-toggle d-flex align-items-center gap-2 px-3 py-1 rounded-pill ${isLoggedIn
+              ? "bg-info text-dark fw-semibold"
+              : "bg-white bg-opacity-10 text-white"
+              }`}
             type="button"
             data-bs-toggle="dropdown"
             aria-expanded="false"
@@ -121,7 +121,7 @@ export const Navbar = () => {
                     className="dropdown-item py-2 small"
                     to="/login"
                   >
-                    🔐 Iniciar sesión
+                    <Icon name="LockKeyhole" className="me-2" />Iniciar sesión
                   </Link>
                 </li>
 
@@ -131,7 +131,7 @@ export const Navbar = () => {
                     className="dropdown-item py-2 small"
                     to="/register"
                   >
-                    ✨ Registrarse
+                    <Icon name="Sparkles" className="me-2" />Registrarse
                   </Link>
                 </li>
               </>
@@ -144,7 +144,7 @@ export const Navbar = () => {
                       className="dropdown-item py-2 small"
                       to="/dashboard/medico"
                     >
-                      🩺 Dashboard médico
+                      <Icon name="Stethoscope" className="me-2" />Dashboard médico
                     </Link>
                   </li>
                 )}
@@ -156,12 +156,12 @@ export const Navbar = () => {
                       className="dropdown-item py-2 small"
                       to="/dashboard/paciente"
                     >
-                      🏠 Dashboard paciente
+                      <Icon name="Hospital" className="me-2" />Dashboard paciente
                     </Link>
                   </li>
                 )}
 
-                
+
               </>
             )}
 
@@ -176,7 +176,7 @@ export const Navbar = () => {
                 className="dropdown-item py-2 small"
                 to="/contacto"
               >
-                ❓ Ayuda y soporte
+                <Icon name="CircleHelp" className="me-2" />Ayuda y soporte
               </Link>
             </li>
 
@@ -193,7 +193,7 @@ export const Navbar = () => {
                     className="dropdown-item py-2 small text-danger fw-semibold"
                     onClick={handleLogout}
                   >
-                    🚪 Cerrar sesión
+                    <Icon name="LogOut" className="me-2" />Cerrar sesión
                   </button>
                 </li>
               </>
@@ -208,8 +208,7 @@ export const Navbar = () => {
         <NavLink
           to="/especialidades"
           className={({ isActive }) =>
-            `navbar-link text-white text-decoration-none ${
-              isActive ? "active text-info fw-bold" : "opacity-75"
+            `navbar-link text-white text-decoration-none ${isActive ? "active text-info fw-bold" : "opacity-75"
             }`
           }
         >
@@ -219,8 +218,7 @@ export const Navbar = () => {
         <NavLink
           to="/diagnostico"
           className={({ isActive }) =>
-            `navbar-link text-white text-decoration-none ${
-              isActive ? "active text-info fw-bold" : "opacity-75"
+            `navbar-link text-white text-decoration-none ${isActive ? "active text-info fw-bold" : "opacity-75"
             }`
           }
         >
@@ -230,8 +228,7 @@ export const Navbar = () => {
         <NavLink
           to="/el-sistema"
           className={({ isActive }) =>
-            `navbar-link text-white text-decoration-none ${
-              isActive ? "active text-info fw-bold" : "opacity-75"
+            `navbar-link text-white text-decoration-none ${isActive ? "active text-info fw-bold" : "opacity-75"
             }`
           }
         >
@@ -241,8 +238,7 @@ export const Navbar = () => {
         <NavLink
           to="/contacto"
           className={({ isActive }) =>
-            `navbar-link text-white text-decoration-none ${
-              isActive ? "active text-info fw-bold" : "opacity-75"
+            `navbar-link text-white text-decoration-none ${isActive ? "active text-info fw-bold" : "opacity-75"
             }`
           }
         >
@@ -252,12 +248,11 @@ export const Navbar = () => {
         <NavLink
           to="/urgencias"
           className={({ isActive }) =>
-            `navbar-link navbar-link-emergency text-danger fw-bold text-decoration-none ${
-              isActive ? "active" : ""
+            `navbar-link navbar-link-emergency text-danger fw-bold text-decoration-none ${isActive ? "active" : ""
             }`
           }
         >
-          Urgencias 🚨
+          <Icon name="Siren" className="me-1" />Urgencias
         </NavLink>
 
       </nav>

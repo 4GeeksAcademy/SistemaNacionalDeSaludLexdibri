@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Icon } from "../components/Icon";
 
 export const Contacto = () => {
   const [formulario, setFormulario] = useState({
@@ -100,7 +101,7 @@ export const Contacto = () => {
 
       setMensajeError(
         error.message ||
-          "Ha ocurrido un error al enviar la consulta. Inténtalo de nuevo."
+        "Ha ocurrido un error al enviar la consulta. Inténtalo de nuevo."
       );
     } finally {
       setEnviando(false);
@@ -169,7 +170,7 @@ export const Contacto = () => {
                   className="d-flex align-items-center justify-content-center bg-info bg-opacity-10 border border-info border-opacity-25 rounded-4 text-info fs-4"
                   style={{ width: "56px", height: "56px" }}
                 >
-                  ✉
+                  <Icon name="Mail" size={28} />
                 </div>
 
                 <div>
@@ -275,7 +276,7 @@ export const Contacto = () => {
                     className="d-flex align-items-center justify-content-center bg-info bg-opacity-10 border border-info border-opacity-25 rounded-4 text-info fs-4"
                     style={{ width: "56px", height: "56px" }}
                   >
-                    ☎
+                    <Icon name="Phone" size={28} />
                   </div>
 
                   <span className="text-info small fw-semibold">
