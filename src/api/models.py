@@ -1175,6 +1175,9 @@ class Allergy(db.Model):
         back_populates="allergies",
     )
 
+#===========
+#VACUNACION
+#===========
 
 class Vaccination(db.Model):
     __tablename__ = "vaccination"
