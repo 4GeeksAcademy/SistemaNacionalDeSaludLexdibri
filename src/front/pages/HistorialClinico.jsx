@@ -361,12 +361,12 @@ export const HistorialClinico = () => {
 
         const noHaCumplido =
             hoy.getMonth() <
-                nacimiento.getMonth() ||
+            nacimiento.getMonth() ||
             (
                 hoy.getMonth() ===
-                    nacimiento.getMonth() &&
+                nacimiento.getMonth() &&
                 hoy.getDate() <
-                    nacimiento.getDate()
+                nacimiento.getDate()
             );
 
         if (noHaCumplido) {
@@ -674,7 +674,7 @@ export const HistorialClinico = () => {
                             </h2>
 
                             <p className="text-white mb-0">
-                                Consulta las enfermedades registradas y ordénalas por fecha.
+                               Enfermedades registradas al paciente.
                             </p>
 
                         </div>
@@ -896,7 +896,7 @@ export const HistorialClinico = () => {
                             </h2>
 
                             <p className="text-white mb-0">
-                                Consulta las alergias registradas y la fecha en la que fueron detectadas.
+                                Alergias registradas y la fecha en la que fueron detectadas al paciente.
                             </p>
 
                         </div>
@@ -987,13 +987,12 @@ export const HistorialClinico = () => {
 
                                                     {alergia.severity && (
                                                         <span
-                                                            className={`badge ${
-                                                                alergia.severity === "Grave"
-                                                                    ? "bg-danger"
-                                                                    : alergia.severity === "Moderada"
-                                                                        ? "bg-warning text-dark"
-                                                                        : "bg-success"
-                                                            }`}
+                                                            className={`badge ${alergia.severity === "Grave"
+                                                                ? "bg-danger"
+                                                                : alergia.severity === "Moderada"
+                                                                    ? "bg-warning text-dark"
+                                                                    : "bg-success"
+                                                                }`}
                                                         >
                                                             {alergia.severity}
                                                         </span>
@@ -1106,8 +1105,8 @@ export const HistorialClinico = () => {
             </div>
 
             {/* ==================================================
-                VACUNAS
-            ================================================== */}
+    VACUNAS
+================================================== */}
 
             <div className="card bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 shadow-sm mb-4">
 
@@ -1169,13 +1168,24 @@ export const HistorialClinico = () => {
 
                     ) : vacunas.length === 0 ? (
 
-                        <div className="text-center py-4">
+                        <div className="text-center py-5">
 
-                            <div className="fs-2 mb-2">
-                                💉
+                            <div className="mb-3">
+
+                                <span
+                                    className="d-inline-flex align-items-center justify-content-center rounded-circle bg-secondary bg-opacity-50 text-white"
+                                    style={{
+                                        width: "60px",
+                                        height: "60px",
+                                        fontSize: "1.5rem",
+                                    }}
+                                >
+                                    —
+                                </span>
+
                             </div>
 
-                            <h3 className="h6 text-info fw-bold">
+                            <h3 className="h5 text-info fw-bold">
                                 No hay vacunas registradas
                             </h3>
 
@@ -1189,118 +1199,121 @@ export const HistorialClinico = () => {
 
                         <div>
 
-                            <div className="row g-3">
+                            {vacunasVisibles.map(
+                                (vacuna) => (
 
-                                {vacunasVisibles.map(
-                                    (vacuna) => (
+                                    <div
+                                        key={vacuna.id}
+                                        className="border border-secondary border-opacity-50 rounded-3 p-3 p-md-4 mb-3"
+                                    >
 
-                                        <div
-                                            className="col-12 col-xl-6"
-                                            key={vacuna.id}
-                                        >
+                                        <div className="row g-3">
 
-                                            <div className="bg-dark bg-opacity-50 border border-secondary border-opacity-50 rounded-3 p-3 h-100">
+                                            <div className="col-md-3 col-lg-2">
 
-                                                <div className="d-flex justify-content-between align-items-start gap-2 mb-3">
+                                                <div className="small text-white">
+                                                    Administrada
+                                                </div>
 
-                                                    <h3 className="h6 text-info fw-bold mb-0">
-                                                        {vacuna.nombre ||
-                                                            vacuna.name ||
-                                                            vacuna.vaccine_name ||
-                                                            "Vacuna"}
-                                                    </h3>
+                                                <div className="fw-semibold text-white mt-1">
+                                                    {formatearFecha(
+                                                        vacuna.fecha ||
+                                                        vacuna.date ||
+                                                        vacuna.administered_at ||
+                                                        vacuna.vaccination_date
+                                                    )}
+                                                </div>
 
-                                                    <span className="badge bg-success">
+                                            </div>
+
+                                            <div className="col-md-9 col-lg-10">
+
+                                                <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
+
+                                                    <span className="badge bg-warning">
                                                         Vacuna
                                                     </span>
 
+                                                    {(vacuna.dosis || vacuna.dose) && (
+
+                                                        <span className="badge bg-info bg-opacity-25 text-info border border-info">
+                                                            {vacuna.dosis || vacuna.dose}
+                                                        </span>
+
+                                                    )}
+
                                                 </div>
 
-                                                {(vacuna.fecha ||
-                                                    vacuna.date ||
-                                                    vacuna.administered_at ||
-                                                    vacuna.vaccination_date) && (
+                                                <h3 className="h5 text-info fw-bold mb-2">
+                                                    {vacuna.nombre ||
+                                                        vacuna.name ||
+                                                        vacuna.vaccine_name ||
+                                                        "Vacuna"}
+                                                </h3>
 
-                                                    <p className="text-white small mb-2">
+                                                {vacuna.manufacturer && (
+
+                                                    <div className="small text-white mb-2">
 
                                                         <strong>
-                                                            Fecha:
+                                                            Fabricante:
+                                                        </strong>
+
+                                                        {" "}
+
+                                                        {vacuna.manufacturer}
+
+                                                    </div>
+
+                                                )}
+
+                                                {(vacuna.lote || vacuna.batch) && (
+
+                                                    <div className="small text-white mb-1">
+
+                                                        <strong>
+                                                            Lote:
+                                                        </strong>
+
+                                                        {" "}
+
+                                                        {vacuna.lote || vacuna.batch}
+
+                                                    </div>
+
+                                                )}
+
+                                                {(vacuna.next_dose_date || vacuna.proxima_dosis) && (
+
+                                                    <div className="small text-white mb-1">
+
+                                                        <strong>
+                                                            Próxima dosis:
                                                         </strong>
 
                                                         {" "}
 
                                                         {formatearFecha(
-                                                            vacuna.fecha ||
-                                                            vacuna.date ||
-                                                            vacuna.administered_at ||
-                                                            vacuna.vaccination_date
+                                                            vacuna.next_dose_date || vacuna.proxima_dosis
                                                         )}
 
-                                                    </p>
+                                                    </div>
 
                                                 )}
 
-                                                {vacuna.dosis && (
+                                                {(vacuna.notes || vacuna.observaciones) && (
 
-                                                    <p className="text-white small mb-2">
+                                                    <div className="small text-white">
 
                                                         <strong>
-                                                            Dosis:
+                                                            Observaciones:
                                                         </strong>
 
                                                         {" "}
 
-                                                        {vacuna.dosis}
+                                                        {vacuna.notes || vacuna.observaciones}
 
-                                                    </p>
-
-                                                )}
-
-                                                {vacuna.dose && (
-
-                                                    <p className="text-white small mb-2">
-
-                                                        <strong>
-                                                            Dosis:
-                                                        </strong>
-
-                                                        {" "}
-
-                                                        {vacuna.dose}
-
-                                                    </p>
-
-                                                )}
-
-                                                {vacuna.lote && (
-
-                                                    <p className="text-white small mb-0">
-
-                                                        <strong>
-                                                            Lote:
-                                                        </strong>
-
-                                                        {" "}
-
-                                                        {vacuna.lote}
-
-                                                    </p>
-
-                                                )}
-
-                                                {vacuna.batch && (
-
-                                                    <p className="text-white small mb-0">
-
-                                                        <strong>
-                                                            Lote:
-                                                        </strong>
-
-                                                        {" "}
-
-                                                        {vacuna.batch}
-
-                                                    </p>
+                                                    </div>
 
                                                 )}
 
@@ -1308,14 +1321,14 @@ export const HistorialClinico = () => {
 
                                         </div>
 
-                                    )
-                                )}
+                                    </div>
 
-                            </div>
+                                )
+                            )}
 
                             {vacunas.length > 4 && (
 
-                                <div className="d-flex justify-content-center mt-4">
+                                <div className="d-flex justify-content-center mt-3">
 
                                     <button
                                         type="button"
@@ -1360,7 +1373,7 @@ export const HistorialClinico = () => {
                             </h2>
 
                             <p className="text-white mb-0">
-                                Intervenciones quirúrgicas registradas para este paciente.
+                                Intervenciones quirúrgicas registradas al paciente.
                             </p>
 
                         </div>
@@ -1461,79 +1474,79 @@ export const HistorialClinico = () => {
                                                     cirugia.date ||
                                                     cirugia.surgery_date) && (
 
-                                                    <p className="text-white small mb-2">
+                                                        <p className="text-white small mb-2">
 
-                                                        <strong>
-                                                            Fecha:
-                                                        </strong>
+                                                            <strong>
+                                                                Fecha:
+                                                            </strong>
 
-                                                        {" "}
+                                                            {" "}
 
-                                                        {formatearFecha(
-                                                            cirugia.fecha ||
-                                                            cirugia.date ||
-                                                            cirugia.surgery_date
-                                                        )}
+                                                            {formatearFecha(
+                                                                cirugia.fecha ||
+                                                                cirugia.date ||
+                                                                cirugia.surgery_date
+                                                            )}
 
-                                                    </p>
+                                                        </p>
 
-                                                )}
+                                                    )}
 
                                                 {(cirugia.hospital ||
                                                     cirugia.hospital_name) && (
 
-                                                    <p className="text-white small mb-2">
+                                                        <p className="text-white small mb-2">
 
-                                                        <strong>
-                                                            Hospital:
-                                                        </strong>
+                                                            <strong>
+                                                                Hospital:
+                                                            </strong>
 
-                                                        {" "}
+                                                            {" "}
 
-                                                        {cirugia.hospital ||
-                                                            cirugia.hospital_name}
+                                                            {cirugia.hospital ||
+                                                                cirugia.hospital_name}
 
-                                                    </p>
+                                                        </p>
 
-                                                )}
+                                                    )}
 
                                                 {(cirugia.cirujano ||
                                                     cirugia.surgeon) && (
 
-                                                    <p className="text-white small mb-2">
+                                                        <p className="text-white small mb-2">
 
-                                                        <strong>
-                                                            Cirujano:
-                                                        </strong>
+                                                            <strong>
+                                                                Cirujano:
+                                                            </strong>
 
-                                                        {" "}
+                                                            {" "}
 
-                                                        {cirugia.cirujano ||
-                                                            cirugia.surgeon}
+                                                            {cirugia.cirujano ||
+                                                                cirugia.surgeon}
 
-                                                    </p>
+                                                        </p>
 
-                                                )}
+                                                    )}
 
                                                 {(cirugia.detalle ||
                                                     cirugia.description ||
                                                     cirugia.descripcion) && (
 
-                                                    <p className="text-white small mb-0">
+                                                        <p className="text-white small mb-0">
 
-                                                        <strong>
-                                                            Descripción:
-                                                        </strong>
+                                                            <strong>
+                                                                Descripción:
+                                                            </strong>
 
-                                                        {" "}
+                                                            {" "}
 
-                                                        {cirugia.detalle ||
-                                                            cirugia.description ||
-                                                            cirugia.descripcion}
+                                                            {cirugia.detalle ||
+                                                                cirugia.description ||
+                                                                cirugia.descripcion}
 
-                                                    </p>
+                                                        </p>
 
-                                                )}
+                                                    )}
 
                                             </div>
 
@@ -1590,7 +1603,7 @@ export const HistorialClinico = () => {
                             </h2>
 
                             <p className="text-white mb-0">
-                                Consultas programadas y realizadas para este paciente.
+                                Consultas programadas y realizadas al paciente.
                             </p>
 
                         </div>
@@ -1667,15 +1680,14 @@ export const HistorialClinico = () => {
                                                     </h3>
 
                                                     <span
-                                                        className={`badge ${
-                                                            consulta.status ===
+                                                        className={`badge ${consulta.status ===
                                                             "completed"
-                                                                ? "bg-success"
-                                                                : consulta.status ===
-                                                                  "cancelled"
-                                                                    ? "bg-danger"
-                                                                    : "bg-warning text-dark"
-                                                        }`}
+                                                            ? "bg-success"
+                                                            : consulta.status ===
+                                                                "cancelled"
+                                                                ? "bg-danger"
+                                                                : "bg-warning text-dark"
+                                                            }`}
                                                     >
                                                         {formatearEstadoConsulta(
                                                             consulta.status
@@ -1688,16 +1700,16 @@ export const HistorialClinico = () => {
 
                                                     {consulta.scheduled_start
                                                         ? new Date(
-                                                              consulta.scheduled_start
-                                                          ).toLocaleString(
-                                                              "es-ES",
-                                                              {
-                                                                  dateStyle:
-                                                                      "medium",
-                                                                  timeStyle:
-                                                                      "short"
-                                                              }
-                                                          )
+                                                            consulta.scheduled_start
+                                                        ).toLocaleString(
+                                                            "es-ES",
+                                                            {
+                                                                dateStyle:
+                                                                    "medium",
+                                                                timeStyle:
+                                                                    "short"
+                                                            }
+                                                        )
                                                         : "Fecha no disponible"}
 
                                                 </p>
@@ -1708,7 +1720,7 @@ export const HistorialClinico = () => {
                                                     {" "}
 
                                                     {consulta.modality ===
-                                                    "virtual"
+                                                        "virtual"
                                                         ? "Virtual"
                                                         : "Presencial"}
 
@@ -1778,7 +1790,7 @@ export const HistorialClinico = () => {
                             </h2>
 
                             <p className="text-white mb-0">
-                                Recetas emitidas para este paciente.
+                                Recetas emitidas al paciente.
                             </p>
 
                         </div>
@@ -1875,12 +1887,11 @@ export const HistorialClinico = () => {
                                                     </div>
 
                                                     <span
-                                                        className={`badge ${
-                                                            receta.status ===
+                                                        className={`badge ${receta.status ===
                                                             "active"
-                                                                ? "bg-success"
-                                                                : "bg-secondary"
-                                                        }`}
+                                                            ? "bg-success"
+                                                            : "bg-secondary"
+                                                            }`}
                                                     >
                                                         {formatearEstadoReceta(
                                                             receta.status

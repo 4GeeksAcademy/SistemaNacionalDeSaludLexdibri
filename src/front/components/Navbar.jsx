@@ -161,15 +161,7 @@ export const Navbar = () => {
                   </li>
                 )}
 
-                {/* AJUSTES */}
-                <li>
-                  <Link
-                    className="dropdown-item py-2 small"
-                    to="/ajustes"
-                  >
-                    ⚙️ Ajustes
-                  </Link>
-                </li>
+                
               </>
             )}
 
