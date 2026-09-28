@@ -38,7 +38,7 @@ export const registrarUsuario = async (formData) => {
   }
 
   const response = await fetch(
-    `${import.meta.env.VITE_BACKEND_URL}api/register`,
+    `${import.meta.env.VITE_BACKEND_URL}/api/register`,
     {
       method: "POST",
       headers: {
@@ -59,14 +59,14 @@ export const registrarUsuario = async (formData) => {
 
 export const iniciarSesion = async ({ email, password, tipoUsuario }) => {
   const response = await fetch(
-    `${import.meta.env.VITE_BACKEND_URL}api/login`,
+    `${import.meta.env.VITE_BACKEND_URL}/api/login`,
     {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ email, password }),
-    }
+    },
   );
 
   const data = await response.json();
@@ -80,21 +80,19 @@ export const iniciarSesion = async ({ email, password, tipoUsuario }) => {
 
   try {
     const dashboardResponse = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}api/dashboard`,
+      `${import.meta.env.VITE_BACKEND_URL}/api/dashboard`,
       {
         method: "GET",
         headers: {
           Authorization: `Bearer ${data.access_token}`,
         },
-      }
+      },
     );
 
     const dashboardData = await dashboardResponse.json();
 
     if (!dashboardResponse.ok) {
-      throw new Error(
-        dashboardData.error || "Error al acceder al dashboard"
-      );
+      throw new Error(dashboardData.error || "Error al acceder al dashboard");
     }
 
     let rolEsperado;
@@ -125,7 +123,6 @@ export const iniciarSesion = async ({ email, password, tipoUsuario }) => {
       ...data,
       dashboard: dashboardData.dashboard,
     };
-
   } catch (error) {
     localStorage.removeItem("access_token");
     throw error;
