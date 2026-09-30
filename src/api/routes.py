@@ -21,7 +21,8 @@ from api.models import (
     Vaccination,
     Surgery,
     Hospital,
-    DoctorStatus
+    DoctorStatus,
+    RegistrationDNI,
 )
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
@@ -4345,3 +4346,46 @@ def admin_cambiar_estado_doctor(doctor_id):
             "error": "Error interno al cambiar el estado del médico",
             "detail": str(e)
         }), 500
+
+
+# =========================================================
+# COMPROBAR DNI PARA REGISTRO
+# =========================================================
+
+@api.route(
+    "/registration-dni/<string:dni>",
+    methods=["GET"]
+)
+def comprobar_registration_dni(dni):
+
+    dni = dni.strip().upper()
+
+    registro = db.session.execute(
+        db.select(RegistrationDNI).where(
+            RegistrationDNI.dni == dni
+        )
+    ).scalar_one_or_none()
+
+    if not registro:
+        return jsonify({
+            "error": "El DNI no está autorizado para registrarse"
+        }), 404
+
+    if registro.is_registered:
+        return jsonify({
+            "error": "Este DNI ya ha sido utilizado para crear una cuenta"
+        }), 409
+
+    return jsonify({
+        "dni": registro.dni,
+        "first_name": registro.first_name,
+        "last_name": registro.last_name,
+        "date_of_birth": (
+            registro.date_of_birth.isoformat()
+            if registro.date_of_birth
+            else None
+        ),
+        "sex": registro.sex,
+        "cip": registro.cip
+    }), 200
+
