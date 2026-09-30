@@ -1,0 +1,12 @@
+[
+  {
+    "name": "Hospital Universitario Madrid",
+    "city": "Madrid",
+    "address": "Calle de ejemplo 123"
+  },
+  {
+    "name": "Hospital Central de Barcelona",
+    "city": "Barcelona",
+    "address": "Avenida de ejemplo 45"
+  }
+]

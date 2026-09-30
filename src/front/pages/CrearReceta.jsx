@@ -158,7 +158,10 @@ export const CrearReceta = () => {
                                 </Link>
                             </div>
                             
-                            <h1 className="h3 fw-bold mb-0 mt-1">Crear receta</h1>
+                            <h1 className="h3 fw-bold mb-0 mt-1 text-info">Crear receta</h1>
+                            <p className="text-white-50 mb-0">
+                                Añade una receta para el paciente seleccionado.
+                            </p>
                         </div>
                     </div>
                 </div>

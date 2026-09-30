@@ -52,9 +52,14 @@ import useGlobalReducer from "../hooks/useGlobalReducer";
   );
 };
 
+import React from "react";
+import { NavLink, Link, useNavigate } from "react-router-dom";
+import useGlobalReducer from "../hooks/useGlobalReducer";
+import { Icon } from "./Icon";
 
 export const Navbar = () => {
   const { store, dispatch } = useGlobalReducer();
+  const navigate = useNavigate();
 
   const isLoggedIn = store.isAuthenticated;
   const user = store.user;
@@ -65,9 +70,13 @@ export const Navbar = () => {
   const isPatient = userRole === "PATIENT";
 
   const handleLogout = () => {
+    // Primero cerramos la sesión
     dispatch({
       type: "logout",
     });
+
+    // Después llevamos siempre al login
+    navigate("/login", { replace: true });
   };
 
   const defaultAvatar =
@@ -85,6 +94,7 @@ export const Navbar = () => {
     >
       {/* BARRA SUPERIOR PRINCIPAL */}
       <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+
         {/* LOGO */}
         <Link
           to="/"
@@ -122,8 +132,8 @@ export const Navbar = () => {
         >
           <button
             className={`btn border-0 dropdown-toggle d-flex align-items-center gap-2 px-3 py-1 rounded-pill ${isLoggedIn
-                ? "bg-info text-dark fw-semibold"
-                : "bg-white bg-opacity-10 text-white"
+              ? "bg-info text-dark fw-semibold"
+              : "bg-white bg-opacity-10 text-white"
               }`}
             type="button"
             data-bs-toggle="dropdown"
@@ -165,7 +175,7 @@ export const Navbar = () => {
                     className="dropdown-item py-2 small"
                     to="/login"
                   >
-                    🔐 Iniciar sesión
+                    <Icon name="LockKeyhole" className="me-2" />Iniciar sesión
                   </Link>
                 </li>
 
@@ -175,7 +185,7 @@ export const Navbar = () => {
                     className="dropdown-item py-2 small"
                     to="/register"
                   >
-                    ✨ Registrarse
+                    <Icon name="Sparkles" className="me-2" />Registrarse
                   </Link>
                 </li>
               </>
@@ -188,7 +198,7 @@ export const Navbar = () => {
                       className="dropdown-item py-2 small"
                       to="/dashboard/medico"
                     >
-                      🩺 Dashboard médico
+                      <Icon name="Stethoscope" className="me-2" />Dashboard médico
                     </Link>
                   </li>
                 )}
@@ -200,20 +210,12 @@ export const Navbar = () => {
                       className="dropdown-item py-2 small"
                       to="/dashboard/paciente"
                     >
-                      🏠 Dashboard paciente
+                      <Icon name="Hospital" className="me-2" />Dashboard paciente
                     </Link>
                   </li>
                 )}
 
-                {/* AJUSTES */}
-                <li>
-                  <Link
-                    className="dropdown-item py-2 small"
-                    to="/ajustes"
-                  >
-                    ⚙️ Ajustes
-                  </Link>
-                </li>
+
               </>
             )}
 
@@ -222,13 +224,13 @@ export const Navbar = () => {
               <hr className="dropdown-divider border-secondary" />
             </li>
 
-            {/* AYUDA Y SOPORTE - PARA TODOS */}
+            {/* AYUDA Y SOPORTE */}
             <li>
               <Link
                 className="dropdown-item py-2 small"
                 to="/contacto"
               >
-                ❓ Ayuda y soporte
+                <Icon name="CircleHelp" className="me-2" />Ayuda y soporte
               </Link>
             </li>
 
@@ -245,7 +247,7 @@ export const Navbar = () => {
                     className="dropdown-item py-2 small text-danger fw-semibold"
                     onClick={handleLogout}
                   >
-                    🚪 Cerrar sesión
+                    <Icon name="LogOut" className="me-2" />Cerrar sesión
                   </button>
                 </li>
               </>
@@ -256,6 +258,7 @@ export const Navbar = () => {
 
       {/* NAVEGACIÓN SECUNDARIA */}
       <nav className="d-flex gap-3 gap-md-4 small flex-wrap pt-2 border-top border-white border-opacity-10">
+
         <NavLink
           to="/especialidades"
           className={({ isActive }) =>
@@ -303,8 +306,9 @@ export const Navbar = () => {
             }`
           }
         >
-          Urgencias 🚨
+          <Icon name="Siren" className="me-1" />Urgencias
         </NavLink>
+
       </nav>
     </header>
   );

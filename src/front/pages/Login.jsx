@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { iniciarSesion } from "../services/authServices";
 import useGlobalReducer from "../hooks/useGlobalReducer";
+import { Icon } from "../components/Icon";
 
 export const Login = () => {
     const navigate = useNavigate();
@@ -12,6 +13,55 @@ export const Login = () => {
     const [error, setError] = useState("");
     const [tipoUsuario, setTipoUsuario] = useState("paciente");
     const [showPassword, setShowPassword] = useState(false);
+
+    /*
+    ========================================================
+    REDIRECCIÓN SI YA HAY UNA SESIÓN INICIADA
+    ========================================================
+    */
+
+    useEffect(() => {
+        const token =
+            localStorage.getItem("access_token") ||
+            localStorage.getItem("token");
+
+        const usuarioGuardado = localStorage.getItem("user");
+
+        if (!token || !usuarioGuardado) {
+            return;
+        }
+
+        try {
+            const usuario = JSON.parse(usuarioGuardado);
+
+            if (usuario.role === "admin") {
+                navigate("/dashboard/admin", { replace: true });
+                return;
+            }
+
+            if (usuario.role === "doctor") {
+                navigate("/dashboard/medico", { replace: true });
+                return;
+            }
+
+            if (usuario.role === "patient") {
+                navigate("/dashboard/paciente", { replace: true });
+                return;
+            }
+
+        } catch (error) {
+            console.error(
+                "Error leyendo el usuario guardado:",
+                error
+            );
+        }
+    }, [navigate]);
+
+    /*
+    ========================================================
+    ANIMACIONES
+    ========================================================
+    */
 
     useEffect(() => {
         const elements = document.querySelectorAll(".scroll-reveal");
@@ -36,6 +86,12 @@ export const Login = () => {
         };
     }, []);
 
+    /*
+    ========================================================
+    LOGIN
+    ========================================================
+    */
+
     const handleLogin = async (e) => {
         e.preventDefault();
 
@@ -53,7 +109,35 @@ export const Login = () => {
                 tipoUsuario,
             });
 
-            localStorage.setItem("user", JSON.stringify(data.user));
+            /*
+            ========================================================
+            GUARDAMOS EL USUARIO
+            ========================================================
+            */
+
+            localStorage.setItem(
+                "user",
+                JSON.stringify(data.user)
+            );
+
+            /*
+            ========================================================
+            GUARDAMOS EL TOKEN
+            ========================================================
+            */
+
+            if (data.access_token) {
+                localStorage.setItem(
+                    "access_token",
+                    data.access_token
+                );
+            }
+
+            /*
+            ========================================================
+            ACTUALIZAMOS EL ESTADO GLOBAL
+            ========================================================
+            */
 
             dispatch({
                 type: "login",
@@ -63,21 +147,76 @@ export const Login = () => {
                 },
             });
 
-            navigate(
-                data.dashboard === "doctor"
-                    ? "/dashboard/medico"
-                    : "/dashboard/paciente"
-            );
+            /*
+            ========================================================
+            REDIRECCIÓN SEGÚN EL ROL
+            ========================================================
+            */
+
+            if (data.user?.role === "admin") {
+                navigate("/dashboard/admin", {
+                    replace: true,
+                });
+
+                return;
+            }
+
+            if (data.user?.role === "doctor") {
+                navigate("/dashboard/medico", {
+                    replace: true,
+                });
+
+                return;
+            }
+
+            if (data.user?.role === "patient") {
+                navigate("/dashboard/paciente", {
+                    replace: true,
+                });
+
+                return;
+            }
+
+            /*
+            ========================================================
+            FALLBACK
+            ========================================================
+            */
+
+            if (data.dashboard === "admin") {
+                navigate("/dashboard/admin", {
+                    replace: true,
+                });
+
+                return;
+            }
+
+            if (data.dashboard === "doctor") {
+                navigate("/dashboard/medico", {
+                    replace: true,
+                });
+
+                return;
+            }
+
+            navigate("/dashboard/paciente", {
+                replace: true,
+            });
+
         } catch (error) {
             console.error(error);
-            setError(error.message);
+            setError(
+                error.message ||
+                "No se pudo iniciar sesión"
+            );
         }
     };
 
     return (
-        <div className=" text-white min-vh-100 d-flex align-items-center">
+        <div className="text-white min-vh-100 d-flex align-items-center">
 
             <section className="container py-5">
+
                 <div className="row justify-content-center">
 
                     <div className="col-12 col-sm-10 col-md-8 col-lg-5">
@@ -85,13 +224,17 @@ export const Login = () => {
                         <div className="card bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 p-md-5 scroll-reveal">
 
                             {/* CABECERA */}
-                            <div className="text-center mb-4">
+
+                            <div className="text-center text-light mb-4">
 
                                 <div
                                     className="d-inline-flex align-items-center justify-content-center bg-info bg-opacity-10 border border-info border-opacity-25 rounded-4 text-info fs-4 mb-3"
-                                    style={{ width: "56px", height: "56px" }}
+                                    style={{
+                                        width: "56px",
+                                        height: "56px"
+                                    }}
                                 >
-                                    ✚
+                                    <Icon name="LogIn" size={28} />
                                 </div>
 
                                 <h1 className="h2 fw-bold mb-2">
@@ -104,7 +247,8 @@ export const Login = () => {
 
                             </div>
 
-                            {/* SELECTOR PACIENTE / MÉDICO */}
+                            {/* SELECTOR DE TIPO DE USUARIO */}
+
                             <div className="mb-4">
 
                                 <span className="text-info small fw-semibold text-uppercase d-block mb-2">
@@ -115,39 +259,67 @@ export const Login = () => {
                                     className="btn-group w-100"
                                     role="group"
                                 >
+
+                                    {/* PACIENTE */}
+
                                     <button
                                         type="button"
                                         onClick={() =>
                                             setTipoUsuario("paciente")
                                         }
-                                        className={`btn rounded-start-pill fw-semibold ${tipoUsuario === "paciente"
+                                        className={`btn rounded-start-pill fw-semibold ${
+                                            tipoUsuario === "paciente"
                                                 ? "btn-info"
                                                 : "btn-outline-secondary text-white"
-                                            }`}
+                                        }`}
                                     >
-                                        🔒 Paciente
+                                        <Icon name="LockKeyhole" className="me-2" />Paciente
                                     </button>
+
+                                    {/* MÉDICO */}
 
                                     <button
                                         type="button"
                                         onClick={() =>
                                             setTipoUsuario("medico")
                                         }
-                                        className={`btn rounded-end-pill fw-semibold ${tipoUsuario === "medico"
+                                        className={`btn fw-semibold ${
+                                            tipoUsuario === "medico"
                                                 ? "btn-info"
                                                 : "btn-outline-secondary text-white"
-                                            }`}
+                                        }`}
                                     >
-                                        👨‍⚕️ Médico
+                                        <Icon name="Stethoscope" className="me-2" />Médico
                                     </button>
+
+                                    {/* ADMINISTRADOR */}
+
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setTipoUsuario("admin")
+                                        }
+                                        className={`btn rounded-end-pill fw-semibold ${
+                                            tipoUsuario === "admin"
+                                                ? "btn-info"
+                                                : "btn-outline-secondary text-white"
+                                        }`}
+                                    >
+                                        <Icon name="ShieldCheck" className="me-2" />Admin
+                                    </button>
+
                                 </div>
 
                             </div>
 
                             {/* FORMULARIO */}
+
                             <form onSubmit={handleLogin}>
 
+                                {/* EMAIL / IDENTIFICADOR */}
+
                                 <div className="mb-3">
+
                                     <label
                                         htmlFor="login-email"
                                         className="form-label text-white-50 small"
@@ -165,9 +337,13 @@ export const Login = () => {
                                             setEmail(e.target.value)
                                         }
                                     />
+
                                 </div>
 
+                                {/* CONTRASEÑA */}
+
                                 <div className="mb-3">
+
                                     <label
                                         htmlFor="login-password"
                                         className="form-label text-white-50 small"
@@ -196,7 +372,9 @@ export const Login = () => {
                                             type="button"
                                             className="btn btn-outline-secondary text-white"
                                             onClick={() =>
-                                                setShowPassword(!showPassword)
+                                                setShowPassword(
+                                                    !showPassword
+                                                )
                                             }
                                             aria-label={
                                                 showPassword
@@ -204,13 +382,15 @@ export const Login = () => {
                                                     : "Mostrar contraseña"
                                             }
                                         >
-                                            {showPassword ? "🙈" : "👁️"}
+                                            <Icon name={showPassword ? "EyeOff" : "Eye"} />
                                         </button>
 
                                     </div>
+
                                 </div>
 
                                 {/* ERROR */}
+
                                 {error && (
                                     <div className="alert alert-danger py-2 small">
                                         {error}
@@ -218,6 +398,7 @@ export const Login = () => {
                                 )}
 
                                 {/* BOTÓN */}
+
                                 <button
                                     type="submit"
                                     className="btn btn-info rounded-pill fw-bold w-100 py-2 mt-2"
@@ -228,12 +409,15 @@ export const Login = () => {
                             </form>
 
                             {/* RECUPERAR CONTRASEÑA */}
+
                             <div className="text-center mt-4">
 
                                 <button
                                     type="button"
                                     className="btn btn-link p-0 text-info text-decoration-none small"
-                                    onClick={() => navigate("/olvide/Contraseña")}
+                                    onClick={() =>
+                                        navigate("/olvide/Contraseña")
+                                    }
                                 >
                                     ¿Olvidó su contraseña?
                                 </button>
@@ -241,6 +425,7 @@ export const Login = () => {
                             </div>
 
                             {/* REGISTRO */}
+
                             <div className="text-center mt-3 small">
 
                                 <span className="text-white-50">
@@ -257,10 +442,11 @@ export const Login = () => {
                             </div>
 
                             {/* SEGURIDAD */}
+
                             <div className="text-center mt-4 pt-3 border-top border-secondary">
 
                                 <span className="text-white-50 small">
-                                    🔒 Conexión segura y protegida
+                                    <Icon name="LockKeyhole" className="me-1" />Conexión segura y protegida
                                 </span>
 
                             </div>
@@ -270,6 +456,7 @@ export const Login = () => {
                     </div>
 
                 </div>
+
             </section>
 
         </div>

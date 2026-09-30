@@ -1,4 +1,5 @@
 import React from "react";
+import { Icon } from "./Icon";
 
 export const CitaDetailModal = ({ show, onClose, cita }) => {
     if (!show || !cita) return null;
@@ -24,7 +25,7 @@ export const CitaDetailModal = ({ show, onClose, cita }) => {
                 >
                     <div className="modal-header border-bottom border-white border-opacity-10">
                         <h5 className="modal-title fw-bold text-info d-flex align-items-center gap-2">
-                            📅 Detalle de la Cita Médica
+                            <Icon name="CalendarDays" />Detalle de la Cita Médica
                         </h5>
                         <button type="button" className="btn-close btn-close-white" onClick={onClose}></button>
                     </div>
@@ -72,7 +73,7 @@ export const CitaDetailModal = ({ show, onClose, cita }) => {
                             rel="noreferrer"
                             className="btn btn-info btn-sm rounded-3 text-dark fw-bold px-3 d-flex align-items-center gap-2"
                         >
-                            📹 Acceder a Teleconsulta
+                            <Icon name="Video" />Acceder a Teleconsulta
                         </a>
                     </div>
                 </div>

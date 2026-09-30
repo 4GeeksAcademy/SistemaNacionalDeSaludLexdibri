@@ -1,4 +1,5 @@
 import React from "react";
+import { Icon } from "../components/Icon";
 
 export const CuadroMedico = () => {
   const medicos = [
@@ -11,7 +12,7 @@ export const CuadroMedico = () => {
     <div className="container text-white py-4">
       <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <div>
-          <h2 className="fw-bold mb-1">🩺 Cuadro Médico</h2>
+          <h2 className="fw-bold mb-1"><Icon name="Stethoscope" className="me-2" />Cuadro Médico</h2>
           <p className="text-secondary m-0">Directorio de profesionales y centros asistenciales</p>
         </div>
         <input type="text" className="form-control form-control-sm bg-dark text-white border-secondary w-auto" placeholder="Filtrar médico o centro..." />

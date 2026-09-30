@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { Icon } from "../components/Icon";
 
 export const Urgencias = () => {
   useEffect(() => {
@@ -68,7 +69,7 @@ export const Urgencias = () => {
                 <div className="col-lg-8">
 
                   <span className="badge rounded-pill bg-danger text-white px-3 py-2">
-                    🚨 EMERGENCIA
+                    <Icon name="Siren" className="me-1" />EMERGENCIA
                   </span>
 
                   <h2 className="fw-bold mt-3 mb-3">
@@ -86,14 +87,14 @@ export const Urgencias = () => {
                       href="tel:112"
                       className="btn btn-danger btn-lg rounded-pill fw-bold px-4"
                     >
-                      📞 Llamar al 112
+                      <Icon name="Phone" className="me-1" />Llamar al 112
                     </a>
 
                     <a
                       href="tel:061"
                       className="btn btn-outline-danger btn-lg rounded-pill fw-bold px-4"
                     >
-                      🚑 Llamar al 061
+                      <Icon name="Ambulance" className="me-1" />Llamar al 061
                     </a>
 
                   </div>
@@ -150,7 +151,7 @@ export const Urgencias = () => {
                 type="button"
                 className="btn btn-info rounded-pill fw-bold mt-3"
               >
-                📍 Buscar centros cercanos
+                <Icon name="MapPin" className="me-1" />Buscar centros cercanos
               </button>
 
               <div className="d-flex align-items-start gap-3 mt-4">
@@ -158,7 +159,7 @@ export const Urgencias = () => {
                 <div className="d-flex align-items-center justify-content-center bg-info bg-opacity-10 border border-info border-opacity-25 rounded-4 text-info fw-bold flex-shrink-0"
                   style={{ width: "48px", height: "48px" }}
                 >
-                  ✓
+                  <Icon name="Check" />
                 </div>
 
                 <div>

@@ -17,6 +17,11 @@ from api.models import (
     Medication,
     Prescription,
     PrescriptionMedication,
+    Allergy,
+    Vaccination,
+    Surgery,
+    Hospital,
+    DoctorStatus
 )
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
@@ -25,6 +30,7 @@ import os
 import json
 import requests
 import random
+import resend
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import (
     create_access_token,
@@ -133,6 +139,7 @@ def seed_doctors():
 
     existing = 0
     created = 0
+    updated = 0
 
     for data in doctors:
 
@@ -140,13 +147,37 @@ def seed_doctors():
             email=data["email"]
         ).first()
 
+        # =====================================================
+        # MÉDICO YA EXISTENTE
+        # =====================================================
+
         if user:
+
             existing += 1
+
+            doctor = Doctor.query.filter_by(
+                user_id=user.id
+            ).first()
+
+            if doctor:
+                doctor.hospital_id = data["hospital_id"]
+                doctor.specialty_id = data["specialty_id"]
+                doctor.years_experience = data["years_experience"]
+                doctor.medical_license = data["medical_license"]
+
+                updated += 1
+
             continue
+
+        # =====================================================
+        # CREAR USUARIO
+        # =====================================================
 
         user = User(
             email=data["email"],
-            password_hash=generate_password_hash(data["password"]),
+            password_hash=generate_password_hash(
+                data["password"]
+            ),
             first_name=data["first_name"],
             last_name=data["last_name"],
             dni=data["dni"],
@@ -160,25 +191,113 @@ def seed_doctors():
             role=UserRole(data["role"])
         )
 
+        # =====================================================
+        # CREAR MÉDICO
+        # =====================================================
+
         doctor = Doctor(
             medical_license=data["medical_license"],
             specialty_id=data["specialty_id"],
-            years_experience=data["years_experience"]
+            years_experience=data["years_experience"],
+            hospital_id=data["hospital_id"]
         )
 
         user.doctor = doctor
 
         db.session.add(user)
+
         created += 1
 
     db.session.commit()
 
     return jsonify({
-        "message": "Doctores creados correctamente",
+        "message": "Médicos procesados correctamente",
         "creados": created,
-        "ya_existian": existing
+        "ya_existian": existing,
+        "actualizados": updated
     }), 200
 
+# =========================================================
+# SEED ADMINISTRADORES
+# =========================================================
+
+@api.route("/seed/admins", methods=["GET"])
+def seed_admins():
+
+    json_route = os.path.join(
+        os.path.dirname(__file__),
+        "../data/admins.json"
+    )
+
+    with open(
+        json_route,
+        "r",
+        encoding="utf-8"
+    ) as file:
+
+        admins = json.load(file)
+
+    existing = 0
+    created = 0
+    updated = 0
+
+    for data in admins:
+
+        user = User.query.filter_by(
+            email=data["email"]
+        ).first()
+
+        # ==========================================
+        # ADMIN YA EXISTENTE
+        # ==========================================
+
+        if user:
+
+            existing += 1
+
+            if user.role == UserRole.ADMIN:
+
+                user.hospital_id = data["hospital_id"]
+
+                updated += 1
+
+            continue
+
+        # ==========================================
+        # CREAR ADMIN
+        # ==========================================
+
+        user = User(
+            email=data["email"],
+            password_hash=generate_password_hash(
+                data["password"]
+            ),
+            first_name=data["first_name"],
+            last_name=data["last_name"],
+            dni=data["dni"],
+            phone=data["phone"],
+            date_of_birth=datetime.strptime(
+                data["date_of_birth"],
+                "%Y-%m-%d"
+            ).date(),
+            sex=data["sex"],
+            is_active=data["is_active"],
+            role=UserRole(data["role"]),
+            hospital_id=data["hospital_id"]
+        )
+
+        db.session.add(user)
+
+        created += 1
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Administradores procesados correctamente",
+        "creados": created,
+        "ya_existian": existing,
+        "actualizados": updated
+    }), 200
 
 # =========================================================
 # SEED ESPECIALIDADES
@@ -211,54 +330,51 @@ def seed_specialties():
         "total": len(specialties)
     }), 200
 
+# =========================================================
+# SEED HOSPITALES
+# =========================================================
 
-@api.route("/seed/especialidades-dos", methods=["GET"])
-def seed_specialties_two():
+@api.route("/seed/hospitales", methods=["GET"])
+def seed_hospitals():
 
     json_route = os.path.join(
         os.path.dirname(__file__),
-        "../data/especialidades_dos.json"
+        "../data/hospitales.json"
     )
 
-    try:
-        with open(json_route, "r", encoding="utf-8") as file:
-            specialties = json.load(file)
+    with open(json_route, "r", encoding="utf-8") as file:
+        hospitals = json.load(file)
 
-    except (FileNotFoundError, json.JSONDecodeError):
-        return jsonify({
-            "error": "No se pudo leer el archivo de especialidades"
-        }), 500
-
-    created = 0
     existing = 0
+    created = 0
 
-    for data in specialties:
+    for data in hospitals:
 
-        specialty = Specialty.query.filter_by(
+        hospital = Hospital.query.filter_by(
             name=data["name"]
         ).first()
 
-        if specialty:
+        if hospital:
             existing += 1
             continue
 
-        db.session.add(
-            Specialty(
-                name=data["name"],
-                description=data.get("description")
-            )
+        hospital = Hospital(
+            name=data["name"],
+            city=data.get("city"),
+            address=data.get("address")
         )
 
+        db.session.add(hospital)
         created += 1
 
     db.session.commit()
 
     return jsonify({
-        "message": "Especialidades adicionales creadas correctamente",
-        "total": len(specialties),
-        "creadas": created,
+        "message": "Hospitales procesados correctamente",
+        "creados": created,
         "ya_existian": existing
     }), 200
+
 
 
 # =========================================================
@@ -430,6 +546,7 @@ def registro_usuario():
 # LOGIN
 # =========================================================
 
+
 @api.route("/login", methods=["POST"])
 def login():
 
@@ -471,6 +588,8 @@ def login():
         }), 403
 
     especialidad = None
+    hospital = None
+    hospital_id = None
 
     if user.role.value == "doctor":
 
@@ -478,8 +597,14 @@ def login():
             user_id=user.id
         ).first()
 
-        if doctor and doctor.specialty:
-            especialidad = doctor.specialty.name
+        if doctor:
+
+            if doctor.specialty:
+                especialidad = doctor.specialty.name
+
+            if doctor.hospital:
+                hospital = doctor.hospital.name
+                hospital_id = doctor.hospital.id
 
     access_token = create_access_token(
         identity=str(user.id)
@@ -494,9 +619,12 @@ def login():
             "first_name": user.first_name,
             "last_name": user.last_name,
             "role": user.role.value,
-            "especialidad": especialidad
+            "especialidad": especialidad,
+            "hospital": hospital,
+            "hospital_id": hospital_id
         }
     }), 200
+
 
 
 # =========================================================
@@ -508,6 +636,7 @@ def login():
 def entrar_en_dashboard():
 
     user_id = get_jwt_identity()
+
     user = db.session.get(
         User,
         int(user_id)
@@ -518,7 +647,15 @@ def entrar_en_dashboard():
             "error": "Usuario no encontrado"
         }), 404
 
-    if user.role == UserRole.DOCTOR:
+    if user.role == UserRole.ADMIN:
+
+        return jsonify({
+            "message": "Acceso permitido",
+            "dashboard": "admin",
+            "redirect": "/dashboard/admin"
+        }), 200
+
+    elif user.role == UserRole.DOCTOR:
 
         return jsonify({
             "message": "Acceso permitido",
@@ -675,8 +812,8 @@ def obtener_enfermedades_paciente(patient_id):
             "error": "Usuario no encontrado"
         }), 404
 
-    if user.role != UserRole.DOCTOR :
-        print(UserRole.DOCTOR ==   user.role)
+    if user.role != UserRole.DOCTOR:
+        print(UserRole.DOCTOR == user.role)
         return jsonify({
             "error": "No tienes permisos para consultar enfermedades"
         }), 403
@@ -726,6 +863,52 @@ def obtener_enfermedades_paciente(patient_id):
                 "detalle": diagnosis.notes or "Sin observaciones"
             }
             for diagnosis in diagnoses
+        ]
+    }), 200
+
+# =========================================================
+# OBTENER HISTORIAL DE CONSULTAS - MÉDICO
+# =========================================================
+
+
+@api.route(
+    "/medico/pacientes/<int:patient_id>/consultas",
+    methods=["GET"]
+)
+@jwt_required()
+def obtener_consultas_paciente_medico(patient_id):
+
+    user_id = get_jwt_identity()
+
+    user = db.session.get(User, int(user_id))
+
+    if not user:
+        return jsonify({
+            "error": "Usuario no encontrado"
+        }), 404
+
+    if user.role != UserRole.DOCTOR or not user.doctor:
+        return jsonify({
+            "error": "No tienes permisos para consultar el historial"
+        }), 403
+
+    # Obtener todas las consultas del paciente.
+    # No comprobamos que el paciente esté asignado
+    # al médico que realiza la petición.
+    consultas = db.session.execute(
+        db.select(Appointment)
+        .where(
+            Appointment.patient_id == patient_id
+        )
+        .order_by(
+            Appointment.scheduled_start.desc()
+        )
+    ).scalars().all()
+
+    return jsonify({
+        "consultas": [
+            consulta.serialize()
+            for consulta in consultas
         ]
     }), 200
 
@@ -1013,6 +1196,7 @@ def crear_consulta_medico(patient_id):
 # OBTENER CONSULTAS DEL MÉDICO
 # =========================================================
 
+
 @api.route("/medico/consultas", methods=["GET"])
 @jwt_required()
 def obtener_consultas_pendientes():
@@ -1057,6 +1241,7 @@ def obtener_consultas_pendientes():
 # =========================================================
 # COMPLETAR CONSULTA
 # =========================================================
+
 
 @api.route(
     "/medico/consultas/<int:appointment_id>/completar",
@@ -1120,7 +1305,6 @@ def completar_consulta(appointment_id):
         "message": "Consulta completada correctamente",
         "consulta": consultation.serialize()
     }), 200
-
 
 
 # =========================================================
@@ -1369,6 +1553,7 @@ def crear_consulta_paciente():
 # =========================================================
 # CANCELAR CONSULTA - PACIENTE
 # =========================================================
+
 
 @api.route(
     "/paciente/consultas/<int:appointment_id>/cancelar",
@@ -1710,18 +1895,16 @@ def buscar_pacientes():
 
     }), 200
 
-
- #=========================================================
-# AGREGAR PACIENTE
-# SOLO MÉDICO DE CABECERA
+# =========================================================
+# ADMIN - AGREGAR PACIENTE A UN MÉDICO
 # =========================================================
 
 @api.route(
-    "/medico/pacientes/<int:patient_id>",
+    "/admin/medicos/<int:doctor_id>/pacientes/<int:patient_id>",
     methods=["POST"]
 )
 @jwt_required()
-def agregar_paciente(patient_id):
+def admin_agregar_paciente(doctor_id, patient_id):
 
     user_id = get_jwt_identity()
 
@@ -1735,44 +1918,28 @@ def agregar_paciente(patient_id):
             "error": "Usuario no encontrado"
         }), 404
 
-    if user.role != UserRole.DOCTOR:
+    # -----------------------------------------------------
+    # SOLO ADMIN
+    # -----------------------------------------------------
+
+    if user.role != UserRole.ADMIN:
         return jsonify({
-            "error": (
-                "No tienes permisos para agregar pacientes"
-            )
+            "error": "No tienes permisos para agregar pacientes"
         }), 403
 
-    doctor = user.doctor
+    # -----------------------------------------------------
+    # BUSCAR MÉDICO
+    # -----------------------------------------------------
+
+    doctor = db.session.get(
+        Doctor,
+        doctor_id
+    )
 
     if not doctor:
         return jsonify({
-            "error": (
-                "El usuario no tiene un perfil de médico"
-            )
+            "error": "Médico no encontrado"
         }), 404
-
-    # -----------------------------------------------------
-    # SOLO MÉDICO DE CABECERA
-    # -----------------------------------------------------
-
-    if not doctor.specialty:
-        return jsonify({
-            "error": (
-                "El médico no tiene una especialidad asignada"
-            )
-        }), 403
-
-    specialty_name = (
-        doctor.specialty.name or ""
-    ).strip().lower()
-
-    if specialty_name != "médico de cabecera":
-        return jsonify({
-            "error": (
-                "Solo el médico de cabecera "
-                "puede añadir pacientes"
-            )
-        }), 403
 
     # -----------------------------------------------------
     # BUSCAR PACIENTE
@@ -1810,7 +1977,11 @@ def agregar_paciente(patient_id):
 
         if same_specialty_relation:
 
-            specialty_name = doctor.specialty.name
+            specialty_name = (
+                doctor.specialty.name
+                if doctor.specialty
+                else "esta especialidad"
+            )
 
             return jsonify({
                 "error": (
@@ -1832,18 +2003,22 @@ def agregar_paciente(patient_id):
 
     if existing_relation:
 
+        # Ya está asignado
         if existing_relation.is_active:
-
             return jsonify({
-                "error": "El paciente ya está en tu lista"
+                "error": (
+                    "El paciente ya está asignado "
+                    "a este médico"
+                )
             }), 409
 
+        # Existía anteriormente pero fue eliminado
         existing_relation.is_active = True
 
         db.session.commit()
 
         return jsonify({
-            "message": "Paciente agregado nuevamente"
+            "message": "Paciente asignado nuevamente"
         }), 200
 
     # -----------------------------------------------------
@@ -1861,8 +2036,10 @@ def agregar_paciente(patient_id):
     db.session.commit()
 
     return jsonify({
-        "message": "Paciente agregado correctamente"
+        "message": "Paciente asignado correctamente"
     }), 201
+
+
 
 
 # =========================================================
@@ -1960,17 +2137,17 @@ def obtener_mis_pacientes():
     }), 200
 
 
+
 # =========================================================
-# ELIMINAR PACIENTE
-# SOLO MÉDICO DE CABECERA
+# ADMIN - ELIMINAR PACIENTE DE UN MÉDICO
 # =========================================================
 
 @api.route(
-    "/medico/pacientes/<int:patient_id>",
+    "/admin/medicos/<int:doctor_id>/pacientes/<int:patient_id>",
     methods=["DELETE"]
 )
 @jwt_required()
-def eliminar_paciente(patient_id):
+def admin_eliminar_paciente(doctor_id, patient_id):
 
     user_id = get_jwt_identity()
 
@@ -1984,42 +2161,28 @@ def eliminar_paciente(patient_id):
             "error": "Usuario no encontrado"
         }), 404
 
-    if user.role != UserRole.DOCTOR:
+    # -----------------------------------------------------
+    # SOLO ADMIN
+    # -----------------------------------------------------
+
+    if user.role != UserRole.ADMIN:
         return jsonify({
-            "error": (
-                "No tienes permisos para eliminar pacientes"
-            )
+            "error": "No tienes permisos para eliminar pacientes"
         }), 403
 
-    doctor = user.doctor
+    # -----------------------------------------------------
+    # BUSCAR MÉDICO
+    # -----------------------------------------------------
+
+    doctor = db.session.get(
+        Doctor,
+        doctor_id
+    )
 
     if not doctor:
         return jsonify({
-            "error": "Perfil médico no encontrado"
+            "error": "Médico no encontrado"
         }), 404
-
-    # -----------------------------------------------------
-    # SOLO MÉDICO DE CABECERA
-    # -----------------------------------------------------
-
-    if not doctor.specialty:
-        return jsonify({
-            "error": (
-                "El médico no tiene una especialidad asignada"
-            )
-        }), 403
-
-    specialty_name = (
-        doctor.specialty.name or ""
-    ).strip().lower()
-
-    if specialty_name != "médico de cabecera":
-        return jsonify({
-            "error": (
-                "Solo el médico de cabecera "
-                "puede eliminar pacientes"
-            )
-        }), 403
 
     # -----------------------------------------------------
     # BUSCAR RELACIÓN
@@ -2034,273 +2197,36 @@ def eliminar_paciente(patient_id):
 
     if not relation:
         return jsonify({
-            "error": "El paciente no está en tu lista"
+            "error": (
+                "El paciente no está asignado "
+                "a este médico"
+            )
         }), 404
+
+    # -----------------------------------------------------
+    # COMPROBAR SI YA ESTÁ INACTIVA
+    # -----------------------------------------------------
 
     if not relation.is_active:
         return jsonify({
             "error": (
-                "El paciente ya no está en tu lista"
+                "El paciente ya no está asignado "
+                "a este médico"
             )
         }), 409
+
+    # -----------------------------------------------------
+    # SOFT DELETE
+    # -----------------------------------------------------
 
     relation.is_active = False
 
     db.session.commit()
 
     return jsonify({
-        "message": "Paciente eliminado correctamente"
+        "message": "Paciente desasignado correctamente"
     }), 200
 
-
-# =========================================================
-# ASIGNAR ESPECIALISTA
-# SOLO MÉDICO DE CABECERA
-# =========================================================
-
-@api.route(
-    "/medico/pacientes/<int:patient_id>/especialista",
-    methods=["POST"]
-)
-@jwt_required()
-def asignar_especialista(patient_id):
-
-    # -----------------------------------------------------
-    # USUARIO AUTENTICADO
-    # -----------------------------------------------------
-
-    user_id = get_jwt_identity()
-
-    user = db.session.get(
-        User,
-        int(user_id)
-    )
-
-    if not user:
-        return jsonify({
-            "error": "Usuario no encontrado"
-        }), 404
-
-    # -----------------------------------------------------
-    # COMPROBAR QUE ES MÉDICO
-    # -----------------------------------------------------
-
-    if user.role != UserRole.DOCTOR or not user.doctor:
-        return jsonify({
-            "error": (
-                "No tienes permisos para "
-                "asignar especialistas"
-            )
-        }), 403
-
-    doctor_cabecera = user.doctor
-
-    # -----------------------------------------------------
-    # COMPROBAR ESPECIALIDAD DEL MÉDICO
-    # -----------------------------------------------------
-
-    if not doctor_cabecera.specialty:
-        return jsonify({
-            "error": (
-                "El médico no tiene una especialidad asignada"
-            )
-        }), 403
-
-    specialty_name = (
-        doctor_cabecera.specialty.name or ""
-    ).strip().lower()
-
-    if specialty_name != "médico de cabecera":
-        return jsonify({
-            "error": (
-                "Solo el médico de cabecera "
-                "puede asignar especialistas"
-            )
-        }), 403
-
-    # -----------------------------------------------------
-    # DATOS DEL FRONTEND
-    # -----------------------------------------------------
-
-    data = request.get_json(
-        silent=True
-    ) or {}
-
-    specialist_id = data.get(
-        "specialist_id"
-    )
-
-    if not specialist_id:
-        return jsonify({
-            "error": (
-                "Debes seleccionar un especialista"
-            )
-        }), 400
-
-    try:
-
-        specialist_id = int(
-            specialist_id
-        )
-
-    except (TypeError, ValueError):
-
-        return jsonify({
-            "error": (
-                "El especialista seleccionado "
-                "no es válido"
-            )
-        }), 400
-
-    # -----------------------------------------------------
-    # BUSCAR PACIENTE
-    # -----------------------------------------------------
-
-    patient = db.session.get(
-        Patient,
-        patient_id
-    )
-
-    if not patient:
-        return jsonify({
-            "error": "Paciente no encontrado"
-        }), 404
-
-    # -----------------------------------------------------
-    # COMPROBAR QUE EL PACIENTE ES DEL MÉDICO
-    # -----------------------------------------------------
-
-    patient_relation = db.session.execute(
-        db.select(DoctorPatient).where(
-            DoctorPatient.doctor_id == doctor_cabecera.id,
-            DoctorPatient.patient_id == patient.id,
-            DoctorPatient.is_active.is_(True)
-        )
-    ).scalar_one_or_none()
-
-    if not patient_relation:
-        return jsonify({
-            "error": (
-                "El paciente no está en tu lista de pacientes"
-            )
-        }), 403
-
-    # -----------------------------------------------------
-    # BUSCAR ESPECIALISTA
-    # -----------------------------------------------------
-
-    specialist = db.session.get(
-        Doctor,
-        specialist_id
-    )
-
-    if not specialist:
-        return jsonify({
-            "error": "Especialista no encontrado"
-        }), 404
-
-    if not specialist.specialty:
-        return jsonify({
-            "error": (
-                "El médico seleccionado "
-                "no tiene especialidad"
-            )
-        }), 400
-
-    # -----------------------------------------------------
-    # NO PERMITIR MÉDICO DE CABECERA
-    # -----------------------------------------------------
-
-    specialist_specialty = (
-        specialist.specialty.name or ""
-    ).strip().lower()
-
-    if specialist_specialty == "médico de cabecera":
-        return jsonify({
-            "error": (
-                "No puedes asignar a un médico "
-                "de cabecera como especialista"
-            )
-        }), 400
-
-    # -----------------------------------------------------
-    # NO PERMITIR ASIGNARSE A SÍ MISMO
-    # -----------------------------------------------------
-
-    if specialist.id == doctor_cabecera.id:
-        return jsonify({
-            "error": (
-                "No puedes asignarte a ti mismo "
-                "como especialista"
-            )
-        }), 400
-
-    # -----------------------------------------------------
-    # COMPROBAR MISMA ESPECIALIDAD
-    # -----------------------------------------------------
-
-    if specialist.specialty_id:
-
-        same_specialty_relation = db.session.execute(
-            db.select(DoctorPatient)
-            .join(
-                Doctor,
-                DoctorPatient.doctor_id == Doctor.id
-            )
-            .where(
-                DoctorPatient.patient_id == patient.id,
-                DoctorPatient.is_active.is_(True),
-                Doctor.specialty_id == specialist.specialty_id,
-                DoctorPatient.doctor_id != specialist.id
-            )
-        ).scalars().first()
-
-        if same_specialty_relation:
-
-            return jsonify({
-                "error": (
-                    "Este paciente ya está asignado "
-                    "a otro médico de esta especialidad"
-                )
-            }), 409
-
-    # -----------------------------------------------------
-    # COMPROBAR RELACIÓN CON ESTE ESPECIALISTA
-    # -----------------------------------------------------
-
-    existing_relation = db.session.execute(
-        db.select(DoctorPatient).where(
-            DoctorPatient.doctor_id == specialist.id,
-            DoctorPatient.patient_id == patient.id
-        )
-    ).scalar_one_or_none()
-
-    if existing_relation:
-
-        # Ya está asignado
-        if existing_relation.is_active:
-
-            return jsonify({
-                "error": (
-                    "Este paciente ya está asignado "
-                    "a este especialista"
-                )
-            }), 409
-
-        # Estaba asignado pero se había eliminado
-        existing_relation.is_active = True
-
-        db.session.commit()
-
-        return jsonify({
-            "message": "Especialista asignado correctamente",
-            "especialista": {
-                "id": specialist.id,
-                "nombre": specialist.user.first_name,
-                "apellidos": specialist.user.last_name,
-                "especialidad": specialist.specialty.name
-            }
-        }), 200
 
     # -----------------------------------------------------
     # CREAR NUEVA RELACIÓN
@@ -3121,6 +3047,7 @@ def obtener_especialistas():
         "total": len(especialistas)
     }), 200
 
+
 @api.route(
     "/medico/pacientes/<int:patient_id>/especialistas",
     methods=["GET"]
@@ -3220,86 +3147,6 @@ def obtener_especialistas_paciente(patient_id):
     }), 200
 
 
-@api.route(
-    "/medico/pacientes/<int:patient_id>/especialista/<int:specialist_id>",
-    methods=["DELETE"]
-)
-@jwt_required()
-def eliminar_especialista_paciente(patient_id, specialist_id):
-
-    user_id = get_jwt_identity()
-    user = db.session.get(User, int(user_id))
-
-    if not user:
-        return jsonify({
-            "error": "Usuario no encontrado"
-        }), 404
-
-    if user.role != UserRole.DOCTOR or not user.doctor:
-        return jsonify({
-            "error": "No tienes permisos"
-        }), 403
-
-    doctor_cabecera = user.doctor
-
-    if not doctor_cabecera.specialty:
-        return jsonify({
-            "error": "El médico no tiene una especialidad asignada"
-        }), 403
-
-    specialty_name = (
-        doctor_cabecera.specialty.name or ""
-    ).strip().lower()
-
-    if specialty_name != "médico de cabecera":
-        return jsonify({
-            "error": "Solo el médico de cabecera puede eliminar especialistas"
-        }), 403
-
-    patient = db.session.get(Patient, patient_id)
-
-    if not patient:
-        return jsonify({
-            "error": "Paciente no encontrado"
-        }), 404
-
-    # Comprobar que el paciente pertenece al médico de cabecera
-    patient_relation = db.session.execute(
-        db.select(DoctorPatient).where(
-            DoctorPatient.doctor_id == doctor_cabecera.id,
-            DoctorPatient.patient_id == patient.id,
-            DoctorPatient.is_active.is_(True)
-        )
-    ).scalar_one_or_none()
-
-    if not patient_relation:
-        return jsonify({
-            "error": "El paciente no está en tu lista de pacientes"
-        }), 403
-
-    # Buscar la relación con el especialista
-    specialist_relation = db.session.execute(
-        db.select(DoctorPatient).where(
-            DoctorPatient.doctor_id == specialist_id,
-            DoctorPatient.patient_id == patient.id,
-            DoctorPatient.is_active.is_(True)
-        )
-    ).scalar_one_or_none()
-
-    if not specialist_relation:
-        return jsonify({
-            "error": "El especialista no está asignado a este paciente"
-        }), 404
-
-    # Desactivar la relación, no borrarla físicamente
-    specialist_relation.is_active = False
-
-    db.session.commit()
-
-    return jsonify({
-        "message": "Especialista eliminado correctamente"
-    }), 200
-
 @api.route("/paciente/consultas/disponibilidad", methods=["GET"])
 @jwt_required()
 def obtener_disponibilidad_consultas():
@@ -3373,3 +3220,1128 @@ def obtener_disponibilidad_consultas():
         "doctor_id": doctor_id,
         "ocupadas": ocupadas
     }), 200
+
+# ====================
+# OBTENER ALERGIAS
+# ===================
+
+
+@api.route(
+    '/medico/pacientes/<int:patient_id>/alergias',
+    methods=['GET']
+)
+@jwt_required()
+def obtener_alergias_paciente(patient_id):
+
+    user_id = get_jwt_identity()
+
+    user = db.session.get(
+        User,
+        int(user_id)
+    )
+
+    if not user:
+        return jsonify({
+            "error": "Usuario no encontrado."
+        }), 404
+
+    if user.role != UserRole.DOCTOR:
+        return jsonify({
+            "error": "No tienes permisos para consultar este historial."
+        }), 403
+
+    doctor = user.doctor
+
+    if not doctor:
+        return jsonify({
+            "error": "Perfil médico no encontrado."
+        }), 404
+
+    patient = db.session.get(
+        Patient,
+        patient_id
+    )
+
+    if not patient:
+        return jsonify({
+            "error": "Paciente no encontrado."
+        }), 404
+
+    alergias = db.session.execute(
+        db.select(Allergy)
+        .where(
+            Allergy.patient_id == patient.id
+        )
+        .order_by(
+            Allergy.created_at.desc()
+        )
+    ).scalars().all()
+
+    resultado = []
+
+    for alergia in alergias:
+        resultado.append({
+            "id": alergia.id,
+            "patient_id": alergia.patient_id,
+            "allergen": alergia.allergen,
+            "reaction": alergia.reaction,
+            "severity": alergia.severity,
+            "notes": alergia.notes,
+            "created_at": (
+                alergia.created_at.isoformat()
+                if alergia.created_at
+                else None
+            ),
+        })
+
+    return jsonify({
+        "alergias": resultado
+    }), 200
+
+
+# ====================
+# CREAR ALERGIA
+# ====================
+
+@api.route(
+    '/medico/pacientes/<int:patient_id>/alergias',
+    methods=['POST']
+)
+@jwt_required()
+def crear_alergia_paciente(patient_id):
+
+    user_id = get_jwt_identity()
+
+    user = db.session.get(
+        User,
+        int(user_id)
+    )
+
+    if not user:
+        return jsonify({
+            "error": "Usuario no encontrado."
+        }), 404
+
+    if user.role != UserRole.DOCTOR:
+        return jsonify({
+            "error": "No tienes permisos para registrar alergias."
+        }), 403
+
+    doctor = user.doctor
+
+    if not doctor:
+        return jsonify({
+            "error": "Perfil médico no encontrado."
+        }), 404
+
+    patient = db.session.get(
+        Patient,
+        patient_id
+    )
+
+    if not patient:
+        return jsonify({
+            "error": "Paciente no encontrado."
+        }), 404
+
+    data = request.get_json()
+
+    if not data:
+        return jsonify({
+            "error": "No se recibieron datos."
+        }), 400
+
+    allergen = data.get("allergen")
+    reaction = data.get("reaction")
+    severity = data.get("severity")
+    notes = data.get("notes")
+
+    if not allergen or not allergen.strip():
+        return jsonify({
+            "error": "El alérgeno es obligatorio."
+        }), 400
+
+    alergia = Allergy(
+        patient_id=patient.id,
+        allergen=allergen.strip(),
+        reaction=reaction.strip() if reaction else None,
+        severity=severity.strip() if severity else None,
+        notes=notes.strip() if notes else None,
+    )
+
+    try:
+
+        db.session.add(alergia)
+        db.session.commit()
+
+    except Exception as error:
+
+        db.session.rollback()
+
+        print(
+            "Error creando alergia:",
+            error
+        )
+
+        return jsonify({
+            "error": "No se pudo registrar la alergia."
+        }), 500
+
+    return jsonify({
+        "message": "Alergia registrada correctamente.",
+        "alergia": {
+            "id": alergia.id,
+            "patient_id": alergia.patient_id,
+            "allergen": alergia.allergen,
+            "reaction": alergia.reaction,
+            "severity": alergia.severity,
+            "notes": alergia.notes,
+            "created_at": (
+                alergia.created_at.isoformat()
+                if alergia.created_at
+                else None
+            ),
+        }
+    }), 201
+
+
+# ====================
+# OBTENER VACUNAS
+# ===================
+
+@api.route(
+    '/medico/pacientes/<int:patient_id>/vacunas',
+    methods=['GET']
+)
+@jwt_required()
+def obtener_vacunas_paciente(patient_id):
+
+    user_id = get_jwt_identity()
+
+    user = db.session.get(
+        User,
+        int(user_id)
+    )
+
+    if not user:
+        return jsonify({
+            "error": "Usuario no encontrado."
+        }), 404
+
+    if user.role != UserRole.DOCTOR:
+        return jsonify({
+            "error": "No tienes permisos para consultar este historial."
+        }), 403
+
+    doctor = user.doctor
+
+    if not doctor:
+        return jsonify({
+            "error": "Perfil médico no encontrado."
+        }), 404
+
+    patient = db.session.get(
+        Patient,
+        patient_id
+    )
+
+    if not patient:
+        return jsonify({
+            "error": "Paciente no encontrado."
+        }), 404
+
+    vacunas = db.session.execute(
+        db.select(Vaccination)
+        .where(
+            Vaccination.patient_id == patient.id
+        )
+        .order_by(
+            Vaccination.vaccination_date.desc()
+        )
+    ).scalars().all()
+
+    resultado = []
+
+    for vacuna in vacunas:
+        resultado.append({
+            "id": vacuna.id,
+            "patient_id": vacuna.patient_id,
+            "vaccine_name": vacuna.vaccine_name,
+            "vaccination_date": (
+                vacuna.vaccination_date.isoformat()
+                if vacuna.vaccination_date
+                else None
+            ),
+            "dose": vacuna.dose,
+            "lot_number": vacuna.lot_number,
+            "manufacturer": vacuna.manufacturer,
+            "next_dose_date": (
+                vacuna.next_dose_date.isoformat()
+                if vacuna.next_dose_date
+                else None
+            ),
+            "notes": vacuna.notes,
+        })
+
+    return jsonify({
+        "vacunas": resultado
+    }), 200
+# =========================================================
+# VACUNACIONES (MÉDICO)
+# =========================================================
+
+@api.route("/medico/vacunaciones", methods=["POST"])
+@jwt_required()
+def crear_vacunacion():
+
+    user_id = get_jwt_identity()
+
+    user = User.query.get(user_id)
+
+    if not user or user.role.value != "doctor":
+        return jsonify({
+            "error": "No autorizado"
+        }), 403
+
+    doctor = Doctor.query.filter_by(
+        user_id=user.id
+    ).first()
+
+    if not doctor:
+        return jsonify({
+            "error": "Médico no encontrado"
+        }), 404
+
+    data = request.get_json()
+
+    if not data:
+        return jsonify({
+            "error": "No se han enviado datos"
+        }), 400
+
+    patient_id = data.get("patient_id")
+    vaccine = (data.get("vaccine") or "").strip()
+    dose = (data.get("dose") or "").strip()
+    administration_date = data.get("administration_date")
+
+    if not patient_id:
+        return jsonify({
+            "error": "Falta el paciente"
+        }), 400
+
+    if not vaccine:
+        return jsonify({
+            "error": "Introduce el nombre de la vacuna"
+        }), 400
+
+    if not dose:
+        return jsonify({
+            "error": "Introduce la dosis"
+        }), 400
+
+    if not administration_date:
+        return jsonify({
+            "error": "Introduce la fecha de administración"
+        }), 400
+
+    relation = DoctorPatient.query.filter_by(
+        doctor_id=doctor.id,
+        patient_id=patient_id,
+        is_active=True
+    ).first()
+
+    if not relation:
+        return jsonify({
+            "error": "Este paciente no está asignado a tu consulta"
+        }), 403
+
+    try:
+        vaccination_date = datetime.strptime(
+            administration_date, "%Y-%m-%d"
+        ).date()
+    except ValueError:
+        return jsonify({
+            "error": "Fecha de administración inválida"
+        }), 400
+
+    next_dose_date = None
+    next_dose_raw = data.get("next_dose_date")
+
+    if next_dose_raw:
+        try:
+            next_dose_date = datetime.strptime(
+                next_dose_raw, "%Y-%m-%d"
+            ).date()
+        except ValueError:
+            return jsonify({
+                "error": "Fecha de próxima dosis inválida"
+            }), 400
+
+    new_vaccination = Vaccination(
+        patient_id=patient_id,
+        vaccine_name=vaccine,
+        vaccination_date=vaccination_date,
+        dose=dose,
+        lot_number=(data.get("lot") or "").strip() or None,
+        manufacturer=(data.get("manufacturer") or "").strip() or None,
+        next_dose_date=next_dose_date,
+        notes=(data.get("observations") or "").strip() or None,
+    )
+
+    db.session.add(new_vaccination)
+    db.session.commit()
+
+    return jsonify({
+        "message": "Registro de vacunación creado correctamente",
+        "vaccination": {
+            "id": new_vaccination.id,
+            "patient_id": new_vaccination.patient_id,
+            "vaccine_name": new_vaccination.vaccine_name,
+            "vaccination_date": new_vaccination.vaccination_date.isoformat(),
+            "dose": new_vaccination.dose,
+            "lot_number": new_vaccination.lot_number,
+            "manufacturer": new_vaccination.manufacturer,
+            "next_dose_date": (
+                new_vaccination.next_dose_date.isoformat()
+                if new_vaccination.next_dose_date else None
+            ),
+            "notes": new_vaccination.notes,
+        }
+    }), 201
+
+
+# ====================
+# OBTENER CIRUGÍAS
+# ===================
+
+@api.route(
+    '/medico/pacientes/<int:patient_id>/cirugias',
+    methods=['GET']
+)
+@jwt_required()
+def obtener_cirugias_paciente(patient_id):
+
+    user_id = get_jwt_identity()
+
+    user = db.session.get(
+        User,
+        int(user_id)
+    )
+
+    if not user:
+        return jsonify({
+            "error": "Usuario no encontrado."
+        }), 404
+
+    if user.role != UserRole.DOCTOR:
+        return jsonify({
+            "error": "No tienes permisos para consultar este historial."
+        }), 403
+
+    doctor = user.doctor
+
+    if not doctor:
+        return jsonify({
+            "error": "Perfil médico no encontrado."
+        }), 404
+
+    patient = db.session.get(
+        Patient,
+        patient_id
+    )
+
+    if not patient:
+        return jsonify({
+            "error": "Paciente no encontrado."
+        }), 404
+
+    cirugias = db.session.execute(
+        db.select(Surgery)
+        .where(
+            Surgery.patient_id == patient.id
+        )
+        .order_by(
+            Surgery.surgery_date.desc()
+        )
+    ).scalars().all()
+
+    resultado = []
+
+    for cirugia in cirugias:
+        resultado.append({
+            "id": cirugia.id,
+            "patient_id": cirugia.patient_id,
+            "name": cirugia.name,
+            "surgery_date": (
+                cirugia.surgery_date.isoformat()
+                if cirugia.surgery_date
+                else None
+            ),
+            "hospital": cirugia.hospital,
+            "surgeon": cirugia.surgeon,
+            "notes": cirugia.notes,
+        })
+
+    return jsonify({
+        "cirugias": resultado
+    }), 200
+
+# =========================================================
+# CIRUGÍAS (CUALQUIER MÉDICO)
+# =========================================================
+
+@api.route("/medico/cirugias", methods=["POST"])
+@jwt_required()
+def crear_cirugia():
+
+    user_id = get_jwt_identity()
+
+    user = db.session.get(User, int(user_id))
+
+    if not user:
+        return jsonify({
+            "error": "Usuario no encontrado"
+        }), 404
+
+    if user.role.value != "doctor":
+        return jsonify({
+            "error": "No autorizado"
+        }), 403
+
+    data = request.get_json()
+
+    if not data:
+        return jsonify({
+            "error": "No se han enviado datos"
+        }), 400
+
+    patient_id = data.get("patient_id")
+    name = (data.get("name") or "").strip()
+    surgery_date_raw = data.get("surgery_date")
+
+    if not patient_id:
+        return jsonify({
+            "error": "Falta el paciente"
+        }), 400
+
+    if not name:
+        return jsonify({
+            "error": "Introduce el nombre de la cirugía"
+        }), 400
+
+    if not surgery_date_raw:
+        return jsonify({
+            "error": "Introduce la fecha de la cirugía"
+        }), 400
+
+    patient = db.session.get(Patient, patient_id)
+
+    if not patient:
+        return jsonify({
+            "error": "Paciente no encontrado"
+        }), 404
+
+    try:
+        surgery_date = datetime.strptime(
+            surgery_date_raw, "%Y-%m-%d"
+        ).date()
+    except ValueError:
+        return jsonify({
+            "error": "Fecha de cirugía inválida"
+        }), 400
+
+    new_surgery = Surgery(
+        patient_id=patient_id,
+        name=name,
+        surgery_date=surgery_date,
+        hospital=(data.get("hospital") or "").strip() or None,
+        surgeon=(data.get("surgeon") or "").strip() or None,
+        notes=(data.get("notes") or "").strip() or None,
+    )
+
+    db.session.add(new_surgery)
+    db.session.commit()
+
+    return jsonify({
+        "message": "Registro de cirugía creado correctamente",
+        "surgery": {
+            "id": new_surgery.id,
+            "patient_id": new_surgery.patient_id,
+            "name": new_surgery.name,
+            "surgery_date": (
+                new_surgery.surgery_date.isoformat()
+                if new_surgery.surgery_date else None
+            ),
+            "hospital": new_surgery.hospital,
+            "surgeon": new_surgery.surgeon,
+            "notes": new_surgery.notes,
+        }
+    }), 201
+
+# =========================================================
+# FORMULARIO DE CONTACTO
+# =========================================================
+
+@api.route('/contacto', methods=['POST'])
+def enviar_contacto():
+
+    data = request.get_json()
+
+    if not data:
+        return jsonify({
+            "error": "No se recibieron datos."
+        }), 400
+
+    nombre = data.get("nombre")
+    email = data.get("email")
+    mensaje = data.get("mensaje")
+
+    if not nombre or not email or not mensaje:
+        return jsonify({
+            "error": "Todos los campos son obligatorios."
+        }), 400
+
+    try:
+
+        resend.Emails.send({
+            "from": "Lexdibri <onboarding@resend.dev>",
+            "to": ["briancafee7@gmail.com"],
+            "reply_to": email,
+            "subject": f"Nuevo mensaje de contacto - {nombre}",
+            "html": f"""
+                <h2>Nuevo mensaje de contacto</h2>
+
+                <p>
+                    <strong>Nombre:</strong> {nombre}
+                </p>
+
+                <p>
+                    <strong>Email:</strong> {email}
+                </p>
+
+                <p>
+                    <strong>Mensaje:</strong>
+                </p>
+
+                <p>
+                    {mensaje}
+                </p>
+            """
+        })
+
+        return jsonify({
+            "message": "Mensaje enviado correctamente."
+        }), 200
+
+    except Exception as error:
+
+        print("Error enviando email:", error)
+
+        return jsonify({
+            "error": "No se pudo enviar el mensaje."
+        }), 500
+
+# ============================================================
+# ADMINISTRACIÓN DEL HOSPITAL
+# ============================================================
+
+def get_admin_actual():
+
+    user_id = get_jwt_identity()
+
+    user = db.session.get(
+        User,
+        int(user_id)
+    )
+
+    if not user:
+        return None, jsonify({
+            "error": "Usuario no encontrado"
+        }), 404
+
+    if user.role != UserRole.ADMIN:
+        return None, jsonify({
+            "error": "Acceso exclusivo para administradores"
+        }), 403
+
+    if not user.hospital_id:
+        return None, jsonify({
+            "error": "El administrador no tiene un hospital asignado"
+        }), 400
+
+    return user, None, None
+
+
+# ============================================================
+# 1. OBTENER HOSPITAL DEL ADMIN
+# ============================================================
+
+@api.route("/admin/hospital", methods=["GET"])
+@jwt_required()
+def admin_hospital():
+
+    user, error, status = get_admin_actual()
+
+    if error:
+        return error, status
+
+    hospital = db.session.get(
+        Hospital,
+        user.hospital_id
+    )
+
+    if not hospital:
+        return jsonify({
+            "error": "Hospital no encontrado"
+        }), 404
+
+    return jsonify({
+        "id": hospital.id,
+        "name": hospital.name,
+        "city": hospital.city,
+        "address": hospital.address
+    }), 200
+
+
+# ============================================================
+# 2. OBTENER DOCTORES DEL HOSPITAL
+# ============================================================
+
+
+@api.route("/admin/doctores", methods=["GET"])
+@jwt_required()
+def admin_doctores():
+    user, error, status = get_admin_actual()
+    if error:
+        return error, status
+
+    doctores = Doctor.query.filter_by(
+        hospital_id=user.hospital_id
+    ).all()
+
+    resultado = []
+
+    for doctor in doctores:
+        resultado.append({
+            "id": doctor.id,
+            "user_id": doctor.user_id,
+
+            "first_name": doctor.user.first_name,
+            "last_name": doctor.user.last_name,
+            "email": doctor.user.email,
+            "dni": doctor.user.dni,
+            "phone": doctor.user.phone,
+
+            "medical_license": doctor.medical_license,
+
+            "specialty": (
+                doctor.specialty.name
+                if doctor.specialty
+                else None
+            ),
+
+            "specialty_id": doctor.specialty_id,
+            "years_experience": doctor.years_experience,
+
+            # Estado profesional del médico
+            "status": (
+                doctor.status.value
+                if doctor.status
+                else None
+            ),
+
+            # Estado de la cuenta del usuario
+            "is_active": doctor.user.is_active,
+
+            "hospital_id": doctor.hospital_id,
+        })
+
+    return jsonify({
+        "doctores": resultado,
+        "total": len(resultado)
+    }), 200
+
+
+
+# ============================================================
+# 3. OBTENER PACIENTES
+# ============================================================
+
+@api.route("/admin/pacientes", methods=["GET"])
+@jwt_required()
+def admin_pacientes():
+
+    user, error, status = get_admin_actual()
+
+    if error:
+        return error, status
+
+    pacientes = Patient.query.all()
+
+    resultado = []
+
+    for patient in pacientes:
+
+        relaciones = (
+            DoctorPatient.query
+            .join(Doctor)
+            .filter(
+                DoctorPatient.patient_id == patient.id,
+                DoctorPatient.is_active.is_(True),
+                Doctor.hospital_id == user.hospital_id
+            )
+            .all()
+        )
+
+        medicos = []
+
+        for relacion in relaciones:
+
+            doctor = relacion.doctor
+
+            medicos.append({
+                "id": doctor.id,
+                "first_name": doctor.user.first_name,
+                "last_name": doctor.user.last_name,
+                "specialty": (
+                    doctor.specialty.name
+                    if doctor.specialty
+                    else None
+                ),
+                "assigned_at": (
+                    relacion.assigned_at.isoformat()
+                    if relacion.assigned_at
+                    else None
+                )
+            })
+
+        resultado.append({
+            "id": patient.id,
+            "user_id": patient.user_id,
+            "first_name": patient.user.first_name,
+            "last_name": patient.user.last_name,
+            "email": patient.user.email,
+            "dni": patient.user.dni,
+            "cip": patient.cip,
+            "blood_type": patient.blood_type,
+            "doctores": medicos
+        })
+
+    return jsonify({
+        "pacientes": resultado,
+        "total": len(resultado)
+    }), 200
+
+
+# ============================================================
+# 4. ASIGNAR MÉDICO A PACIENTE
+# ============================================================
+
+@api.route("/admin/asignar-medico", methods=["POST"])
+@jwt_required()
+def asignar_medico():
+
+    user, error, status = get_admin_actual()
+
+    if error:
+        return error, status
+
+    data = request.get_json()
+
+    if not data:
+        return jsonify({
+            "error": "No se han enviado datos"
+        }), 400
+
+    patient_id = data.get("patient_id")
+    doctor_id = data.get("doctor_id")
+
+    if not patient_id or not doctor_id:
+        return jsonify({
+            "error": "patient_id y doctor_id son obligatorios"
+        }), 400
+
+    patient = db.session.get(
+        Patient,
+        patient_id
+    )
+
+    if not patient:
+        return jsonify({
+            "error": "Paciente no encontrado"
+        }), 404
+
+    doctor = db.session.get(
+        Doctor,
+        doctor_id
+    )
+
+    if not doctor:
+        return jsonify({
+            "error": "Médico no encontrado"
+        }), 404
+
+    # El médico debe pertenecer al hospital
+    # del administrador autenticado
+    if doctor.hospital_id != user.hospital_id:
+        return jsonify({
+            "error": "El médico no pertenece a tu hospital"
+        }), 403
+
+    relacion = DoctorPatient.query.filter_by(
+        doctor_id=doctor.id,
+        patient_id=patient.id
+    ).first()
+
+    if relacion:
+
+        if relacion.is_active:
+            return jsonify({
+                "error": "El médico ya está asignado a este paciente"
+            }), 409
+
+        # Reactivar una relación anterior
+        relacion.is_active = True
+
+    else:
+
+        relacion = DoctorPatient(
+            doctor_id=doctor.id,
+            patient_id=patient.id,
+            is_active=True
+        )
+
+        db.session.add(relacion)
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Médico asignado correctamente",
+        "doctor_id": doctor.id,
+        "patient_id": patient.id
+    }), 200
+
+
+# ============================================================
+# 5. DESASIGNAR MÉDICO DE PACIENTE
+# ============================================================
+
+@api.route(
+    "/admin/desasignar-medico/<int:doctor_id>/<int:patient_id>",
+    methods=["PUT"]
+)
+@jwt_required()
+def desasignar_medico(doctor_id, patient_id):
+
+    user, error, status = get_admin_actual()
+
+    if error:
+        return error, status
+
+    doctor = db.session.get(
+        Doctor,
+        doctor_id
+    )
+
+    if not doctor:
+        return jsonify({
+            "error": "Médico no encontrado"
+        }), 404
+
+    # El médico debe pertenecer al hospital
+    # del administrador autenticado
+    if doctor.hospital_id != user.hospital_id:
+        return jsonify({
+            "error": "El médico no pertenece a tu hospital"
+        }), 403
+
+    relacion = DoctorPatient.query.filter_by(
+        doctor_id=doctor_id,
+        patient_id=patient_id
+    ).first()
+
+    if not relacion:
+        return jsonify({
+            "error": "La asignación no existe"
+        }), 404
+
+    relacion.is_active = False
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Médico desasignado correctamente"
+    }), 200
+
+
+
+
+@api.route("/admin/doctores/<int:doctor_id>/estado", methods=["PUT"])
+@jwt_required()
+def admin_cambiar_estado_doctor(doctor_id):
+    print("\n================ CAMBIAR ESTADO MÉDICO ================")
+    print(">>> ENTRÓ AL ENDPOINT")
+    print(">>> doctor_id:", doctor_id)
+
+    try:
+        # --------------------------------------------------
+        # 1. Comprobar administrador
+        # --------------------------------------------------
+        print(">>> Comprobando administrador...")
+
+        user, error, status = get_admin_actual()
+
+        if error:
+            print(">>> ERROR EN get_admin_actual()")
+            print(">>> error:", error)
+            print(">>> status:", status)
+            return error, status
+
+        print(">>> Admin correcto")
+        print(">>> admin user_id:", user.id)
+        print(">>> admin hospital_id:", user.hospital_id)
+
+        # --------------------------------------------------
+        # 2. Buscar médico
+        # --------------------------------------------------
+        print(">>> Buscando médico...")
+
+        doctor = db.session.get(Doctor, doctor_id)
+
+        if not doctor:
+            print(">>> MÉDICO NO ENCONTRADO")
+            return jsonify({
+                "error": "Médico no encontrado"
+            }), 404
+
+        print(">>> Médico encontrado")
+        print(">>> doctor.id:", doctor.id)
+        print(">>> doctor.user_id:", doctor.user_id)
+        print(">>> doctor.hospital_id:", doctor.hospital_id)
+        print(">>> doctor.status actual:", doctor.status)
+
+        # --------------------------------------------------
+        # 3. Comprobar hospital
+        # --------------------------------------------------
+        print(">>> Comprobando hospital...")
+
+        if doctor.hospital_id != user.hospital_id:
+            print(">>> ERROR: el médico no pertenece al hospital del admin")
+            print(">>> doctor.hospital_id:", doctor.hospital_id)
+            print(">>> admin.hospital_id:", user.hospital_id)
+
+            return jsonify({
+                "error": "El médico no pertenece a tu hospital"
+            }), 403
+
+        print(">>> Hospital correcto")
+
+        # --------------------------------------------------
+        # 4. Leer JSON
+        # --------------------------------------------------
+        print(">>> Leyendo JSON de la petición...")
+
+        data = request.get_json(silent=True)
+
+        print(">>> data recibida:", data)
+
+        if not data:
+            print(">>> ERROR: no se recibió JSON")
+
+            return jsonify({
+                "error": "No se recibió ningún JSON"
+            }), 400
+
+        nuevo_estado = data.get("status")
+
+        print(">>> nuevo_estado:", nuevo_estado)
+        print(">>> tipo nuevo_estado:", type(nuevo_estado))
+
+        # --------------------------------------------------
+        # 5. Comprobar status
+        # --------------------------------------------------
+        if not nuevo_estado:
+            print(">>> ERROR: falta el campo status")
+
+            return jsonify({
+                "error": "El campo 'status' es obligatorio"
+            }), 400
+
+        # --------------------------------------------------
+        # 6. Convertir al Enum
+        # --------------------------------------------------
+        print(">>> Estados permitidos:")
+
+        for estado in DoctorStatus:
+            print(
+                "    -",
+                estado.name,
+                "=",
+                estado.value
+            )
+
+        print(">>> Intentando asignar nuevo estado...")
+
+        try:
+            doctor.status = DoctorStatus(nuevo_estado)
+
+            print(">>> Estado asignado correctamente")
+            print(">>> doctor.status:", doctor.status)
+            print(">>> doctor.status.value:", doctor.status.value)
+
+        except (ValueError, TypeError) as e:
+            print(">>> ERROR AL CONVERTIR EL ESTADO")
+            print(">>> excepción:", repr(e))
+
+            return jsonify({
+                "error": "Estado de médico no válido",
+                "estados_permitidos": [
+                    estado.value
+                    for estado in DoctorStatus
+                ]
+            }), 400
+
+        # --------------------------------------------------
+        # 7. Guardar en BD
+        # --------------------------------------------------
+        print(">>> Haciendo commit en la base de datos...")
+
+        db.session.commit()
+
+        print(">>> COMMIT CORRECTO")
+        print(">>> Nuevo estado guardado:", doctor.status.value)
+
+        # --------------------------------------------------
+        # 8. Respuesta
+        # --------------------------------------------------
+        respuesta = {
+            "message": "Estado del médico actualizado correctamente",
+            "doctor_id": doctor.id,
+            "status": doctor.status.value
+        }
+
+        print(">>> RESPUESTA:", respuesta)
+        print("========================================================\n")
+
+        return jsonify(respuesta), 200
+
+    except Exception as e:
+        # --------------------------------------------------
+        # ERROR INESPERADO
+        # --------------------------------------------------
+        print("\n!!!!!!!!!!!!!!!! ERROR INESPERADO !!!!!!!!!!!!!!!!")
+        print(">>> Tipo:", type(e).__name__)
+        print(">>> Error:", str(e))
+        print(">>> repr:", repr(e))
+
+        import traceback
+        traceback.print_exc()
+
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
+
+        db.session.rollback()
+
+        return jsonify({
+            "error": "Error interno al cambiar el estado del médico",
+            "detail": str(e)
+        }), 500
