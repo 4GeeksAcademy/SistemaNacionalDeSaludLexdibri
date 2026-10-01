@@ -173,7 +173,7 @@ export const Urgencias = () => {
                 Localización
               </span>
 
-              <h2 className="fw-bold mt-2 mb-3">
+              <h2 className="fw-bold mt-2 mb-3 text-light">
                 Encuentra el centro de urgencias
                 <span className="text-info">
                   {" "}más cercano.
@@ -207,7 +207,7 @@ export const Urgencias = () => {
                 </div>
 
                 <div>
-                  <strong className="d-block">
+                  <strong className="d-block text-white">
                     Servicios de urgencias
                   </strong>
 
