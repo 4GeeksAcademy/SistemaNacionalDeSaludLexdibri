@@ -71,7 +71,7 @@ export const ElSistema = () => {
                                         El origen del proyecto
                                     </span>
 
-                                    <h2 className="fw-bold mt-2 mb-4">
+                                    <h2 className="fw-bold mt-2 mb-4 text-light">
                                         Tres estudiantes,
                                         <span className="text-info">
                                             {" "}un problema real.
@@ -79,11 +79,11 @@ export const ElSistema = () => {
                                     </h2>
 
                                     <p className="text-white-50 mb-3">
-                                        En este proyecto{" "}
+                                        En este proyecto llamado {" "}
                                         <strong className="text-white">
-                                            4Geeks Academy
+                                            LEXDIBRI
                                         </strong>{" "}
-                                         quisimos aplicar nuestros conocimientos de programación a un problema del mundo real: la falta de interconexión entre las bases de datos sanitarias de las distintas comunidades autónomas dificulta que los profesionales médicos puedan consultar de forma rápida y segura la información clínica de un paciente cuando este es atendido fuera de su comunidad.
+                                         quisimos aplicar nuestros conocimientos de programación a un problema del mundo real: la falta de interconexión entre las bases de datos sanitarias de las distintas comunidades autónomas  que dificulta que los profesionales médicos puedan consultar de forma rápida y segura la información clínica de un paciente cuando este es atendido fuera de su comunidad.
 
                                     </p>
 

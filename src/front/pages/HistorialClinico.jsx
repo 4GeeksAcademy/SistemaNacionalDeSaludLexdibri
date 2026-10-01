@@ -1,3 +1,4 @@
+
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Icon } from "../components/Icon";
@@ -92,7 +93,6 @@ export const HistorialClinico = () => {
                 }
 
                 setEnfermedades(data.enfermedades || []);
-
             } catch (error) {
                 setErrorEnfermedades(error.message);
             } finally {
@@ -139,7 +139,6 @@ export const HistorialClinico = () => {
                 }
 
                 setAlergias(data.alergias || []);
-
             } catch (error) {
                 setErrorAlergias(error.message);
             } finally {
@@ -186,7 +185,6 @@ export const HistorialClinico = () => {
                 }
 
                 setVacunas(data.vacunas || []);
-
             } catch (error) {
                 setErrorVacunas(error.message);
             } finally {
@@ -233,7 +231,6 @@ export const HistorialClinico = () => {
                 }
 
                 setCirugias(data.cirugias || []);
-
             } catch (error) {
                 setErrorCirugias(error.message);
             } finally {
@@ -280,7 +277,6 @@ export const HistorialClinico = () => {
                 }
 
                 setConsultas(data.consultas || []);
-
             } catch (error) {
                 setErrorConsultas(error.message);
             } finally {
@@ -333,7 +329,6 @@ export const HistorialClinico = () => {
                             String(patient.id)
                     )
                 );
-
             } catch (error) {
                 setErrorRecetas(error.message);
             } finally {
@@ -684,7 +679,7 @@ export const HistorialClinico = () => {
 
                             <label
                                 htmlFor="orden"
-                                className="border rounded  bg-info bg-opacity-10 text-info border-info"
+                                className="border rounded bg-info bg-opacity-10 text-info border-info"
                             >
                                 Ordenar por :
                             </label>
@@ -699,11 +694,11 @@ export const HistorialClinico = () => {
                                 }}
                             >
 
-                                <option value="recientes" className=" bg-info bg-opacity-10">
+                                <option value="recientes" className="bg-info bg-opacity-10">
                                     Más recientes
                                 </option>
 
-                                <option value="antiguos" className=" bg-info bg-opacity-10">
+                                <option value="antiguos" className="bg-info bg-opacity-10">
                                     Más antiguos
                                 </option>
 
@@ -790,7 +785,7 @@ export const HistorialClinico = () => {
                                                         Enfermedad
                                                     </span>
 
-                                                    <span className="badge bg-danger text-light ">
+                                                    <span className="badge bg-danger text-light">
                                                         {antecedente.estado}
                                                     </span>
 
@@ -956,7 +951,6 @@ export const HistorialClinico = () => {
 
                                         <div className="row g-3">
 
-                                            {/* FECHA */}
                                             <div className="col-md-3 col-lg-2">
 
                                                 <div className="small text-white">
@@ -971,7 +965,6 @@ export const HistorialClinico = () => {
 
                                             </div>
 
-                                            {/* INFORMACIÓN */}
                                             <div className="col-md-9 col-lg-10">
 
                                                 <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
@@ -988,12 +981,13 @@ export const HistorialClinico = () => {
 
                                                     {alergia.severity && (
                                                         <span
-                                                            className={`badge ${alergia.severity === "Grave"
-                                                                ? "bg-danger"
-                                                                : alergia.severity === "Moderada"
-                                                                    ? "bg-warning text-dark"
-                                                                    : "bg-success"
-                                                                }`}
+                                                            className={`badge ${
+                                                                alergia.severity === "Grave"
+                                                                    ? "bg-danger"
+                                                                    : alergia.severity === "Moderada"
+                                                                        ? "bg-warning text-dark"
+                                                                        : "bg-success"
+                                                            }`}
                                                         >
                                                             {alergia.severity}
                                                         </span>
@@ -1106,8 +1100,8 @@ export const HistorialClinico = () => {
             </div>
 
             {/* ==================================================
-    VACUNAS
-================================================== */}
+                VACUNAS
+            ================================================== */}
 
             <div className="card bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 shadow-sm mb-4">
 
@@ -1421,11 +1415,24 @@ export const HistorialClinico = () => {
 
                     ) : cirugias.length === 0 ? (
 
-                        <div className="text-center py-4">
+                        <div className="text-center py-5">
 
-                            <Icon name="Hospital" className="fs-2 mb-2" size="1em" />
+                            <div className="mb-3">
 
-                            <h3 className="h6 text-info fw-bold">
+                                <span
+                                    className="d-inline-flex align-items-center justify-content-center rounded-circle bg-secondary bg-opacity-50 text-white"
+                                    style={{
+                                        width: "60px",
+                                        height: "60px",
+                                        fontSize: "1.5rem",
+                                    }}
+                                >
+                                    —
+                                </span>
+
+                            </div>
+
+                            <h3 className="h5 text-info fw-bold">
                                 No hay cirugías registradas
                             </h3>
 
@@ -1550,6 +1557,7 @@ export const HistorialClinico = () => {
                                             </div>
 
                                         </div>
+
                                     )
                                 )}
 
@@ -1649,9 +1657,32 @@ export const HistorialClinico = () => {
 
                     ) : consultas.length === 0 ? (
 
-                        <p className="text-white mb-0">
-                            No hay consultas registradas.
-                        </p>
+                        <div className="text-center py-5">
+
+                            <div className="mb-3">
+
+                                <span
+                                    className="d-inline-flex align-items-center justify-content-center rounded-circle bg-secondary bg-opacity-50 text-white"
+                                    style={{
+                                        width: "60px",
+                                        height: "60px",
+                                        fontSize: "1.5rem",
+                                    }}
+                                >
+                                    —
+                                </span>
+
+                            </div>
+
+                            <h3 className="h5 text-info fw-bold">
+                                No hay consultas registradas
+                            </h3>
+
+                            <p className="text-white mb-0">
+                                Este paciente no tiene consultas registradas.
+                            </p>
+
+                        </div>
 
                     ) : (
 
@@ -1679,14 +1710,15 @@ export const HistorialClinico = () => {
                                                     </h3>
 
                                                     <span
-                                                        className={`badge ${consulta.status ===
+                                                        className={`badge ${
+                                                            consulta.status ===
                                                             "completed"
-                                                            ? "bg-success"
-                                                            : consulta.status ===
-                                                                "cancelled"
-                                                                ? "bg-danger"
-                                                                : "bg-warning text-dark"
-                                                            }`}
+                                                                ? "bg-success"
+                                                                : consulta.status ===
+                                                                    "cancelled"
+                                                                    ? "bg-danger"
+                                                                    : "bg-warning text-dark"
+                                                        }`}
                                                     >
                                                         {formatearEstadoConsulta(
                                                             consulta.status
@@ -1836,11 +1868,24 @@ export const HistorialClinico = () => {
 
                     ) : recetas.length === 0 ? (
 
-                        <div className="text-center py-4">
+                        <div className="text-center py-5">
 
-                            <Icon name="Pill" className="fs-2 mb-2" size="1em" />
+                            <div className="mb-3">
 
-                            <h3 className="h6 text-info fw-bold">
+                                <span
+                                    className="d-inline-flex align-items-center justify-content-center rounded-circle bg-secondary bg-opacity-50 text-white"
+                                    style={{
+                                        width: "60px",
+                                        height: "60px",
+                                        fontSize: "1.5rem",
+                                    }}
+                                >
+                                    —
+                                </span>
+
+                            </div>
+
+                            <h3 className="h5 text-info fw-bold">
                                 No hay recetas registradas
                             </h3>
 
@@ -1884,11 +1929,12 @@ export const HistorialClinico = () => {
                                                     </div>
 
                                                     <span
-                                                        className={`badge ${receta.status ===
+                                                        className={`badge ${
+                                                            receta.status ===
                                                             "active"
-                                                            ? "bg-success"
-                                                            : "bg-secondary"
-                                                            }`}
+                                                                ? "bg-success"
+                                                                : "bg-secondary"
+                                                        }`}
                                                     >
                                                         {formatearEstadoReceta(
                                                             receta.status
@@ -2021,3 +2067,4 @@ export const HistorialClinico = () => {
         </div>
     );
 };
+
