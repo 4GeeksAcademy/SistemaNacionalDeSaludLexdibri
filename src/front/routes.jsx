@@ -93,7 +93,7 @@ export const router = createBrowserRouter(
             <Route
                 path="dashboard/medico"
                 element={
-                    <PrivateRoute roles={["medico"]}>
+                    <PrivateRoute roles={["doctor"]}>
                         <DashboardMedico />
                     </PrivateRoute>
                 }
@@ -101,7 +101,7 @@ export const router = createBrowserRouter(
             <Route
                 path="nuevo-diagnostico"
                 element={
-                    <PrivateRoute roles={["medico"]}>
+                    <PrivateRoute roles={["doctor"]}>
                         <NuevoDiagnostico />
                     </PrivateRoute>
                 }
@@ -109,7 +109,7 @@ export const router = createBrowserRouter(
             <Route
                 path="nueva-consulta"
                 element={
-                    <PrivateRoute roles={["medico"]}>
+                    <PrivateRoute roles={["doctor"]}>
                         <NuevaConsulta />
                     </PrivateRoute>
                 }
@@ -117,7 +117,7 @@ export const router = createBrowserRouter(
             <Route
                 path="crear-receta"
                 element={
-                    <PrivateRoute roles={["medico"]}>
+                    <PrivateRoute roles={["doctor"]}>
                         <CrearReceta />
                     </PrivateRoute>
                 }
@@ -125,7 +125,7 @@ export const router = createBrowserRouter(
             <Route
                 path="crear-vacunacion"
                 element={
-                    <PrivateRoute roles={["medico"]}>
+                    <PrivateRoute roles={["doctor"]}>
                         <CrearVacunacion />
                     </PrivateRoute>
                 }
@@ -133,7 +133,7 @@ export const router = createBrowserRouter(
             <Route
                 path="crear-cirugia"
                 element={
-                    <PrivateRoute roles={["medico"]}>
+                    <PrivateRoute roles={["doctor"]}>
                         <CrearCirugia />
                     </PrivateRoute>
                 }
