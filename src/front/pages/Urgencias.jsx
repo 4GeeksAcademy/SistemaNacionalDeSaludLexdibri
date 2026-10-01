@@ -1,7 +1,11 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Icon } from "../components/Icon";
 
 export const Urgencias = () => {
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [mapUrl, setMapUrl] = useState(
+    "https://www.google.com/maps?q=hospitales%20Vigo%20Espa%C3%B1a&output=embed"
+  );
   useEffect(() => {
     const elements = document.querySelectorAll(".scroll-reveal");
 
@@ -26,7 +30,41 @@ export const Urgencias = () => {
       elements.forEach((element) => observer.unobserve(element));
     };
   }, []);
+  const buscarCentrosCercanos = () => {
+    if (!navigator.geolocation) {
+      alert("Tu navegador no permite obtener la ubicación.");
+      return;
+    }
 
+    setLocationLoading(true);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+
+        const url = `https://www.google.com/maps?q=hospitales+urgencias+near+${latitude},${longitude}&output=embed`;
+
+        setMapUrl(url);
+        setLocationLoading(false);
+      },
+      (error) => {
+        setLocationLoading(false);
+
+        if (error.code === 1) {
+          alert(
+            "Necesitamos permiso para acceder a tu ubicación para buscar centros cercanos."
+          );
+        } else {
+          alert("No se pudo obtener tu ubicación.");
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
+    );
+  };
   return (
     <div className=" text-white min-vh-100">
 
@@ -150,8 +188,14 @@ export const Urgencias = () => {
               <button
                 type="button"
                 className="btn btn-info rounded-pill fw-bold mt-3"
+                onClick={buscarCentrosCercanos}
+                disabled={locationLoading}
               >
-                <Icon name="MapPin" className="me-1" />Buscar centros cercanos
+                <Icon name="MapPin" className="me-1" />
+
+                {locationLoading
+                  ? "Buscando ubicación..."
+                  : "Buscar centros cercanos"}
               </button>
 
               <div className="d-flex align-items-start gap-3 mt-4">
@@ -182,7 +226,7 @@ export const Urgencias = () => {
 
                 <iframe
                   title="Mapa de centros de urgencias"
-                  src="https://www.google.com/maps?q=hospitales%20Vigo%20Espa%C3%B1a&output=embed"
+                   src={mapUrl}
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
                 ></iframe>
