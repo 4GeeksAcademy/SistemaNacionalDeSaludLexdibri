@@ -1,3 +1,4 @@
+
 [
   {
     "dni": "12345678Z",
@@ -6,7 +7,6 @@
     "date_of_birth": "1988-04-15",
     "sex": "F",
     "cip": "CIP000001",
-    "role": "patient",
     "is_registered": false
   },
   {
@@ -16,7 +16,6 @@
     "date_of_birth": "1975-09-22",
     "sex": "M",
     "cip": "CIP000002",
-    "role": "patient",
     "is_registered": false
   },
   {
@@ -26,7 +25,6 @@
     "date_of_birth": "1995-02-10",
     "sex": "F",
     "cip": "CIP000003",
-    "role": "patient",
     "is_registered": false
   },
   {
@@ -36,7 +34,6 @@
     "date_of_birth": "1968-11-30",
     "sex": "M",
     "cip": "CIP000004",
-    "role": "patient",
     "is_registered": false
   },
   {
@@ -46,7 +43,6 @@
     "date_of_birth": "2001-07-18",
     "sex": "F",
     "cip": "CIP000005",
-    "role": "patient",
     "is_registered": false
   },
   {
@@ -56,7 +52,6 @@
     "date_of_birth": "1982-04-03",
     "sex": "M",
     "cip": "CIP000006",
-    "role": "patient",
     "is_registered": false
   },
   {
@@ -66,7 +61,6 @@
     "date_of_birth": "1990-12-25",
     "sex": "F",
     "cip": "CIP000007",
-    "role": "patient",
     "is_registered": false
   },
   {
@@ -76,7 +70,6 @@
     "date_of_birth": "1959-06-12",
     "sex": "M",
     "cip": "CIP000008",
-    "role": "patient",
     "is_registered": false
   },
   {
@@ -86,7 +79,6 @@
     "date_of_birth": "1979-03-27",
     "sex": "F",
     "cip": "CIP000009",
-    "role": "patient",
     "is_registered": false
   },
   {
@@ -96,7 +88,15 @@
     "date_of_birth": "1998-10-05",
     "sex": "M",
     "cip": "CIP000010",
-    "role": "patient",
+    "is_registered": false
+  },
+  {
+    "dni": "99995278Z",
+    "first_name": "Brian",
+    "last_name": "Borrajo Otalvaro",
+    "date_of_birth": "1988-04-15",
+    "sex": "F",
+    "cip": "CIP999321",
     "is_registered": false
   }
 ]

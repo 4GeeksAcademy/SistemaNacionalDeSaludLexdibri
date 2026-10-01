@@ -1,5 +1,6 @@
+
 import React, { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { registrarUsuario } from "../services/authServices";
 import { Icon } from "../components/Icon";
 
@@ -18,6 +19,8 @@ const EMPTY_FORM = {
 };
 
 export const Register = () => {
+    const navigate = useNavigate();
+
     const [tipoUsuario, setTipoUsuario] = useState("paciente");
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -36,7 +39,6 @@ export const Register = () => {
     const [formData, setFormData] = useState(EMPTY_FORM);
     const [dniValido, setDniValido] = useState(false);
 
-    // Guarda el AbortController de la comprobación de DNI en curso
     const dniAbortRef = useRef(null);
 
     // ============================================================
@@ -131,7 +133,6 @@ export const Register = () => {
     // ============================================================
 
     const handleTipoUsuarioChange = (tipo) => {
-        // Cancelar cualquier comprobación de DNI pendiente
         dniAbortRef.current?.abort();
 
         setLoadingDni(false);
@@ -158,10 +159,6 @@ export const Register = () => {
             ...prev,
             [name]: value
         }));
-
-        // ========================================================
-        // VALIDACIÓN DE CONTRASEÑAS EN TIEMPO REAL
-        // ========================================================
 
         if (name === "confirmPassword") {
             setError("");
@@ -203,11 +200,9 @@ export const Register = () => {
             .toUpperCase()
             .replace(/\s/g, "");
 
-        // Cada cambio cancela la comprobación anterior
         dniAbortRef.current?.abort();
         setLoadingDni(false);
 
-        // Actualizamos el DNI y limpiamos los datos autorrellenados
         setFormData((prev) => ({
             ...prev,
             dni: dniIngresado,
@@ -218,21 +213,18 @@ export const Register = () => {
             cip: ""
         }));
 
-        // Cada cambio invalida la validación anterior
         setDniValido(false);
         setError("");
         setErrorDni("");
 
-        // Si está vacío, no mostramos ningún error
         if (dniIngresado.length === 0) {
             return;
         }
 
         // ========================================================
-        // VALIDACIÓN DEL FORMATO MIENTRAS ESCRIBE
+        // VALIDACIÓN DEL FORMATO
         // ========================================================
 
-        // Los primeros 8 caracteres tienen que ser números
         if (
             dniIngresado.length <= 8 &&
             !/^\d*$/.test(dniIngresado)
@@ -241,13 +233,11 @@ export const Register = () => {
             return;
         }
 
-        // No puede tener más de 9 caracteres
         if (dniIngresado.length > 9) {
             setErrorDni("DNI no válido.");
             return;
         }
 
-        // Si tiene 9 caracteres: 8 números + 1 letra
         if (dniIngresado.length === 9) {
             if (!/^\d{8}[A-Z]$/.test(dniIngresado)) {
                 setErrorDni(
@@ -257,7 +247,7 @@ export const Register = () => {
             }
 
             // ====================================================
-            // COMPROBAR DNI EN EL BACKEND
+            // COMPROBAR DNI EN BACKEND
             // ====================================================
 
             const controller = new AbortController();
@@ -326,7 +316,6 @@ export const Register = () => {
                 setDniValido(true);
                 setErrorDni("");
             } catch (dniError) {
-                // Petición obsoleta: el usuario ya ha cambiado el DNI
                 if (dniError.name === "AbortError") {
                     return;
                 }
@@ -343,8 +332,6 @@ export const Register = () => {
                     "El DNI no es válido."
                 );
             } finally {
-                // Solo apagamos el loading si seguimos siendo
-                // la petición activa
                 if (dniAbortRef.current === controller) {
                     setLoadingDni(false);
                 }
@@ -359,7 +346,6 @@ export const Register = () => {
     const handleSubmit = async (event) => {
         event.preventDefault();
 
-        // Guardamos el formulario antes de cualquier await
         const form = event.currentTarget;
 
         setError("");
@@ -381,14 +367,15 @@ export const Register = () => {
         // COMPROBAR CONTRASEÑAS
         // ========================================================
 
-        if (formData.password !== formData.confirmPassword) {
-            setError("Las contraseñas no coinciden.");
-            return;
-        }
         if (!passwordValid) {
             setError(
                 "La contraseña no cumple todos los requisitos de seguridad."
             );
+            return;
+        }
+
+        if (formData.password !== formData.confirmPassword) {
+            setError("Las contraseñas no coinciden.");
             return;
         }
 
@@ -461,10 +448,10 @@ export const Register = () => {
                 password: formData.password,
                 phone: formData.phone,
 
-                // Solo se utiliza para pacientes
+                // Solo pacientes
                 bloodType: formData.bloodType,
 
-                // Solo se utilizan para médicos
+                // Solo médicos
                 medicalLicense:
                     form.medical_license?.value
                         ?.trim()
@@ -483,20 +470,7 @@ export const Register = () => {
             // REGISTRO CORRECTO
             // ====================================================
 
-            setSuccess(
-                "Cuenta creada correctamente. Ya puedes iniciar sesión."
-            );
-
-            // Limpiar formulario
-            setFormData({
-                ...EMPTY_FORM
-            });
-
-            setDniValido(false);
-            setErrorDni("");
-
-            // Limpia los campos no controlados del médico
-            form.reset();
+            navigate("/login");
         } catch (submitError) {
             setError(
                 submitError.message ||
@@ -572,11 +546,11 @@ export const Register = () => {
                                                 "paciente"
                                             )
                                         }
-                                        className={`btn rounded-start-pill fw-semibold ${tipoUsuario ===
-                                                "paciente"
+                                        className={`btn rounded-start-pill fw-semibold ${
+                                            tipoUsuario === "paciente"
                                                 ? "btn-info"
                                                 : "btn-outline-secondary text-white"
-                                            }`}
+                                        }`}
                                     >
                                         <Icon
                                             name="LockKeyhole"
@@ -592,11 +566,11 @@ export const Register = () => {
                                                 "medico"
                                             )
                                         }
-                                        className={`btn rounded-end-pill fw-semibold ${tipoUsuario ===
-                                                "medico"
+                                        className={`btn rounded-end-pill fw-semibold ${
+                                            tipoUsuario === "medico"
                                                 ? "btn-info"
                                                 : "btn-outline-secondary text-white"
-                                            }`}
+                                        }`}
                                     >
                                         <Icon
                                             name="Stethoscope"
@@ -633,12 +607,13 @@ export const Register = () => {
                                             maxLength={9}
                                             autoComplete="off"
                                             required
-                                            className={`form-control bg-dark text-white text-uppercase ${errorDni
+                                            className={`form-control bg-dark text-white text-uppercase ${
+                                                errorDni
                                                     ? "border-danger"
                                                     : dniValido
                                                         ? "border-success"
                                                         : "border-secondary"
-                                                }`}
+                                            }`}
                                             placeholder="Ingrese su DNI (ej: 12345678Z)"
                                         />
 
@@ -682,16 +657,6 @@ export const Register = () => {
                                         <div className="col-12">
                                             <div className="alert alert-danger bg-danger bg-opacity-25 text-danger border-danger border-opacity-50 py-2 small mb-0">
                                                 {error}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* ÉXITO */}
-
-                                    {success && (
-                                        <div className="col-12">
-                                            <div className="alert alert-success bg-success bg-opacity-25 text-success border-success border-opacity-50 py-2 small mb-0">
-                                                {success}
                                             </div>
                                         </div>
                                     )}
@@ -831,7 +796,7 @@ export const Register = () => {
 
                                     </div>
 
-                                    {/* GRUPO SANGUÍNEO - SOLO PACIENTES */}
+                                    {/* GRUPO SANGUÍNEO */}
 
                                     {tipoUsuario === "paciente" && (
                                         <div className="col-12">
@@ -851,37 +816,14 @@ export const Register = () => {
                                                     Seleccione
                                                 </option>
 
-                                                <option value="A+">
-                                                    A+
-                                                </option>
-
-                                                <option value="A-">
-                                                    A-
-                                                </option>
-
-                                                <option value="B+">
-                                                    B+
-                                                </option>
-
-                                                <option value="B-">
-                                                    B-
-                                                </option>
-
-                                                <option value="AB+">
-                                                    AB+
-                                                </option>
-
-                                                <option value="AB-">
-                                                    AB-
-                                                </option>
-
-                                                <option value="O+">
-                                                    O+
-                                                </option>
-
-                                                <option value="O-">
-                                                    O-
-                                                </option>
+                                                <option value="A+">A+</option>
+                                                <option value="A-">A-</option>
+                                                <option value="B+">B+</option>
+                                                <option value="B-">B-</option>
+                                                <option value="AB+">AB+</option>
+                                                <option value="AB-">AB-</option>
+                                                <option value="O+">O+</option>
+                                                <option value="O-">O-</option>
                                             </select>
 
                                         </div>
@@ -948,8 +890,7 @@ export const Register = () => {
                                                     required
                                                     disabled={
                                                         loadingEspecialidades ||
-                                                        especialidades.length ===
-                                                        0
+                                                        especialidades.length === 0
                                                     }
                                                 >
                                                     <option value="">
@@ -978,9 +919,7 @@ export const Register = () => {
 
                                                 {errorEspecialidades && (
                                                     <div className="text-danger small mt-2">
-                                                        {
-                                                            errorEspecialidades
-                                                        }
+                                                        {errorEspecialidades}
                                                     </div>
                                                 )}
 
@@ -1015,6 +954,102 @@ export const Register = () => {
                                             Contraseña
                                         </label>
 
+                                        {/* REQUISITOS */}
+
+                                        <div className="bg-dark bg-opacity-50 border border-secondary rounded-3 p-3 mb-2">
+
+                                            <div className="text-white-50 small fw-semibold mb-2">
+                                                La contraseña debe contener:
+                                            </div>
+
+                                            {/* MÍNIMO 8 */}
+
+                                            <div
+                                                className={`small d-flex align-items-center mb-1 ${
+                                                    passwordRequirements.minLength
+                                                        ? "text-decoration-line-through text-success"
+                                                        : "text-white-50"
+                                                }`}
+                                            >
+                                                <Icon
+                                                    name={
+                                                        passwordRequirements.minLength
+                                                            ? "Check"
+                                                            : "Circle"
+                                                    }
+                                                    size={14}
+                                                    className="me-2"
+                                                />
+                                                Mínimo 8 caracteres
+                                            </div>
+
+                                            {/* ESPECIAL */}
+
+                                            <div
+                                                className={`small d-flex align-items-center mb-1 ${
+                                                    passwordRequirements.hasSpecial
+                                                        ? "text-decoration-line-through text-success"
+                                                        : "text-white-50"
+                                                }`}
+                                            >
+                                                <Icon
+                                                    name={
+                                                        passwordRequirements.hasSpecial
+                                                            ? "Check"
+                                                            : "Circle"
+                                                    }
+                                                    size={14}
+                                                    className="me-2"
+                                                />
+                                                1 carácter especial
+                                            </div>
+
+                                            {/* MAYÚSCULA */}
+
+                                            <div
+                                                className={`small d-flex align-items-center mb-1 ${
+                                                    passwordRequirements.hasUppercase
+                                                        ? "text-decoration-line-through text-success"
+                                                        : "text-white-50"
+                                                }`}
+                                            >
+                                                <Icon
+                                                    name={
+                                                        passwordRequirements.hasUppercase
+                                                            ? "Check"
+                                                            : "Circle"
+                                                    }
+                                                    size={14}
+                                                    className="me-2"
+                                                />
+                                                1 letra mayúscula
+                                            </div>
+
+                                            {/* NÚMERO */}
+
+                                            <div
+                                                className={`small d-flex align-items-center ${
+                                                    passwordRequirements.hasNumber
+                                                        ? "text-decoration-line-through text-success"
+                                                        : "text-white-50"
+                                                }`}
+                                            >
+                                                <Icon
+                                                    name={
+                                                        passwordRequirements.hasNumber
+                                                            ? "Check"
+                                                            : "Circle"
+                                                    }
+                                                    size={14}
+                                                    className="me-2"
+                                                />
+                                                1 número
+                                            </div>
+
+                                        </div>
+
+                                        {/* INPUT PASSWORD */}
+
                                         <div className="input-group">
 
                                             <input
@@ -1028,7 +1063,12 @@ export const Register = () => {
                                                 onChange={handleChange}
                                                 autoComplete="new-password"
                                                 required
-                                                className="form-control bg-dark text-white border-secondary"
+                                                className={`form-control bg-dark text-white ${
+                                                    formData.password.length > 0 &&
+                                                    passwordValid
+                                                        ? "border-success"
+                                                        : "border-secondary"
+                                                }`}
                                                 placeholder="••••••••••••"
                                             />
 
@@ -1077,12 +1117,13 @@ export const Register = () => {
                                                 onChange={handleChange}
                                                 autoComplete="new-password"
                                                 required
-                                                className={`form-control bg-dark text-white ${passwordMismatch
+                                                className={`form-control bg-dark text-white ${
+                                                    passwordMismatch
                                                         ? "border-danger"
                                                         : passwordsMatch
                                                             ? "border-success"
                                                             : "border-secondary"
-                                                    }`}
+                                                }`}
                                                 placeholder="Repite tu contraseña"
                                             />
 
@@ -1106,7 +1147,7 @@ export const Register = () => {
 
                                         </div>
 
-                                        {/* CONTRASEÑAS NO COINCIDEN */}
+                                        {/* NO COINCIDEN */}
 
                                         {passwordMismatch && (
                                             <div className="text-danger small mt-2">
@@ -1118,7 +1159,7 @@ export const Register = () => {
                                             </div>
                                         )}
 
-                                        {/* CONTRASEÑAS COINCIDEN */}
+                                        {/* COINCIDEN */}
 
                                         {passwordsMatch && (
                                             <div className="text-success small mt-2">
@@ -1141,7 +1182,8 @@ export const Register = () => {
                                             disabled={
                                                 submitting ||
                                                 loadingDni ||
-                                                passwordMismatch
+                                                passwordMismatch ||
+                                                !passwordValid
                                             }
                                             className="btn btn-info rounded-pill fw-bold w-100 py-2 mt-2"
                                         >
@@ -1191,3 +1233,4 @@ export const Register = () => {
         </div>
     );
 };
+
