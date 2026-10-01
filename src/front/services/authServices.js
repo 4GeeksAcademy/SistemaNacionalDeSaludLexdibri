@@ -1,15 +1,10 @@
 export const registrarUsuario = async (formData) => {
   const {
     role,
-    firstName,
-    lastName,
     dni,
     email,
     password,
     phone,
-    dateOfBirth,
-    sex,
-    cip,
     bloodType,
     medicalLicense,
     specialtyId,
@@ -19,19 +14,24 @@ export const registrarUsuario = async (formData) => {
   const payload = {
     email,
     password,
-    first_name: firstName,
-    last_name: lastName,
     dni,
     phone,
-    date_of_birth: dateOfBirth,
-    sex,
     role,
   };
 
+  // =====================================================
+  // PACIENTE
+  // =====================================================
+
   if (role === "patient") {
-    payload.cip = cip;
     payload.blood_type = bloodType;
-  } else {
+  }
+
+  // =====================================================
+  // MÉDICO
+  // =====================================================
+
+  if (role === "doctor") {
     payload.medical_license = medicalLicense;
     payload.specialty_id = Number(specialtyId);
     payload.years_experience = Number(yearsExperience);
@@ -56,7 +56,6 @@ export const registrarUsuario = async (formData) => {
 
   return data;
 };
-
 export const iniciarSesion = async ({ email, password, tipoUsuario }) => {
   const response = await fetch(
     `${import.meta.env.VITE_BACKEND_URL}/api/login`,

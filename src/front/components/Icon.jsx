@@ -13,6 +13,14 @@ import {
     CircleX,
     CircleHelp,
     Clock3,
+    Cloud,          // <-- Clima
+    CloudDrizzle,   // <-- Clima
+    CloudFog,       // <-- Clima
+    CloudLightning, // <-- Clima
+    CloudOff,       // <-- Clima
+    CloudRain,      // <-- Clima
+    CloudSnow,      // <-- Clima
+    CloudSun,       // <-- Clima
     Dna,
     Droplet,
     Droplets,
@@ -26,6 +34,7 @@ import {
     Info,
     KeyRound,
     Leaf,
+    LoaderCircle,   // <-- Spinner
     LockKeyhole,
     LogIn,
     LogOut,
@@ -50,6 +59,7 @@ import {
     Smile,
     Sparkles,
     Stethoscope,
+    Sun,            // <-- Clima
     Syringe,
     Utensils,
     User,
@@ -75,6 +85,14 @@ const icons = {
     CircleX,
     CircleHelp,
     Clock3,
+    Cloud,          // <-- Clima
+    CloudDrizzle,   // <-- Clima
+    CloudFog,       // <-- Clima
+    CloudLightning, // <-- Clima
+    CloudOff,       // <-- Clima
+    CloudRain,      // <-- Clima
+    CloudSnow,      // <-- Clima
+    CloudSun,       // <-- Clima
     Dna,
     Droplet,
     Droplets,
@@ -88,6 +106,7 @@ const icons = {
     Info,
     KeyRound,
     Leaf,
+    LoaderCircle,   // <-- Spinner
     LockKeyhole,
     LogIn,
     LogOut,
@@ -109,8 +128,10 @@ const icons = {
     Shield,
     ShieldCheck,
     Siren,
+    Smile,
     Sparkles,
     Stethoscope,
+    Sun,            // <-- Clima
     Syringe,
     Utensils,
     User,
