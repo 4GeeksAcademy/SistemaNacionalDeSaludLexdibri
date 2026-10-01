@@ -2,7 +2,8 @@
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
 
-from flask import Flask, request, jsonify, url_for, Blueprint
+from flask import Flask, request, jsonify, url_for, Blueprint, current_app
+
 from api.models import (
     db,
     User,
@@ -24,21 +25,35 @@ from api.models import (
     DoctorStatus,
     RegistrationDNI,
 )
+
 from api.utils import generate_sitemap, APIException
+
 from flask_cors import CORS
+
 from datetime import datetime, timedelta
+
 import os
 import json
 import requests
 import random
 import resend
-from werkzeug.security import generate_password_hash, check_password_hash
+
+from werkzeug.security import (
+    generate_password_hash,
+    check_password_hash,
+)
+
 from flask_jwt_extended import (
     create_access_token,
     jwt_required,
-    get_jwt_identity
+    get_jwt_identity,
 )
 
+from itsdangerous import (
+    URLSafeTimedSerializer,
+    BadSignature,
+    SignatureExpired,
+)
 
 api = Blueprint('api', __name__)
 
@@ -4669,3 +4684,186 @@ def comprobar_registration_dni(dni):
         "sex": registro.sex,
         "cip": registro.cip
     }), 200
+
+@api.route("/forgot-password", methods=["POST"])
+def forgot_password():
+
+    data = request.get_json()
+
+    if not data:
+        return jsonify({
+            "error": "No se han enviado datos"
+        }), 400
+
+    email = data.get("email")
+
+    if not email:
+        return jsonify({
+            "error": "El email es obligatorio"
+        }), 400
+
+    user = User.query.filter_by(
+        email=email
+    ).first()
+
+    if not user:
+        return jsonify({
+            "error": "El correo electrónico no está registrado."
+        }), 404
+
+    serializer = URLSafeTimedSerializer(
+        current_app.config["SECRET_KEY"]
+    )
+
+    token = serializer.dumps({
+        "user_id": user.id
+    })
+
+    reset_url = (
+        "http://localhost:5173/reset-password"
+        f"?token={token}"
+    )
+
+    resend.api_key = os.getenv("RESEND_API_KEY")
+
+    resend.Emails.send({
+        "from": "Sistema Nacional de Salud <onboarding@resend.dev>",
+        "to": [user.email],
+        "subject": "Recuperación de contraseña",
+        "html": f"""
+            <div style="
+                font-family: Arial, sans-serif;
+                max-width: 600px;
+                margin: auto;
+            ">
+
+                <h2>Recuperación de contraseña</h2>
+
+                <p>
+                    Hemos recibido una solicitud para recuperar
+                    tu contraseña.
+                </p>
+
+                <p>
+                    Haz clic en el siguiente botón:
+                </p>
+
+                <p>
+                    <a
+                        href="{reset_url}"
+                        style="
+                            display: inline-block;
+                            padding: 12px 20px;
+                            background-color: #0dcaf0;
+                            color: #000;
+                            text-decoration: none;
+                            border-radius: 8px;
+                            font-weight: bold;
+                        "
+                    >
+                        Recuperar contraseña
+                    </a>
+                </p>
+
+                <p>
+                    Este enlace caducará en 30 minutos.
+                </p>
+
+                <p>
+                    Si no has solicitado recuperar tu contraseña,
+                    puedes ignorar este correo.
+                </p>
+
+                <p>
+                    Sistema Nacional de Salud
+                </p>
+
+            </div>
+        """
+    })
+
+    return jsonify({
+        "message": "Se han enviado las instrucciones a tu correo."
+    }), 200
+
+@api.route("/reset-password", methods=["POST"])
+def reset_password():
+
+    data = request.get_json()
+
+    if not data:
+        return jsonify({
+            "error": "No se han enviado datos"
+        }), 400
+
+    token = data.get("token")
+    new_password = data.get("password")
+
+    if not token:
+        return jsonify({
+            "error": "El token es obligatorio"
+        }), 400
+
+    if not new_password:
+        return jsonify({
+            "error": "La nueva contraseña es obligatoria"
+        }), 400
+
+    if len(new_password) < 8:
+        return jsonify({
+            "error": (
+                "La contraseña debe tener al menos "
+                "8 caracteres"
+            )
+        }), 400
+
+    # Verificar token
+    serializer = URLSafeTimedSerializer(
+        current_app.config["SECRET_KEY"]
+    )
+
+    try:
+
+        data_token = serializer.loads(
+            token,
+            max_age=1800
+        )
+
+        user_id = data_token["user_id"]
+
+    except SignatureExpired:
+
+        return jsonify({
+            "error": "El enlace de recuperación ha caducado"
+        }), 400
+
+    except BadSignature:
+
+        return jsonify({
+            "error": "El enlace de recuperación no es válido"
+        }), 400
+
+    # Buscar usuario
+    user = db.session.get(
+        User,
+        user_id
+    )
+
+    if not user:
+        return jsonify({
+            "error": "El usuario no existe"
+        }), 404
+
+    # Cambiar contraseña
+    user.password_hash = generate_password_hash(
+        new_password
+    )
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Contraseña actualizada correctamente"
+    }), 200
+
+
+    

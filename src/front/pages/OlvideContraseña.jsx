@@ -6,20 +6,61 @@ const ForgotPassword = () => {
     const [email, setEmail] = useState("");
     const [mensaje, setMensaje] = useState("");
     const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         setMensaje("");
         setError("");
 
-        if (!email) {
+        if (!email.trim()) {
             setError("Por favor, introduce tu email.");
             return;
         }
 
+        try {
+            setLoading(true);
 
-        setMensaje("Si el email está registrado, recibirás instrucciones para recuperar tu contraseña.");
+            const response = await fetch(
+                `${import.meta.env.VITE_BACKEND_URL}api/forgot-password`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        email: email.trim(),
+                    }),
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.error ||
+                    data.message ||
+                    "No se ha podido procesar la solicitud."
+                );
+            }
+
+            setMensaje(
+                data.message ||
+                "Se han enviado las instrucciones a tu correo."
+            );
+
+            setEmail("");
+
+        } catch (err) {
+            setError(
+                err.message ||
+                "Ha ocurrido un error. Inténtalo de nuevo."
+            );
+
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -31,11 +72,18 @@ const ForgotPassword = () => {
                         <div className="card bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 p-md-5">
 
                             <div className="text-center text-light mb-4">
+
                                 <div
                                     className="d-inline-flex align-items-center justify-content-center bg-info bg-opacity-10 border border-info border-opacity-25 rounded-4 text-info fs-4 mb-3"
-                                    style={{ width: "56px", height: "56px" }}
+                                    style={{
+                                        width: "56px",
+                                        height: "56px",
+                                    }}
                                 >
-                                    <Icon name="KeyRound" size={28} />
+                                    <Icon
+                                        name="KeyRound"
+                                        size={28}
+                                    />
                                 </div>
 
                                 <h1 className="h2 fw-bold mb-2">
@@ -43,8 +91,10 @@ const ForgotPassword = () => {
                                 </h1>
 
                                 <p className="text-white-50 small mb-0">
-                                    Introduce tu email para recuperar tu contraseña.
+                                    Introduce tu email para recuperar tu
+                                    contraseña.
                                 </p>
+
                             </div>
 
                             <form onSubmit={handleSubmit}>
@@ -63,7 +113,10 @@ const ForgotPassword = () => {
                                         className="form-control bg-dark text-white border-secondary"
                                         placeholder="Ingrese su email"
                                         value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
+                                        onChange={(e) =>
+                                            setEmail(e.target.value)
+                                        }
+                                        disabled={loading}
                                     />
                                 </div>
 
@@ -82,8 +135,21 @@ const ForgotPassword = () => {
                                 <button
                                     type="submit"
                                     className="btn btn-info rounded-pill fw-bold w-100 py-2"
+                                    disabled={loading}
                                 >
-                                    Recuperar contraseña →
+                                    {loading ? (
+                                        <>
+                                            <span
+                                                className="spinner-border spinner-border-sm me-2"
+                                                role="status"
+                                                aria-hidden="true"
+                                            />
+
+                                            Enviando...
+                                        </>
+                                    ) : (
+                                        "Recuperar contraseña →"
+                                    )}
                                 </button>
 
                             </form>
