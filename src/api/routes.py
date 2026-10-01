@@ -377,6 +377,107 @@ def seed_hospitals():
     }), 200
 
 
+#=====================
+#SEED DNIs
+#====================
+@api.route("/seed/registration-dni", methods=["GET"])
+def seed_registration_dni():
+
+    json_route = os.path.join(
+        os.path.dirname(__file__),
+        "../data/dni.json"
+    )
+
+    with open(json_route, "r", encoding="utf-8") as file:
+        registrations = json.load(file)
+
+    existing = 0
+    created = 0
+    updated = 0
+
+    for data in registrations:
+
+        registration = RegistrationDNI.query.filter_by(
+            dni=data["dni"]
+        ).first()
+
+        # =====================================================
+        # DNI YA EXISTENTE
+        # =====================================================
+
+        if registration:
+
+            existing += 1
+
+            registration.first_name = data["first_name"]
+            registration.last_name = data["last_name"]
+
+            registration.date_of_birth = (
+                datetime.strptime(
+                    data["date_of_birth"],
+                    "%Y-%m-%d"
+                ).date()
+                if data.get("date_of_birth")
+                else None
+            )
+
+            registration.sex = data.get("sex")
+            registration.cip = data.get("cip")
+
+            registration.role = UserRole(
+                data.get("role", UserRole.PATIENT.value)
+            )
+
+            registration.is_registered = data.get(
+                "is_registered",
+                False
+            )
+
+            updated += 1
+
+            continue
+
+        # =====================================================
+        # CREAR REGISTRO
+        # =====================================================
+
+        registration = RegistrationDNI(
+            dni=data["dni"],
+            first_name=data["first_name"],
+            last_name=data["last_name"],
+            date_of_birth=(
+                datetime.strptime(
+                    data["date_of_birth"],
+                    "%Y-%m-%d"
+                ).date()
+                if data.get("date_of_birth")
+                else None
+            ),
+            sex=data.get("sex"),
+            cip=data.get("cip"),
+            role=UserRole(
+                data.get("role", UserRole.PATIENT.value)
+            ),
+            is_registered=data.get(
+                "is_registered",
+                False
+            )
+        )
+
+        db.session.add(registration)
+
+        created += 1
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Registros DNI procesados correctamente",
+        "creados": created,
+        "ya_existian": existing,
+        "actualizados": updated
+    }), 200
+
+
 
 # =========================================================
 # ESPECIALIDADES
@@ -399,6 +500,7 @@ def obtener_especialidades():
     }), 200
 
 
+
 # =========================================================
 # REGISTRO
 # =========================================================
@@ -413,15 +515,15 @@ def registro_usuario():
             "error": "No se han enviado datos"
         }), 400
 
+    # =====================================================
+    # CAMPOS BÁSICOS
+    # =====================================================
+
     required_fields = [
         "email",
         "password",
-        "first_name",
-        "last_name",
         "dni",
         "phone",
-        "date_of_birth",
-        "sex",
         "role"
     ]
 
@@ -432,10 +534,60 @@ def registro_usuario():
                 "error": f"Falta el campo: {field}"
             }), 400
 
+    # =====================================================
+    # NORMALIZAR DNI
+    # =====================================================
+
+    dni = data["dni"].strip().upper()
+
+    # =====================================================
+    # VALIDAR ROLE
+    # =====================================================
+
     if data["role"] not in ["patient", "doctor"]:
         return jsonify({
             "error": "El role debe ser 'patient' o 'doctor'"
         }), 400
+
+    # =====================================================
+    # BUSCAR DNI EN REGISTRATION_DNI
+    # =====================================================
+
+    registration = RegistrationDNI.query.filter_by(
+        dni=dni
+    ).first()
+
+    if not registration:
+        return jsonify({
+            "error": "El DNI no está autorizado para registrarse"
+        }), 404
+
+    # =====================================================
+    # COMPROBAR SI YA ESTÁ REGISTRADO
+    # =====================================================
+
+    if registration.is_registered:
+        return jsonify({
+            "error": "Este DNI ya está registrado"
+        }), 409
+
+    # =====================================================
+    # COMPROBAR ROLE
+    # =====================================================
+
+    expected_role = UserRole(data["role"])
+
+    if registration.role != expected_role:
+        return jsonify({
+            "error": (
+                "Este DNI no está autorizado para registrarse "
+                f"como {data['role']}"
+            )
+        }), 400
+
+    # =====================================================
+    # COMPROBAR EMAIL
+    # =====================================================
 
     existing_user = User.query.filter_by(
         email=data["email"]
@@ -446,57 +598,93 @@ def registro_usuario():
             "error": "El email ya está registrado"
         }), 409
 
+    # =====================================================
+    # COMPROBAR DNI EN USERS
+    # =====================================================
+
+    existing_dni = User.query.filter_by(
+        dni=dni
+    ).first()
+
+    if existing_dni:
+        return jsonify({
+            "error": "Este DNI ya está asociado a un usuario"
+        }), 409
+
+    # =====================================================
+    # CREAR USER
+    # =====================================================
+
     user = User(
         email=data["email"],
         password_hash=generate_password_hash(
             data["password"]
         ),
-        first_name=data["first_name"],
-        last_name=data["last_name"],
-        dni=data["dni"],
+
+        # ---------------------------------------------
+        # Datos oficiales de RegistrationDNI
+        # ---------------------------------------------
+
+        first_name=registration.first_name,
+        last_name=registration.last_name,
+        dni=registration.dni,
+        date_of_birth=registration.date_of_birth,
+        sex=registration.sex,
+
+        # ---------------------------------------------
+        # Datos introducidos durante el registro
+        # ---------------------------------------------
+
         phone=data["phone"],
-        date_of_birth=datetime.strptime(
-            data["date_of_birth"],
-            "%Y-%m-%d"
-        ).date(),
-        sex=data["sex"],
+
         is_active=True,
-        role=UserRole(data["role"])
+        role=registration.role
     )
 
-    # -----------------------------------------------------
+    # =====================================================
     # PACIENTE
-    # -----------------------------------------------------
+    # =====================================================
 
     if data["role"] == "patient":
 
-        if "cip" not in data or "blood_type" not in data:
+        blood_type = data.get("blood_type")
+
+        if not blood_type:
             return jsonify({
-                "error": "Para un paciente se necesita cip y blood_type"
+                "error": "Para un paciente se necesita blood_type"
             }), 400
 
         patient = Patient(
-            cip=data["cip"],
-            blood_type=data["blood_type"]
+            cip=registration.cip,
+            blood_type=blood_type
         )
 
         user.patient = patient
 
-    # -----------------------------------------------------
+    # =====================================================
     # MÉDICO
-    # -----------------------------------------------------
+    # =====================================================
 
     elif data["role"] == "doctor":
 
-        if "medical_license" not in data:
+        medical_license = (
+            data.get("medical_license") or ""
+        ).strip().upper()
+
+        if not medical_license:
             return jsonify({
                 "error": "Para un médico se necesita medical_license"
             }), 400
 
         specialty_id = data.get("specialty_id")
+
         specialty_name = (
             data.get("specialty_name") or ""
         ).strip()
+
+        # ---------------------------------------------
+        # Buscar/crear especialidad
+        # ---------------------------------------------
 
         if not specialty_id and specialty_name:
 
@@ -520,16 +708,75 @@ def registro_usuario():
                 "error": "Para un médico se necesita una especialidad"
             }), 400
 
+        # ---------------------------------------------
+        # Años de experiencia
+        # ---------------------------------------------
+
+        years_experience = data.get("years_experience")
+
+        if years_experience is None:
+            return jsonify({
+                "error": (
+                    "Para un médico se necesitan "
+                    "los años de experiencia"
+                )
+            }), 400
+
+        try:
+            years_experience = int(years_experience)
+        except (TypeError, ValueError):
+            return jsonify({
+                "error": "Los años de experiencia deben ser un número"
+            }), 400
+
+        if years_experience < 0:
+            return jsonify({
+                "error": "Los años de experiencia no pueden ser negativos"
+            }), 400
+
+        # ---------------------------------------------
+        # Crear médico
+        # ---------------------------------------------
+
         doctor = Doctor(
-            medical_license=data["medical_license"],
+            medical_license=medical_license,
             specialty_id=specialty_id,
-            years_experience=data["years_experience"]
+            years_experience=years_experience
         )
 
         user.doctor = doctor
 
+    # =====================================================
+    # GUARDAR USER
+    # =====================================================
+
     db.session.add(user)
-    db.session.commit()
+
+    # =====================================================
+    # MARCAR REGISTRATION DNI COMO REGISTRADO
+    # =====================================================
+
+    registration.is_registered = True
+
+    # =====================================================
+    # COMMIT
+    # =====================================================
+
+    try:
+
+        db.session.commit()
+
+    except Exception:
+
+        db.session.rollback()
+
+        return jsonify({
+            "error": "No se pudo completar el registro"
+        }), 500
+
+    # =====================================================
+    # RESPUESTA
+    # =====================================================
 
     return jsonify({
         "message": "Usuario registrado correctamente",
@@ -541,7 +788,6 @@ def registro_usuario():
             "role": user.role.value
         }
     }), 201
-
 
 # =========================================================
 # LOGIN
@@ -4360,6 +4606,21 @@ def comprobar_registration_dni(dni):
 
     dni = dni.strip().upper()
 
+    # =====================================================
+    # OBTENER ROLE SOLICITADO
+    # =====================================================
+
+    role = request.args.get("role", "").strip().lower()
+
+    if role not in ["patient", "doctor"]:
+        return jsonify({
+            "error": "El role debe ser 'patient' o 'doctor'"
+        }), 400
+
+    # =====================================================
+    # BUSCAR DNI
+    # =====================================================
+
     registro = db.session.execute(
         db.select(RegistrationDNI).where(
             RegistrationDNI.dni == dni
@@ -4371,10 +4632,30 @@ def comprobar_registration_dni(dni):
             "error": "El DNI no está autorizado para registrarse"
         }), 404
 
+    # =====================================================
+    # COMPROBAR SI YA ESTÁ REGISTRADO
+    # =====================================================
+
     if registro.is_registered:
         return jsonify({
             "error": "Este DNI ya ha sido utilizado para crear una cuenta"
         }), 409
+
+    # =====================================================
+    # COMPROBAR ROLE
+    # =====================================================
+
+    if registro.role.value != role:
+        return jsonify({
+            "error": (
+                "Este DNI no está autorizado para registrarse "
+                f"como {role}"
+            )
+        }), 404
+
+    # =====================================================
+    # DEVOLVER DATOS
+    # =====================================================
 
     return jsonify({
         "dni": registro.dni,
@@ -4388,4 +4669,3 @@ def comprobar_registration_dni(dni):
         "sex": registro.sex,
         "cip": registro.cip
     }), 200
-
