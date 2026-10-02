@@ -4225,20 +4225,39 @@ def admin_doctores():
 
 
 
-# ============================================================
-# 3. OBTENER PACIENTES
-# ============================================================
+from sqlalchemy import or_, exists
 
 @api.route("/admin/pacientes", methods=["GET"])
 @jwt_required()
 def admin_pacientes():
 
     user, error, status = get_admin_actual()
-
     if error:
         return error, status
 
-    pacientes = Patient.query.all()
+    # Sin hospital, el filtro compararía contra NULL y devolvería datos ajenos
+    if not user.hospital_id:
+        return jsonify({"error": "Tu cuenta de administrador no tiene hospital asignado."}), 403
+
+    # ¿Tiene algún médico activo de este hospital?
+    tiene_medico_del_hospital = exists().where(
+        DoctorPatient.patient_id == Patient.id,
+        DoctorPatient.is_active.is_(True),
+        DoctorPatient.doctor_id == Doctor.id,
+        Doctor.hospital_id == user.hospital_id,
+    )
+
+    pacientes = (
+        Patient.query
+        .join(User, User.id == Patient.user_id)
+        .filter(
+            or_(
+                User.hospital_id == user.hospital_id,
+                tiene_medico_del_hospital,
+            )
+        )
+        .all()
+    )
 
     resultado = []
 
@@ -4250,32 +4269,21 @@ def admin_pacientes():
             .filter(
                 DoctorPatient.patient_id == patient.id,
                 DoctorPatient.is_active.is_(True),
-                Doctor.hospital_id == user.hospital_id
+                Doctor.hospital_id == user.hospital_id,
             )
             .all()
         )
 
-        medicos = []
-
-        for relacion in relaciones:
-
-            doctor = relacion.doctor
-
-            medicos.append({
-                "id": doctor.id,
-                "first_name": doctor.user.first_name,
-                "last_name": doctor.user.last_name,
-                "specialty": (
-                    doctor.specialty.name
-                    if doctor.specialty
-                    else None
-                ),
-                "assigned_at": (
-                    relacion.assigned_at.isoformat()
-                    if relacion.assigned_at
-                    else None
-                )
-            })
+        medicos = [
+            {
+                "id": r.doctor.id,
+                "first_name": r.doctor.user.first_name,
+                "last_name": r.doctor.user.last_name,
+                "specialty": r.doctor.specialty.name if r.doctor.specialty else None,
+                "assigned_at": r.assigned_at.isoformat() if r.assigned_at else None,
+            }
+            for r in relaciones
+        ]
 
         resultado.append({
             "id": patient.id,
@@ -4286,14 +4294,10 @@ def admin_pacientes():
             "dni": patient.user.dni,
             "cip": patient.cip,
             "blood_type": patient.blood_type,
-            "doctores": medicos
+            "doctores": medicos,
         })
 
-    return jsonify({
-        "pacientes": resultado,
-        "total": len(resultado)
-    }), 200
-
+    return jsonify({"pacientes": resultado, "total": len(resultado)}), 200
 
 # ============================================================
 # 4. ASIGNAR MÉDICO A PACIENTE
