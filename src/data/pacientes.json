@@ -11,7 +11,8 @@
     "is_active": true,
     "cip": "CIP000001",
     "blood_type": "A+",
-    "role": "patient"
+    "role": "patient",
+    "hospital_id": 1
   },
   {
     "email": "carlos.martinez@example.com",
@@ -25,7 +26,8 @@
     "is_active": true,
     "cip": "CIP000002",
     "blood_type": "O+",
-    "role": "patient"
+    "role": "patient",
+    "hospital_id": 1
   },
   {
     "email": "laura.sanchez@example.com",
@@ -39,7 +41,8 @@
     "is_active": true,
     "cip": "CIP000003",
     "blood_type": "B+",
-    "role": "patient"
+    "role": "patient",
+    "hospital_id": 1
   },
   {
     "email": "miguel.fernandez@example.com",
@@ -53,7 +56,8 @@
     "is_active": true,
     "cip": "CIP000004",
     "blood_type": "AB+",
-    "role": "patient"
+    "role": "patient",
+    "hospital_id": 1
   },
   {
     "email": "marta.lopez@example.com",
@@ -67,7 +71,8 @@
     "is_active": true,
     "cip": "CIP000005",
     "blood_type": "O-",
-    "role": "patient"
+    "role": "patient",
+    "hospital_id": 1
   },
   {
     "email": "david.navarro@example.com",
@@ -81,7 +86,8 @@
     "is_active": true,
     "cip": "CIP000006",
     "blood_type": "A-",
-    "role": "patient"
+    "role": "patient",
+    "hospital_id": 1
   },
   {
     "email": "sofia.romero@example.com",
@@ -95,7 +101,8 @@
     "is_active": true,
     "cip": "CIP000007",
     "blood_type": "B-",
-    "role": "patient"
+    "role": "patient",
+    "hospital_id": 1
   },
   {
     "email": "jorge.molina@example.com",
@@ -109,7 +116,8 @@
     "is_active": true,
     "cip": "CIP000008",
     "blood_type": "O+",
-    "role": "patient"
+    "role": "patient",
+    "hospital_id": 1
   },
   {
     "email": "elena.castro@example.com",
@@ -123,7 +131,8 @@
     "is_active": true,
     "cip": "CIP000009",
     "blood_type": "A+",
-    "role": "patient"
+    "role": "patient",
+    "hospital_id": 1
   },
   {
     "email": "pablo.ortega@example.com",
@@ -137,6 +146,7 @@
     "is_active": true,
     "cip": "CIP000010",
     "blood_type": "AB-",
-    "role": "patient"
+    "role": "patient",
+    "hospital_id": 1
   }
 ]

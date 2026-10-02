@@ -78,6 +78,9 @@ def handle_hello():
 # =========================================================
 # SEED PACIENTES
 # =========================================================
+# =========================================================
+# SEED PACIENTES
+# =========================================================
 
 @api.route("/seed/pacientes", methods=["GET"])
 def seed_patients():
@@ -91,6 +94,7 @@ def seed_patients():
         patients = json.load(file)
 
     existing = 0
+    updated = 0
     created = 0
 
     for data in patients:
@@ -99,10 +103,22 @@ def seed_patients():
             email=data["email"]
         ).first()
 
+        # =================================================
+        # USUARIO YA EXISTE
+        # =================================================
         if user:
             existing += 1
+
+            # Si no tiene hospital, se lo asignamos
+            if user.hospital_id is None:
+                user.hospital_id = data["hospital_id"]
+                updated += 1
+
             continue
 
+        # =================================================
+        # CREAR USUARIO
+        # =================================================
         user = User(
             email=data["email"],
             password_hash=generate_password_hash(data["password"]),
@@ -116,12 +132,16 @@ def seed_patients():
             ).date(),
             sex=data["sex"],
             is_active=data["is_active"],
-            role=UserRole(data["role"])
+            role=UserRole(data["role"]),
+            hospital_id=data["hospital_id"],
         )
 
+        # =================================================
+        # CREAR PACIENTE
+        # =================================================
         patient = Patient(
             cip=data["cip"],
-            blood_type=data["blood_type"]
+            blood_type=data["blood_type"],
         )
 
         user.patient = patient
@@ -132,8 +152,9 @@ def seed_patients():
     db.session.commit()
 
     return jsonify({
-        "message": "Pacientes creados correctamente",
+        "message": "Seed de pacientes ejecutado correctamente",
         "creados": created,
+        "actualizados": updated,
         "ya_existian": existing
     }), 200
 
@@ -237,6 +258,7 @@ def seed_doctors():
 # SEED ADMINISTRADORES
 # =========================================================
 
+
 @api.route("/seed/admins", methods=["GET"])
 def seed_admins():
 
@@ -319,6 +341,7 @@ def seed_admins():
 # SEED ESPECIALIDADES
 # =========================================================
 
+
 @api.route("/seed/especialidades", methods=["GET"])
 def seed_specialties():
 
@@ -349,6 +372,7 @@ def seed_specialties():
 # =========================================================
 # SEED HOSPITALES
 # =========================================================
+
 
 @api.route("/seed/hospitales", methods=["GET"])
 def seed_hospitals():
@@ -392,9 +416,9 @@ def seed_hospitals():
     }), 200
 
 
-#=====================
-#SEED DNIs
-#====================
+# =====================
+# SEED DNIs
+# ====================
 @api.route("/seed/registration-dni", methods=["GET"])
 def seed_registration_dni():
 
@@ -493,7 +517,6 @@ def seed_registration_dni():
     }), 200
 
 
-
 # =========================================================
 # ESPECIALIDADES
 # =========================================================
@@ -513,7 +536,6 @@ def obtener_especialidades():
             for specialty in specialties
         ]
     }), 200
-
 
 
 # =========================================================
@@ -886,7 +908,6 @@ def login():
             "hospital_id": hospital_id
         }
     }), 200
-
 
 
 # =========================================================
@@ -2161,6 +2182,7 @@ def buscar_pacientes():
 # ADMIN - AGREGAR PACIENTE A UN MÉDICO
 # =========================================================
 
+
 @api.route(
     "/admin/medicos/<int:doctor_id>/pacientes/<int:patient_id>",
     methods=["POST"]
@@ -2302,8 +2324,6 @@ def admin_agregar_paciente(doctor_id, patient_id):
     }), 201
 
 
-
-
 # =========================================================
 # MIS PACIENTES
 # =========================================================
@@ -2399,7 +2419,6 @@ def obtener_mis_pacientes():
     }), 200
 
 
-
 # =========================================================
 # ADMIN - ELIMINAR PACIENTE DE UN MÉDICO
 # =========================================================
@@ -2488,7 +2507,6 @@ def admin_eliminar_paciente(doctor_id, patient_id):
     return jsonify({
         "message": "Paciente desasignado correctamente"
     }), 200
-
 
     # -----------------------------------------------------
     # CREAR NUEVA RELACIÓN
@@ -3752,6 +3770,7 @@ def obtener_vacunas_paciente(patient_id):
 # VACUNACIONES (MÉDICO)
 # =========================================================
 
+
 @api.route("/medico/vacunaciones", methods=["POST"])
 @jwt_required()
 def crear_vacunacion():
@@ -3952,6 +3971,7 @@ def obtener_cirugias_paciente(patient_id):
 # CIRUGÍAS (CUALQUIER MÉDICO)
 # =========================================================
 
+
 @api.route("/medico/cirugias", methods=["POST"])
 @jwt_required()
 def crear_cirugia():
@@ -4044,6 +4064,7 @@ def crear_cirugia():
 # FORMULARIO DE CONTACTO
 # =========================================================
 
+
 @api.route('/contacto', methods=['POST'])
 def enviar_contacto():
 
@@ -4106,6 +4127,7 @@ def enviar_contacto():
 # ============================================================
 # ADMINISTRACIÓN DEL HOSPITAL
 # ============================================================
+
 
 def get_admin_actual():
 
@@ -4224,40 +4246,20 @@ def admin_doctores():
     }), 200
 
 
-
-from sqlalchemy import or_, exists
+# ============================================================
+# 3. OBTENER PACIENTES
+# ============================================================
 
 @api.route("/admin/pacientes", methods=["GET"])
 @jwt_required()
 def admin_pacientes():
 
     user, error, status = get_admin_actual()
+
     if error:
         return error, status
 
-    # Sin hospital, el filtro compararía contra NULL y devolvería datos ajenos
-    if not user.hospital_id:
-        return jsonify({"error": "Tu cuenta de administrador no tiene hospital asignado."}), 403
-
-    # ¿Tiene algún médico activo de este hospital?
-    tiene_medico_del_hospital = exists().where(
-        DoctorPatient.patient_id == Patient.id,
-        DoctorPatient.is_active.is_(True),
-        DoctorPatient.doctor_id == Doctor.id,
-        Doctor.hospital_id == user.hospital_id,
-    )
-
-    pacientes = (
-        Patient.query
-        .join(User, User.id == Patient.user_id)
-        .filter(
-            or_(
-                User.hospital_id == user.hospital_id,
-                tiene_medico_del_hospital,
-            )
-        )
-        .all()
-    )
+    pacientes = Patient.query.all()
 
     resultado = []
 
@@ -4269,21 +4271,32 @@ def admin_pacientes():
             .filter(
                 DoctorPatient.patient_id == patient.id,
                 DoctorPatient.is_active.is_(True),
-                Doctor.hospital_id == user.hospital_id,
+                Doctor.hospital_id == user.hospital_id
             )
             .all()
         )
 
-        medicos = [
-            {
-                "id": r.doctor.id,
-                "first_name": r.doctor.user.first_name,
-                "last_name": r.doctor.user.last_name,
-                "specialty": r.doctor.specialty.name if r.doctor.specialty else None,
-                "assigned_at": r.assigned_at.isoformat() if r.assigned_at else None,
-            }
-            for r in relaciones
-        ]
+        medicos = []
+
+        for relacion in relaciones:
+
+            doctor = relacion.doctor
+
+            medicos.append({
+                "id": doctor.id,
+                "first_name": doctor.user.first_name,
+                "last_name": doctor.user.last_name,
+                "specialty": (
+                    doctor.specialty.name
+                    if doctor.specialty
+                    else None
+                ),
+                "assigned_at": (
+                    relacion.assigned_at.isoformat()
+                    if relacion.assigned_at
+                    else None
+                )
+            })
 
         resultado.append({
             "id": patient.id,
@@ -4294,14 +4307,17 @@ def admin_pacientes():
             "dni": patient.user.dni,
             "cip": patient.cip,
             "blood_type": patient.blood_type,
-            "doctores": medicos,
+            "doctores": medicos
         })
 
-    return jsonify({"pacientes": resultado, "total": len(resultado)}), 200
-
+    return jsonify({
+        "pacientes": resultado,
+        "total": len(resultado)
+    }), 200
 # ============================================================
 # 4. ASIGNAR MÉDICO A PACIENTE
 # ============================================================
+
 
 @api.route("/admin/asignar-medico", methods=["POST"])
 @jwt_required()
@@ -4438,8 +4454,6 @@ def desasignar_medico(doctor_id, patient_id):
     return jsonify({
         "message": "Médico desasignado correctamente"
     }), 200
-
-
 
 
 @api.route("/admin/doctores/<int:doctor_id>/estado", methods=["PUT"])
@@ -4689,6 +4703,7 @@ def comprobar_registration_dni(dni):
         "cip": registro.cip
     }), 200
 
+
 @api.route("/forgot-password", methods=["POST"])
 def forgot_password():
 
@@ -4790,6 +4805,7 @@ def forgot_password():
         "message": "Se han enviado las instrucciones a tu correo."
     }), 200
 
+
 @api.route("/reset-password", methods=["POST"])
 def reset_password():
 
@@ -4868,6 +4884,3 @@ def reset_password():
     return jsonify({
         "message": "Contraseña actualizada correctamente"
     }), 200
-
-
-    
