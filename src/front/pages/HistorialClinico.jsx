@@ -397,6 +397,8 @@ export const HistorialClinico = () => {
 
         tipoSangre: patient?.grupo_sanguineo || "No disponible",
 
+        hospital: patient?.hospital || "No disponible",
+
         nacimiento: formatearNacimiento(
             patient?.fecha_nacimiento
         ),
@@ -642,6 +644,14 @@ export const HistorialClinico = () => {
                                 Fecha de nacimiento:
                                 {" "}
                                 {paciente.nacimiento}
+
+                                <span className="mx-2">
+                                    •
+                                </span>
+
+                                Hospital:
+                                {" "}
+                                {paciente.hospital}
 
                             </div>
 
@@ -2067,4 +2077,3 @@ export const HistorialClinico = () => {
         </div>
     );
 };
-

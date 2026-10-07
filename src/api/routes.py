@@ -2213,7 +2213,12 @@ def buscar_pacientes():
                     else None
                 ),
                 "sexo": paciente.user.sex,
-                "grupo_sanguineo": paciente.blood_type
+                "grupo_sanguineo": paciente.blood_type,
+                "hospital": (
+                    paciente.hospital.name
+                    if paciente.hospital
+                    else None
+                )
             }
             for paciente in pacientes
         ],
@@ -2449,6 +2454,11 @@ def obtener_mis_pacientes():
 
             "sexo": patient_user.sex,
             "grupo_sanguineo": patient.blood_type,
+            "hospital": (
+                patient.hospital.name
+                if patient.hospital
+                else None
+            ),
 
             "assigned_at": (
                 relacion.assigned_at.isoformat()
