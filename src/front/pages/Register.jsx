@@ -6,14 +6,10 @@ import { Icon } from "../components/Icon";
 
 const EMPTY_FORM = {
     dni: "",
-    firstName: "",
-    lastName: "",
     email: "",
     phone: "",
-    dateOfBirth: "",
-    sex: "",
-    bloodType: "",
     cip: "",
+    medicalLicense: "",
     password: "",
     confirmPassword: ""
 };
@@ -29,17 +25,18 @@ export const Register = () => {
     const [success, setSuccess] = useState("");
     const [submitting, setSubmitting] = useState(false);
 
-    const [especialidades, setEspecialidades] = useState([]);
-    const [loadingEspecialidades, setLoadingEspecialidades] = useState(false);
-    const [errorEspecialidades, setErrorEspecialidades] = useState("");
-
     const [loadingDni, setLoadingDni] = useState(false);
     const [errorDni, setErrorDni] = useState("");
+    const [loadingColegiado, setLoadingColegiado] = useState(false);
+    const [errorColegiado, setErrorColegiado] = useState("");
+    const [colegiadoValido, setColegiadoValido] = useState(false);
+    const [datosColegiado, setDatosColegiado] = useState(null);
 
     const [formData, setFormData] = useState(EMPTY_FORM);
     const [dniValido, setDniValido] = useState(false);
 
     const dniAbortRef = useRef(null);
+    const colegiadoAbortRef = useRef(null);
 
     // ============================================================
     // ANIMACIÓN DE ENTRADA
@@ -73,60 +70,83 @@ export const Register = () => {
     // ============================================================
 
     useEffect(() => {
-        return () => dniAbortRef.current?.abort();
+        return () => {
+            dniAbortRef.current?.abort();
+            colegiadoAbortRef.current?.abort();
+        };
     }, []);
 
     // ============================================================
-    // CARGAR ESPECIALIDADES PARA MÉDICOS
+    // VALIDAR NÚMERO DE COLEGIADO
     // ============================================================
 
     useEffect(() => {
-        if (tipoUsuario !== "medico") {
-            return;
-        }
+        const medicalLicense = formData.medicalLicense.trim();
+        if (tipoUsuario !== "medico" || !medicalLicense) return undefined;
 
         const controller = new AbortController();
-
-        const cargarEspecialidades = async () => {
-            setLoadingEspecialidades(true);
-            setErrorEspecialidades("");
-
+        colegiadoAbortRef.current = controller;
+        const timeoutId = setTimeout(async () => {
+            setLoadingColegiado(true);
             try {
                 const response = await fetch(
-                    `${import.meta.env.VITE_BACKEND_URL}/api/especialidades`,
+                    `${import.meta.env.VITE_BACKEND_URL}/api/registration-license/${encodeURIComponent(
+                        medicalLicense
+                    )}`,
                     {
                         signal: controller.signal
                     }
                 );
 
-                const data = await response.json();
+                let data = {};
+
+                try {
+                    data = await response.json();
+                } catch {
+                    data = {};
+                }
 
                 if (!response.ok) {
                     throw new Error(
                         data.error ||
-                        "No se pudieron cargar las especialidades."
+                        "El número de colegiado no está autorizado."
                     );
                 }
 
-                setEspecialidades(data.especialidades || []);
-            } catch (loadError) {
-                if (loadError.name === "AbortError") {
-                    return;
-                }
+                setDatosColegiado(data);
+                setColegiadoValido(true);
+                setErrorColegiado("");
+            } catch (licenseError) {
+                if (licenseError.name === "AbortError") return;
 
-                setErrorEspecialidades(loadError.message);
-                setEspecialidades([]);
+                console.error(
+                    "Error comprobando número de colegiado:",
+                    licenseError
+                );
+                setDatosColegiado(null);
+                setColegiadoValido(false);
+                setErrorColegiado(
+                    licenseError.message ||
+                    "No se pudo verificar el número de colegiado."
+                );
             } finally {
-                if (!controller.signal.aborted) {
-                    setLoadingEspecialidades(false);
+                if (
+                    colegiadoAbortRef.current === controller &&
+                    !controller.signal.aborted
+                ) {
+                    setLoadingColegiado(false);
                 }
             }
+        }, 400);
+
+        return () => {
+            clearTimeout(timeoutId);
+            controller.abort();
+            if (colegiadoAbortRef.current === controller) {
+                colegiadoAbortRef.current = null;
+            }
         };
-
-        cargarEspecialidades();
-
-        return () => controller.abort();
-    }, [tipoUsuario]);
+    }, [tipoUsuario, formData.medicalLicense]);
 
     // ============================================================
     // CAMBIAR TIPO DE USUARIO
@@ -134,13 +154,18 @@ export const Register = () => {
 
     const handleTipoUsuarioChange = (tipo) => {
         dniAbortRef.current?.abort();
+        colegiadoAbortRef.current?.abort();
 
         setLoadingDni(false);
+        setLoadingColegiado(false);
         setTipoUsuario(tipo);
 
         setError("");
         setSuccess("");
         setErrorDni("");
+        setErrorColegiado("");
+        setColegiadoValido(false);
+        setDatosColegiado(null);
         setDniValido(false);
 
         setFormData({
@@ -163,6 +188,18 @@ export const Register = () => {
         if (name === "confirmPassword") {
             setError("");
         }
+    };
+
+    const handleColegiadoChange = (e) => {
+        colegiadoAbortRef.current?.abort();
+        setLoadingColegiado(false);
+        setErrorColegiado("");
+        setColegiadoValido(false);
+        setDatosColegiado(null);
+        setFormData((prev) => ({
+            ...prev,
+            medicalLicense: e.target.value.toUpperCase()
+        }));
     };
 
     // ============================================================
@@ -206,10 +243,6 @@ export const Register = () => {
         setFormData((prev) => ({
             ...prev,
             dni: dniIngresado,
-            firstName: "",
-            lastName: "",
-            dateOfBirth: "",
-            sex: "",
             cip: ""
         }));
 
@@ -287,9 +320,10 @@ export const Register = () => {
 
                     if (response.status === 404) {
                         throw new Error(
-                            tipoUsuario === "medico"
+                            data.error ||
+                            (tipoUsuario === "medico"
                                 ? "Este DNI no es válido."
-                                : "El DNI no es válido o no está autorizado para registrarse."
+                                : "El DNI no es válido o no está autorizado para registrarse.")
                         );
                     }
 
@@ -306,10 +340,6 @@ export const Register = () => {
                 setFormData((prev) => ({
                     ...prev,
                     dni: dniIngresado,
-                    firstName: data.first_name || "",
-                    lastName: data.last_name || "",
-                    dateOfBirth: data.date_of_birth || "",
-                    sex: data.sex || "",
                     cip: data.cip || ""
                 }));
 
@@ -346,8 +376,6 @@ export const Register = () => {
     const handleSubmit = async (event) => {
         event.preventDefault();
 
-        const form = event.currentTarget;
-
         setError("");
         setSuccess("");
 
@@ -380,58 +408,15 @@ export const Register = () => {
         }
 
         // ========================================================
-        // COMPROBAR GRUPO SANGUÍNEO DEL PACIENTE
-        // ========================================================
-
-        if (
-            tipoUsuario === "paciente" &&
-            !formData.bloodType
-        ) {
-            setError(
-                "Debes seleccionar tu grupo sanguíneo."
-            );
-            return;
-        }
-
-        // ========================================================
         // COMPROBAR DATOS DEL MÉDICO
         // ========================================================
 
-        if (tipoUsuario === "medico") {
-            const medicalLicense =
-                form.medical_license?.value
-                    ?.trim()
-                    .toUpperCase() || "";
-
-            const specialtyId =
-                form.specialty_id?.value || "";
-
-            const yearsExperience =
-                form.years_experience?.value || "";
-
-            if (!medicalLicense) {
-                setError(
-                    "Debes introducir el número de colegiado."
-                );
-                return;
-            }
-
-            if (!specialtyId) {
-                setError(
-                    "Debes seleccionar una especialidad."
-                );
-                return;
-            }
-
-            if (
-                yearsExperience === "" ||
-                Number(yearsExperience) < 0
-            ) {
-                setError(
-                    "Debes introducir unos años de experiencia válidos."
-                );
-                return;
-            }
+        if (tipoUsuario === "medico" && !colegiadoValido) {
+            setError(
+                errorColegiado ||
+                "El número de colegiado no está verificado."
+            );
+            return;
         }
 
         setSubmitting(true);
@@ -448,22 +433,7 @@ export const Register = () => {
                 password: formData.password,
                 phone: formData.phone,
 
-                // Solo pacientes
-                bloodType: formData.bloodType,
-
-                // Solo médicos
-                medicalLicense:
-                    form.medical_license?.value
-                        ?.trim()
-                        .toUpperCase() || "",
-
-                specialtyId:
-                    form.specialty_id?.value || "",
-
-                yearsExperience:
-                    Number(
-                        form.years_experience?.value
-                    ) || 0
+                medicalLicense: formData.medicalLicense.trim()
             });
 
             // ====================================================
@@ -480,12 +450,6 @@ export const Register = () => {
             setSubmitting(false);
         }
     };
-
-    // ============================================================
-    // CAMPOS BLOQUEADOS DESPUÉS DE VALIDAR DNI
-    // ============================================================
-
-    const camposBloqueados = dniValido;
 
     // ============================================================
     // RENDER
@@ -661,48 +625,6 @@ export const Register = () => {
                                         </div>
                                     )}
 
-                                    {/* NOMBRE */}
-
-                                    <div className="col-12">
-
-                                        <label className="form-label text-white-50 small">
-                                            Nombre
-                                        </label>
-
-                                        <input
-                                            type="text"
-                                            name="firstName"
-                                            value={formData.firstName}
-                                            onChange={handleChange}
-                                            readOnly={camposBloqueados}
-                                            required
-                                            className="form-control bg-dark text-white border-secondary"
-                                            placeholder="Nombre"
-                                        />
-
-                                    </div>
-
-                                    {/* APELLIDOS */}
-
-                                    <div className="col-12">
-
-                                        <label className="form-label text-white-50 small">
-                                            Apellidos
-                                        </label>
-
-                                        <input
-                                            type="text"
-                                            name="lastName"
-                                            value={formData.lastName}
-                                            onChange={handleChange}
-                                            readOnly={camposBloqueados}
-                                            required
-                                            className="form-control bg-dark text-white border-secondary"
-                                            placeholder="Apellidos"
-                                        />
-
-                                    </div>
-
                                     {/* EMAIL */}
 
                                     <div className="col-12">
@@ -744,90 +666,6 @@ export const Register = () => {
                                         />
 
                                     </div>
-
-                                    {/* FECHA DE NACIMIENTO */}
-
-                                    <div className="col-12">
-
-                                        <label className="form-label text-white-50 small">
-                                            Fecha de nacimiento
-                                        </label>
-
-                                        <input
-                                            type="date"
-                                            name="dateOfBirth"
-                                            value={formData.dateOfBirth}
-                                            onChange={handleChange}
-                                            readOnly={camposBloqueados}
-                                            required
-                                            className="form-control bg-dark text-white border-secondary"
-                                        />
-
-                                    </div>
-
-                                    {/* SEXO */}
-
-                                    <div className="col-12">
-
-                                        <label className="form-label text-white-50 small">
-                                            Sexo
-                                        </label>
-
-                                        <select
-                                            name="sex"
-                                            value={formData.sex}
-                                            onChange={handleChange}
-                                            disabled={camposBloqueados}
-                                            required
-                                            className="form-select bg-dark text-white border-secondary"
-                                        >
-                                            <option value="">
-                                                Seleccione
-                                            </option>
-
-                                            <option value="M">
-                                                Masculino
-                                            </option>
-
-                                            <option value="F">
-                                                Femenino
-                                            </option>
-                                        </select>
-
-                                    </div>
-
-                                    {/* GRUPO SANGUÍNEO */}
-
-                                    {tipoUsuario === "paciente" && (
-                                        <div className="col-12">
-
-                                            <label className="form-label text-white-50 small">
-                                                Grupo sanguíneo
-                                            </label>
-
-                                            <select
-                                                name="bloodType"
-                                                value={formData.bloodType}
-                                                onChange={handleChange}
-                                                required
-                                                className="form-select bg-dark text-white border-secondary"
-                                            >
-                                                <option value="">
-                                                    Seleccione
-                                                </option>
-
-                                                <option value="A+">A+</option>
-                                                <option value="A-">A-</option>
-                                                <option value="B+">B+</option>
-                                                <option value="B-">B-</option>
-                                                <option value="AB+">AB+</option>
-                                                <option value="AB-">AB-</option>
-                                                <option value="O+">O+</option>
-                                                <option value="O-">O-</option>
-                                            </select>
-
-                                        </div>
-                                    )}
 
                                     {/* CIP */}
 
@@ -871,76 +709,41 @@ export const Register = () => {
                                                     className="form-control bg-dark text-white border-secondary"
                                                     placeholder="Número de colegiado"
                                                     required
+                                                    value={formData.medicalLicense}
+                                                    onChange={handleColegiadoChange}
                                                 />
 
-                                            </div>
-
-                                            {/* ESPECIALIDAD */}
-
-                                            <div className="col-12">
-
-                                                <label className="form-label text-white-50 small">
-                                                    Especialidad
-                                                </label>
-
-                                                <select
-                                                    name="specialty_id"
-                                                    className="form-select bg-dark text-white border-secondary"
-                                                    defaultValue=""
-                                                    required
-                                                    disabled={
-                                                        loadingEspecialidades ||
-                                                        especialidades.length === 0
-                                                    }
-                                                >
-                                                    <option value="">
-                                                        {loadingEspecialidades
-                                                            ? "Cargando especialidades..."
-                                                            : "Seleccione una especialidad"}
-                                                    </option>
-
-                                                    {especialidades.map(
-                                                        (especialidad) => (
-                                                            <option
-                                                                key={
-                                                                    especialidad.id
-                                                                }
-                                                                value={
-                                                                    especialidad.id
-                                                                }
-                                                            >
-                                                                {
-                                                                    especialidad.name
-                                                                }
-                                                            </option>
-                                                        )
-                                                    )}
-                                                </select>
-
-                                                {errorEspecialidades && (
-                                                    <div className="text-danger small mt-2">
-                                                        {errorEspecialidades}
+                                                {loadingColegiado && (
+                                                    <div className="text-info small mt-2">
+                                                        <Icon
+                                                            name="LoaderCircle"
+                                                            className="me-1"
+                                                        />
+                                                        Comprobando número de colegiado...
                                                     </div>
                                                 )}
 
-                                            </div>
+                                                {!loadingColegiado && errorColegiado && (
+                                                    <div className="text-danger small mt-2">
+                                                        <Icon
+                                                            name="CircleAlert"
+                                                            className="me-1"
+                                                        />
+                                                        {errorColegiado}
+                                                    </div>
+                                                )}
 
-                                            {/* AÑOS DE EXPERIENCIA */}
-
-                                            <div className="col-12">
-
-                                                <label className="form-label text-white-50 small">
-                                                    Años de experiencia
-                                                </label>
-
-                                                <input
-                                                    type="number"
-                                                    name="years_experience"
-                                                    min="0"
-                                                    className="form-control bg-dark text-white border-secondary"
-                                                    placeholder="Años de experiencia"
-                                                    required
-                                                />
+                                                {!loadingColegiado &&
+                                                    colegiadoValido &&
+                                                    datosColegiado && (
+                                                        <div className="text-success small mt-2">
+                                                            <Icon
+                                                                name="Check"
+                                                                className="me-1"
+                                                            />
+                                                            Colegiado verificado
+                                                        </div>
+                                                    )}
 
                                             </div>
                                         </>
@@ -950,9 +753,7 @@ export const Register = () => {
 
                                     <div className="col-12">
 
-                                        <label className="form-label text-white-50 small">
-                                            Contraseña
-                                        </label>
+                                        
 
                                         {/* REQUISITOS */}
 
@@ -1047,6 +848,10 @@ export const Register = () => {
                                             </div>
 
                                         </div>
+
+                                        <label className="form-label text-white-50 small">
+                                            Contraseña
+                                        </label>
 
                                         {/* INPUT PASSWORD */}
 
@@ -1233,4 +1038,3 @@ export const Register = () => {
         </div>
     );
 };
-

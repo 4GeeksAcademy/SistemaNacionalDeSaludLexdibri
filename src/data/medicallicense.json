@@ -1,0 +1,188 @@
+[
+  {
+    "medical_license": "MED-000047",
+    "specialty_id": 1,
+    "years_since_license": 16,
+    "hospital_id": 1
+  },
+  {
+    "medical_license": "MED-000048",
+    "specialty_id": 2,
+    "years_since_license": 12,
+    "hospital_id": 1
+  },
+  {
+    "medical_license": "MED-000049",
+    "specialty_id": 3,
+    "years_since_license": 9,
+    "hospital_id": 1
+  },
+  {
+    "medical_license": "MED-000050",
+    "specialty_id": 4,
+    "years_since_license": 23,
+    "hospital_id": 1
+  },
+  {
+    "medical_license": "MED-000051",
+    "specialty_id": 5,
+    "years_since_license": 14,
+    "hospital_id": 1
+  },
+  {
+    "medical_license": "MED-000052",
+    "specialty_id": 6,
+    "years_since_license": 18,
+    "hospital_id": 1
+  },
+  {
+    "medical_license": "MED-000053",
+    "specialty_id": 7,
+    "years_since_license": 11,
+    "hospital_id": 1
+  },
+  {
+    "medical_license": "MED-000054",
+    "specialty_id": 8,
+    "years_since_license": 25,
+    "hospital_id": 1
+  },
+  {
+    "medical_license": "MED-000055",
+    "specialty_id": 9,
+    "years_since_license": 13,
+    "hospital_id": 1
+  },
+  {
+    "medical_license": "MED-000056",
+    "specialty_id": 10,
+    "years_since_license": 17,
+    "hospital_id": 1
+  },
+  {
+    "medical_license": "MED-000057",
+    "specialty_id": 11,
+    "years_since_license": 10,
+    "hospital_id": 1
+  },
+  {
+    "medical_license": "MED-000058",
+    "specialty_id": 12,
+    "years_since_license": 20,
+    "hospital_id": 1
+  },
+  {
+    "medical_license": "MED-000059",
+    "specialty_id": 13,
+    "years_since_license": 7,
+    "hospital_id": 1
+  },
+  {
+    "medical_license": "MED-000060",
+    "specialty_id": 14,
+    "years_since_license": 15,
+    "hospital_id": 1
+  },
+  {
+    "medical_license": "MED-000061",
+    "specialty_id": 15,
+    "years_since_license": 11,
+    "hospital_id": 1
+  },
+  {
+    "medical_license": "MED-000062",
+    "specialty_id": 16,
+    "years_since_license": 26,
+    "hospital_id": 1
+  },
+  {
+    "medical_license": "MED-000063",
+    "specialty_id": 17,
+    "years_since_license": 12,
+    "hospital_id": 1
+  },
+  {
+    "medical_license": "MED-000064",
+    "specialty_id": 18,
+    "years_since_license": 16,
+    "hospital_id": 1
+  },
+  {
+    "medical_license": "MED-000065",
+    "specialty_id": 19,
+    "years_since_license": 9,
+    "hospital_id": 1
+  },
+  {
+    "medical_license": "MED-000066",
+    "specialty_id": 20,
+    "years_since_license": 17,
+    "hospital_id": 1
+  },
+  {
+    "medical_license": "MED-000067",
+    "specialty_id": 21,
+    "years_since_license": 13,
+    "hospital_id": 1
+  },
+  {
+    "medical_license": "MED-000068",
+    "specialty_id": 22,
+    "years_since_license": 22,
+    "hospital_id": 1
+  },
+  {
+    "medical_license": "MED-000069",
+    "specialty_id": 23,
+    "years_since_license": 10,
+    "hospital_id": 1
+  },
+  {
+    "medical_license": "MED-000070",
+    "specialty_id": 24,
+    "years_since_license": 15,
+    "hospital_id": 1
+  },
+  {
+    "medical_license": "MED-000071",
+    "specialty_id": 25,
+    "years_since_license": 12,
+    "hospital_id": 1
+  },
+  {
+    "medical_license": "MED-000072",
+    "specialty_id": 26,
+    "years_since_license": 18,
+    "hospital_id": 1
+  },
+  {
+    "medical_license": "MED-000073",
+    "specialty_id": 27,
+    "years_since_license": 9,
+    "hospital_id": 1
+  },
+  {
+    "medical_license": "MED-000074",
+    "specialty_id": 28,
+    "years_since_license": 21,
+    "hospital_id": 1
+  },
+  {
+    "medical_license": "MED-021048",
+    "specialty_id": 40,
+    "years_since_license": 18,
+    "hospital_id": 1
+  },
+  {
+    "medical_license": "MED-900049",
+    "specialty_id": 40,
+    "years_since_license": 12,
+    "hospital_id": 1
+  },
+  {
+    "medical_license": "MED-9997050",
+    "specialty_id": 40,
+    "years_since_license": 15,
+    "hospital_id": 1
+  }
+]

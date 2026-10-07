@@ -21,10 +21,11 @@ class UserRole(Enum):
     DOCTOR = "doctor"
     ADMIN = "admin"
 
-class DoctorStatus(Enum): 
-    ACTIVE = "active" 
-    VACATION = "vacation" 
-    TEMPORARY_LEAVE = "temporary_leave" 
+
+class DoctorStatus(Enum):
+    ACTIVE = "active"
+    VACATION = "vacation"
+    TEMPORARY_LEAVE = "temporary_leave"
     INACTIVE = "inactive"
 
 ### =====================================  DB    ==============================================================###
@@ -102,9 +103,10 @@ class User(db.Model):
             # do not serialize the password, its a security breach
         }
 
-#=================
+# =================
 # Pacientes
-#===============
+# ===============
+
 
 class Patient(db.Model):
 
@@ -201,14 +203,25 @@ class Patient(db.Model):
         cascade="all, delete-orphan",
     )
 
-    # =========================
-    # Médicos asociados
-    # =========================
+    hospital_id: Mapped[int] = mapped_column(
+        ForeignKey("hospital.id"),
+        nullable=False,
+    )
+
+
+    hospital: Mapped["Hospital"] = relationship(
+        back_populates="patients",
+    )
+
+# =========================
+# Médicos asociados
+# =========================
 
     doctors: Mapped[list["DoctorPatient"]] = relationship(
         back_populates="patient",
         cascade="all, delete-orphan",
     )
+
 
     def serialize(self):
         return {
@@ -306,7 +319,6 @@ class HealthCenter(db.Model):
 
 
 # Doctores
-
 
 
 class Doctor(db.Model):
@@ -1137,6 +1149,8 @@ class MedicalRecordAccessLog(db.Model):
                 if self.accessed_at else None
             ),
         }
+
+
 class DoctorPatient(db.Model):
 
     doctor_id: Mapped[int] = mapped_column(
@@ -1170,9 +1184,9 @@ class DoctorPatient(db.Model):
     )
 
 
-#=============
-#Alergias
-#==============
+# =============
+# Alergias
+# ==============
 
 
 class Allergy(db.Model):
@@ -1219,29 +1233,34 @@ class Allergy(db.Model):
         back_populates="allergies",
     )
 
-#===========
-#VACUNACION
-#===========
+# ===========
+# VACUNACION
+# ===========
+
 
 class Vaccination(db.Model):
     __tablename__ = "vaccination"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    patient_id: Mapped[int] = mapped_column(ForeignKey("patient.id"), nullable=False)
+    id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, autoincrement=True)
+    patient_id: Mapped[int] = mapped_column(
+        ForeignKey("patient.id"), nullable=False)
     vaccine_name: Mapped[str] = mapped_column(String(255), nullable=False)
     vaccination_date: Mapped[date] = mapped_column(Date, nullable=False)
     dose: Mapped[str | None] = mapped_column(String(100), nullable=True)
     lot_number: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    manufacturer: Mapped[str | None] = mapped_column(String(255), nullable=True)   # NUEVO
-    next_dose_date: Mapped[date | None] = mapped_column(Date, nullable=True)       # NUEVO
+    manufacturer: Mapped[str | None] = mapped_column(
+        String(255), nullable=True)   # NUEVO
+    next_dose_date: Mapped[date | None] = mapped_column(
+        Date, nullable=True)       # NUEVO
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     patient: Mapped["Patient"] = relationship(back_populates="vaccinations")
 
 
-#===================
-#Cirugías
-#====================
+# ===================
+# Cirugías
+# ====================
 
 
 class Surgery(db.Model):
@@ -1288,9 +1307,9 @@ class Surgery(db.Model):
     )
 
 
-#================
-#Hospital
-#================
+# ================
+# Hospital
+# ================
 
 class Hospital(db.Model):
     __tablename__ = "hospital"
@@ -1323,6 +1342,11 @@ class Hospital(db.Model):
     admins: Mapped[list["User"]] = relationship(
         back_populates="hospital",
     )
+
+    patients: Mapped[list["Patient"]] = relationship(
+        back_populates="hospital",
+    )
+
 
 class RegistrationDNI(db.Model):
     __tablename__ = "registration_dni"
@@ -1384,3 +1408,47 @@ class RegistrationDNI(db.Model):
     )
 
 
+class ColegiadoRegistration(db.Model):
+    __tablename__ = "colegiado_registration"
+
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+
+    medical_license: Mapped[str] = mapped_column(
+        String(100),
+        unique=True,
+        nullable=False
+    )
+
+    specialty_id: Mapped[int] = mapped_column(
+        ForeignKey("specialty.id"),
+        nullable=False
+    )
+
+    hospital_id: Mapped[int] = mapped_column(
+        ForeignKey("hospital.id"),
+        nullable=False
+    )
+
+    years_since_license: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False
+    )
+
+    is_registered: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False
+    )
+
+    specialty: Mapped["Specialty"] = relationship()
+    hospital: Mapped["Hospital"] = relationship()

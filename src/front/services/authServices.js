@@ -5,10 +5,7 @@ export const registrarUsuario = async (formData) => {
     email,
     password,
     phone,
-    bloodType,
     medicalLicense,
-    specialtyId,
-    yearsExperience,
   } = formData;
 
   const payload = {
@@ -20,21 +17,11 @@ export const registrarUsuario = async (formData) => {
   };
 
   // =====================================================
-  // PACIENTE
-  // =====================================================
-
-  if (role === "patient") {
-    payload.blood_type = bloodType;
-  }
-
-  // =====================================================
   // MÉDICO
   // =====================================================
 
   if (role === "doctor") {
     payload.medical_license = medicalLicense;
-    payload.specialty_id = Number(specialtyId);
-    payload.years_experience = Number(yearsExperience);
   }
 
   const response = await fetch(

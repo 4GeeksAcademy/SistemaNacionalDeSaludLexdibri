@@ -11,5 +11,18 @@
     "is_active": true,
     "role": "admin",
     "hospital_id": 2
+  },
+  {
+    "email": "admin@lexdibri2.com",
+    "password": "1234",
+    "first_name": "Administrador",
+    "last_name": "LEXDIBRI",
+    "dni": "00000000X",
+    "phone": "+34600000000",
+    "date_of_birth": "1990-01-01",
+    "sex": "M",
+    "is_active": true,
+    "role": "admin",
+    "hospital_id": 1
   }
 ]

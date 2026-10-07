@@ -24,6 +24,7 @@ from api.models import (
     Hospital,
     DoctorStatus,
     RegistrationDNI,
+    ColegiadoRegistration,
 )
 
 from api.utils import generate_sitemap, APIException
@@ -75,12 +76,6 @@ def handle_hello():
     return jsonify(response_body), 200
 
 
-# =========================================================
-# SEED PACIENTES
-# =========================================================
-# =========================================================
-# SEED PACIENTES
-# =========================================================
 
 @api.route("/seed/pacientes", methods=["GET"])
 def seed_patients():
@@ -114,6 +109,12 @@ def seed_patients():
                 user.hospital_id = data["hospital_id"]
                 updated += 1
 
+            # Si el paciente existe pero no tiene hospital,
+            # también se lo asignamos.
+            if user.patient and user.patient.hospital_id is None:
+                user.patient.hospital_id = data["hospital_id"]
+                updated += 1
+
             continue
 
         # =================================================
@@ -142,6 +143,7 @@ def seed_patients():
         patient = Patient(
             cip=data["cip"],
             blood_type=data["blood_type"],
+            hospital_id=data["hospital_id"],
         )
 
         user.patient = patient
@@ -157,7 +159,6 @@ def seed_patients():
         "actualizados": updated,
         "ya_existian": existing
     }), 200
-
 
 # =========================================================
 # SEED MÉDICOS
@@ -517,6 +518,113 @@ def seed_registration_dni():
     }), 200
 
 
+@api.route("/seed/colegiados", methods=["GET"])
+def seed_colegiados():
+
+    json_route = os.path.join(
+        os.path.dirname(__file__),
+        "../data/medicallicense.json"
+    )
+
+    with open(json_route, "r", encoding="utf-8") as file:
+        registrations = json.load(file)
+
+    created = 0
+    updated = 0
+
+    for data in registrations:
+        medical_license = (
+            data.get("medical_license") or ""
+        ).strip().upper()
+
+        specialty_id = data.get("specialty_id")
+        hospital_id = data.get("hospital_id")
+        years_since_license = data.get("years_since_license")
+
+        if (
+            not medical_license
+            or specialty_id is None
+            or hospital_id is None
+        ):
+            db.session.rollback()
+            return jsonify({
+                "error": (
+                    "El origen contiene un colegiado sin número, "
+                    "especialidad o hospital"
+                )
+            }), 400
+
+        try:
+            years_since_license = int(years_since_license)
+        except (TypeError, ValueError):
+            db.session.rollback()
+            return jsonify({
+                "error": (
+                    "El origen contiene años desde la licencia no válidos "
+                    f"para el colegiado {medical_license}"
+                )
+            }), 400
+
+        if years_since_license < 0:
+            db.session.rollback()
+            return jsonify({
+                "error": (
+                    "Los años desde la licencia no pueden ser negativos "
+                    f"para el colegiado {medical_license}"
+                )
+            }), 400
+
+        if not db.session.get(Specialty, specialty_id):
+            db.session.rollback()
+            return jsonify({
+                "error": (
+                    "No existe la especialidad "
+                    f"{specialty_id} del colegiado {medical_license}"
+                )
+            }), 400
+
+        if not db.session.get(Hospital, hospital_id):
+            db.session.rollback()
+            return jsonify({
+                "error": (
+                    "No existe el hospital "
+                    f"{hospital_id} del colegiado {medical_license}"
+                )
+            }), 400
+
+        registration = ColegiadoRegistration.query.filter_by(
+            medical_license=medical_license
+        ).first()
+
+        if registration:
+            registration.specialty_id = specialty_id
+            registration.hospital_id = hospital_id
+            registration.years_since_license = years_since_license
+            updated += 1
+        else:
+            registration = ColegiadoRegistration(
+                medical_license=medical_license,
+                specialty_id=specialty_id,
+                hospital_id=hospital_id,
+                years_since_license=years_since_license
+            )
+            db.session.add(registration)
+            created += 1
+
+        if Doctor.query.filter_by(
+            medical_license=medical_license
+        ).first():
+            registration.is_registered = True
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Registros de colegiados procesados correctamente",
+        "creados": created,
+        "actualizados": updated
+    }), 200
+
+
 # =========================================================
 # ESPECIALIDADES
 # =========================================================
@@ -608,19 +716,7 @@ def registro_usuario():
             "error": "Este DNI ya está registrado"
         }), 409
 
-    # =====================================================
-    # COMPROBAR ROLE
-    # =====================================================
-
     expected_role = UserRole(data["role"])
-
-    if registration.role != expected_role:
-        return jsonify({
-            "error": (
-                "Este DNI no está autorizado para registrarse "
-                f"como {data['role']}"
-            )
-        }), 400
 
     # =====================================================
     # COMPROBAR EMAIL
@@ -675,7 +771,7 @@ def registro_usuario():
         phone=data["phone"],
 
         is_active=True,
-        role=registration.role
+        role=expected_role
     )
 
     # =====================================================
@@ -683,17 +779,9 @@ def registro_usuario():
     # =====================================================
 
     if data["role"] == "patient":
-
-        blood_type = data.get("blood_type")
-
-        if not blood_type:
-            return jsonify({
-                "error": "Para un paciente se necesita blood_type"
-            }), 400
-
         patient = Patient(
             cip=registration.cip,
-            blood_type=blood_type
+            blood_type=data.get("blood_type")
         )
 
         user.patient = patient
@@ -713,75 +801,31 @@ def registro_usuario():
                 "error": "Para un médico se necesita medical_license"
             }), 400
 
-        specialty_id = data.get("specialty_id")
+        colegiado = ColegiadoRegistration.query.filter_by(
+            medical_license=medical_license
+        ).first()
 
-        specialty_name = (
-            data.get("specialty_name") or ""
-        ).strip()
-
-        # ---------------------------------------------
-        # Buscar/crear especialidad
-        # ---------------------------------------------
-
-        if not specialty_id and specialty_name:
-
-            specialty = Specialty.query.filter_by(
-                name=specialty_name
-            ).first()
-
-            if not specialty:
-
-                specialty = Specialty(
-                    name=specialty_name
-                )
-
-                db.session.add(specialty)
-                db.session.flush()
-
-            specialty_id = specialty.id
-
-        if not specialty_id:
+        if not colegiado:
             return jsonify({
-                "error": "Para un médico se necesita una especialidad"
+                "error": "El número de colegiado no está autorizado"
             }), 400
 
-        # ---------------------------------------------
-        # Años de experiencia
-        # ---------------------------------------------
-
-        years_experience = data.get("years_experience")
-
-        if years_experience is None:
+        if colegiado.is_registered or Doctor.query.filter_by(
+            medical_license=medical_license
+        ).first():
             return jsonify({
-                "error": (
-                    "Para un médico se necesitan "
-                    "los años de experiencia"
-                )
-            }), 400
-
-        try:
-            years_experience = int(years_experience)
-        except (TypeError, ValueError):
-            return jsonify({
-                "error": "Los años de experiencia deben ser un número"
-            }), 400
-
-        if years_experience < 0:
-            return jsonify({
-                "error": "Los años de experiencia no pueden ser negativos"
-            }), 400
-
-        # ---------------------------------------------
-        # Crear médico
-        # ---------------------------------------------
+                "error": "Este número de colegiado ya está registrado"
+            }), 409
 
         doctor = Doctor(
             medical_license=medical_license,
-            specialty_id=specialty_id,
-            years_experience=years_experience
+            specialty_id=colegiado.specialty_id,
+            years_experience=colegiado.years_since_license,
+            hospital_id=colegiado.hospital_id
         )
 
         user.doctor = doctor
+        colegiado.is_registered = True
 
     # =====================================================
     # GUARDAR USER
@@ -4259,7 +4303,9 @@ def admin_pacientes():
     if error:
         return error, status
 
-    pacientes = Patient.query.all()
+    pacientes = Patient.query.filter_by(
+        hospital_id=user.hospital_id
+    ).all()
 
     resultado = []
 
@@ -4675,18 +4721,6 @@ def comprobar_registration_dni(dni):
         }), 409
 
     # =====================================================
-    # COMPROBAR ROLE
-    # =====================================================
-
-    if registro.role.value != role:
-        return jsonify({
-            "error": (
-                "Este DNI no está autorizado para registrarse "
-                f"como {role}"
-            )
-        }), 404
-
-    # =====================================================
     # DEVOLVER DATOS
     # =====================================================
 
@@ -4701,6 +4735,41 @@ def comprobar_registration_dni(dni):
         ),
         "sex": registro.sex,
         "cip": registro.cip
+    }), 200
+
+
+@api.route(
+    "/registration-license/<string:medical_license>",
+    methods=["GET"]
+)
+def comprobar_registration_license(medical_license):
+
+    medical_license = medical_license.strip().upper()
+
+    registro = db.session.execute(
+        db.select(ColegiadoRegistration).where(
+            ColegiadoRegistration.medical_license == medical_license
+        )
+    ).scalar_one_or_none()
+
+    if not registro:
+        return jsonify({
+            "error": "El número de colegiado no está autorizado"
+        }), 404
+
+    if registro.is_registered or Doctor.query.filter_by(
+        medical_license=medical_license
+    ).first():
+        return jsonify({
+            "error": "Este número de colegiado ya está registrado"
+        }), 409
+
+    return jsonify({
+        "medical_license": registro.medical_license,
+        "specialty": registro.specialty.name,
+        "years_since_license": registro.years_since_license,
+        "hospital_id": registro.hospital_id,
+        "hospital": registro.hospital.name
     }), 200
 
 
