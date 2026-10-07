@@ -613,21 +613,21 @@ export const HistorialClinico = () => {
 
                             <div className="d-flex flex-wrap align-items-center gap-2">
 
-                                <h3 className="text-info fw-bold mb-0">
+                                <h3 className="text-info fw-bold mb-0 ">
                                     {paciente.nombre}
                                 </h3>
 
-                                <span className="badge bg-info bg-opacity-25 text-info border border-info">
+                                <span className="badge bg-info bg-opacity-25 text-info border border-info text-decoration-underline link-underline-info">
                                     {paciente.id}
                                 </span>
 
-                                <span className="badge bg-danger bg-opacity-25 text-danger border border-danger">
+                                <span className="badge bg-danger bg-opacity-25 text-danger border border-danger ">
                                     Tipo de sangre: {paciente.tipoSangre}
                                 </span>
 
                             </div>
 
-                            <div className="text-white-50 mt-2">
+                            <div className="text-white-50 mt-2 text-decoration-underline link-underline-info">
 
                                 {paciente.edad} años
 
@@ -649,7 +649,7 @@ export const HistorialClinico = () => {
                                     •
                                 </span>
 
-                                Hospital:
+
                                 {" "}
                                 {paciente.hospital}
 

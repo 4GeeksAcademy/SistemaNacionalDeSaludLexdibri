@@ -178,7 +178,7 @@ export const Contacto = () => {
                     CONTACTO DIRECTO
                   </span>
 
-                  <h3 className="h4 fw-bold mb-0 mt-1">
+                  <h3 className="h4 fw-bold mb-0 mt-1 text-light">
                     Envíanos tu consulta
                   </h3>
                 </div>
@@ -285,7 +285,7 @@ export const Contacto = () => {
 
                 </div>
 
-                <h3 className="h4 fw-bold mb-3">
+                <h3 className="h4 fw-bold mb-3 text-light">
                   Centro de Atención Telefónica
                 </h3>
 
@@ -320,7 +320,7 @@ export const Contacto = () => {
 
                 </div>
 
-                <h3 className="h4 fw-bold mb-3">
+                <h3 className="h4 fw-bold mb-3 text-light">
                   Atención online
                 </h3>
 

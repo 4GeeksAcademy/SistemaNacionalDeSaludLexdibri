@@ -9,10 +9,28 @@ const initialSurgery = {
     description: ""
 };
 
+const getDoctorHospital = () => {
+    const storedUser = localStorage.getItem("user");
+
+    if (!storedUser) return "";
+
+    try {
+        const user = JSON.parse(storedUser);
+        return user.role === "doctor" ? user.hospital || "" : "";
+    } catch (error) {
+        console.error("Error leyendo el hospital del médico:", error);
+        return "";
+    }
+};
+
 export const CrearCirugia = () => {
     const { state } = useLocation();
     const patient = state?.patient;
-    const [surgery, setSurgery] = useState(initialSurgery);
+    const [doctorHospital] = useState(getDoctorHospital);
+    const [surgery, setSurgery] = useState(() => ({
+        ...initialSurgery,
+        hospital: doctorHospital
+    }));
     const [creatingSurgery, setCreatingSurgery] = useState(false);
     const [surgeryError, setSurgeryError] = useState("");
     const [surgerySuccess, setSurgerySuccess] = useState("");
@@ -81,7 +99,10 @@ export const CrearCirugia = () => {
             }
 
             setSurgerySuccess("Registro de cirugía creado correctamente.");
-            setSurgery(initialSurgery);
+            setSurgery({
+                ...initialSurgery,
+                hospital: doctorHospital
+            });
         } catch (error) {
             console.error("Error creando registro de cirugía:", error);
             setSurgeryError("Error de conexión con el servidor.");
@@ -142,7 +163,18 @@ export const CrearCirugia = () => {
                                     </div>
                                     <div className="mb-3">
                                         <label className="form-label">Hospital</label>
-                                        <input type="text" className="form-control bg-dark text-white border-secondary" name="hospital" placeholder="Ej. Hospital La Paz" value={surgery.hospital} onChange={handleChange} />
+                                        <input
+                                            type="text"
+                                            className="form-control bg-dark text-white border-secondary"
+                                            name="hospital"
+                                            value={surgery.hospital}
+                                            readOnly
+                                        />
+                                        <div className="form-text text-white-50">
+                                            {doctorHospital
+                                                ? "Hospital asignado a tu cuenta de médico."
+                                                : "No se ha encontrado un hospital asignado a tu cuenta."}
+                                        </div>
                                     </div>
                                     <div className="mb-3">
                                         <label className="form-label">Cirujano</label>

@@ -1355,9 +1355,23 @@ export const DashboardMedico = () => {
                                 !consultationError &&
                                 consultations.length === 0 && (
 
-                                    <p className="text-white-50 mb-0">
-                                        No tienes consultas pendientes.
-                                    </p>
+                                    <div className="text-center py-5">
+
+                                        <Icon
+                                            name="CalendarX"
+                                            className="fs-1 mb-3"
+                                            size="1em"
+                                        />
+
+                                        <h3 className="h5 fw-bold">
+                                            No tienes consultas pendientes
+                                        </h3>
+
+                                        <p className="text-white-50 mb-0">
+                                            Las consultas pendientes aparecerán aquí.
+                                        </p>
+
+                                    </div>
 
                                 )}
 

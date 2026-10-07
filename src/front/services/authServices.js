@@ -5,6 +5,7 @@ export const registrarUsuario = async (formData) => {
     email,
     password,
     phone,
+    phoneVerificationToken,
     medicalLicense,
   } = formData;
 
@@ -13,6 +14,7 @@ export const registrarUsuario = async (formData) => {
     password,
     dni,
     phone,
+    phone_verification_token: phoneVerificationToken,
     role,
   };
 
@@ -43,6 +45,45 @@ export const registrarUsuario = async (formData) => {
 
   return data;
 };
+
+export const enviarPinRegistro = async (phone) => {
+  const response = await fetch(
+    `${import.meta.env.VITE_BACKEND_URL}/api/registration/send-phone-pin`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ phone }),
+    },
+  );
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || "No se pudo enviar el PIN.");
+  }
+  return data;
+};
+
+export const verificarPinRegistro = async ({ phone, pin }) => {
+  const response = await fetch(
+    `${import.meta.env.VITE_BACKEND_URL}/api/registration/verify-phone-pin`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ phone, pin }),
+    },
+  );
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || "No se pudo verificar el PIN.");
+  }
+  return data;
+};
+
 export const iniciarSesion = async ({ email, password, tipoUsuario }) => {
   const response = await fetch(
     `${import.meta.env.VITE_BACKEND_URL}/api/login`,

@@ -462,7 +462,7 @@
     "specialty_id": 40,
     "years_experience": 18,
     "role": "doctor",
-    "hospital_id": 2
+    "hospital_id": 1
   },
   {
     "email": "marta.medicocabecera.madrid@hospital.com",
@@ -478,8 +478,39 @@
     "specialty_id": 40,
     "years_experience": 12,
     "role": "doctor",
+    "hospital_id": 1
+  },
+  {
+    "email": "julia.medicocabecera.bcn@hospital.com",
+    "password": "Doctor123!",
+    "first_name": "Julia",
+    "last_name": "Vidal Costa",
+    "dni": "23948271G",
+    "phone": "+34612000203",
+    "date_of_birth": "1982-04-17",
+    "sex": "F",
+    "is_active": true,
+    "medical_license": "MED-900050",
+    "specialty_id": 40,
+    "years_experience": 16,
+    "role": "doctor",
+    "hospital_id": 2
+  },
+  {
+    "email": "andres.medicocabecera.bcn@hospital.com",
+    "password": "Doctor123!",
+    "first_name": "Andrés",
+    "last_name": "Soler Navarro",
+    "dni": "23956190B",
+    "phone": "+34612000204",
+    "date_of_birth": "1979-08-03",
+    "sex": "M",
+    "is_active": true,
+    "medical_license": "MED-900051",
+    "specialty_id": 40,
+    "years_experience": 19,
+    "role": "doctor",
     "hospital_id": 2
   }
-
 
 ]

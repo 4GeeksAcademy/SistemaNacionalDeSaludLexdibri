@@ -1452,3 +1452,42 @@ class ColegiadoRegistration(db.Model):
 
     specialty: Mapped["Specialty"] = relationship()
     hospital: Mapped["Hospital"] = relationship()
+
+
+class PhoneVerification(db.Model):
+    __tablename__ = "phone_verification"
+
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+
+    phone: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    code_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    registration_token_hash: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True
+    )
+    request_ip: Mapped[str | None] = mapped_column(
+        String(45),
+        nullable=True,
+        index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+        index=True
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    sent: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    verified_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True
+    )
+    consumed_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True
+    )

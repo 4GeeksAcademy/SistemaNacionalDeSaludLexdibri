@@ -25,6 +25,7 @@ from api.models import (
     DoctorStatus,
     RegistrationDNI,
     ColegiadoRegistration,
+    PhoneVerification,
 )
 
 from api.utils import generate_sitemap, APIException
@@ -37,6 +38,8 @@ import os
 import json
 import requests
 import random
+import re
+import secrets
 import resend
 
 from werkzeug.security import (
@@ -60,6 +63,175 @@ api = Blueprint('api', __name__)
 
 # Allow CORS requests to this API
 CORS(api)
+
+
+def normalize_e164_phone(phone):
+    normalized = re.sub(r"[\s().-]", "", str(phone or ""))
+    if not re.fullmatch(r"\+[1-9]\d{7,14}", normalized):
+        return None
+    return normalized
+
+
+@api.route("/registration/send-phone-pin", methods=["POST"])
+def send_registration_phone_pin():
+    data = request.get_json(silent=True) or {}
+    phone = normalize_e164_phone(data.get("phone"))
+
+    if not phone:
+        return jsonify({
+            "error": "Introduce un teléfono internacional válido, por ejemplo +34600000000"
+        }), 400
+
+    now = datetime.utcnow()
+    day_ago = now - timedelta(days=1)
+    db.session.query(PhoneVerification).filter(
+        PhoneVerification.created_at < day_ago
+    ).delete(synchronize_session=False)
+
+    recent_phone_requests = PhoneVerification.query.filter(
+        PhoneVerification.phone == phone,
+        PhoneVerification.created_at >= day_ago
+    ).order_by(PhoneVerification.created_at.desc()).all()
+
+    if recent_phone_requests and (
+        now - recent_phone_requests[0].created_at
+    ).total_seconds() < 60:
+        return jsonify({
+            "error": "Espera un minuto antes de solicitar otro PIN."
+        }), 429
+
+    if len(recent_phone_requests) >= 3:
+        return jsonify({
+            "error": "Has alcanzado el límite diario de PIN para este teléfono."
+        }), 429
+
+    request_ip = request.remote_addr
+    if request_ip:
+        recent_ip_requests = PhoneVerification.query.filter(
+            PhoneVerification.request_ip == request_ip,
+            PhoneVerification.created_at >= day_ago
+        ).count()
+        if recent_ip_requests >= 10:
+            return jsonify({
+                "error": "Se ha alcanzado el límite diario de solicitudes desde esta conexión."
+            }), 429
+
+    pin = f"{secrets.randbelow(1_000_000):06d}"
+    message = (
+        f"Tu PIN de registro del Sistema Nacional de Salud es {pin}. "
+        "Caduca en 10 minutos."
+    )
+
+    verification = PhoneVerification(
+        phone=phone,
+        code_hash=generate_password_hash(pin),
+        request_ip=request_ip,
+        created_at=now,
+        expires_at=now + timedelta(minutes=10)
+    )
+    db.session.add(verification)
+
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception(
+            "No se pudo guardar la solicitud de verificación SMS."
+        )
+        return jsonify({
+            "error": "No se pudo iniciar la verificación del teléfono."
+        }), 500
+
+    try:
+        response = requests.post(
+            "https://textbelt.com/text",
+            data={
+                "phone": phone,
+                "message": message,
+                "key": os.environ.get("TEXTBELT_API_KEY", "textbelt")
+            },
+            timeout=10
+        )
+        response.raise_for_status()
+        provider_result = response.json()
+    except (requests.RequestException, ValueError):
+        current_app.logger.warning("No se pudo contactar con el proveedor SMS.")
+        return jsonify({
+            "error": "No se pudo enviar el PIN por SMS. Inténtalo más tarde."
+        }), 502
+
+    if (
+        not isinstance(provider_result, dict)
+        or not provider_result.get("success")
+    ):
+        current_app.logger.warning("El proveedor SMS rechazó el envío del PIN.")
+        return jsonify({
+            "error": "El servicio SMS no pudo enviar el PIN. Comprueba el teléfono o inténtalo más tarde."
+        }), 502
+
+    verification.sent = True
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception("No se pudo guardar la verificación SMS.")
+        return jsonify({
+            "error": "No se pudo iniciar la verificación del teléfono."
+        }), 500
+
+    return jsonify({
+        "message": "PIN enviado. Caduca en 10 minutos."
+    }), 200
+
+
+@api.route("/registration/verify-phone-pin", methods=["POST"])
+def verify_registration_phone_pin():
+    data = request.get_json(silent=True) or {}
+    phone = normalize_e164_phone(data.get("phone"))
+    pin = str(data.get("pin") or "").strip()
+
+    if not phone or not re.fullmatch(r"\d{6}", pin):
+        return jsonify({
+            "error": "Introduce el teléfono y el PIN de seis cifras."
+        }), 400
+
+    now = datetime.utcnow()
+    verification = PhoneVerification.query.filter(
+        PhoneVerification.phone == phone,
+        PhoneVerification.sent.is_(True),
+        PhoneVerification.expires_at > now,
+        PhoneVerification.consumed_at.is_(None)
+    ).order_by(PhoneVerification.created_at.desc()).first()
+
+    if not verification:
+        return jsonify({
+            "error": "No hay un PIN vigente para este teléfono. Solicita uno nuevo."
+        }), 400
+
+    if verification.attempts >= 5:
+        return jsonify({
+            "error": "Has alcanzado el máximo de intentos. Solicita un PIN nuevo."
+        }), 429
+
+    verification.attempts += 1
+
+    if not check_password_hash(verification.code_hash, pin):
+        db.session.commit()
+        return jsonify({
+            "error": "El PIN no es correcto."
+        }), 400
+
+    registration_token = secrets.token_urlsafe(32)
+    verification.registration_token_hash = generate_password_hash(
+        registration_token
+    )
+    verification.verified_at = now
+    db.session.commit()
+
+    return jsonify({
+        "message": "Teléfono verificado.",
+        "registration_token": registration_token
+    }), 200
 
 
 # =========================================================
@@ -679,6 +851,15 @@ def registro_usuario():
                 "error": f"Falta el campo: {field}"
             }), 400
 
+    phone = normalize_e164_phone(data.get("phone"))
+    registration_token = str(
+        data.get("phone_verification_token") or ""
+    )
+    if not phone or not registration_token:
+        return jsonify({
+            "error": "Verifica tu número de teléfono antes de registrarte."
+        }), 400
+
     # =====================================================
     # NORMALIZAR DNI
     # =====================================================
@@ -744,6 +925,28 @@ def registro_usuario():
             "error": "Este DNI ya está asociado a un usuario"
         }), 409
 
+    phone_verification = None
+    phone_verifications = PhoneVerification.query.filter(
+        PhoneVerification.phone == phone,
+        PhoneVerification.sent.is_(True),
+        PhoneVerification.verified_at.is_not(None),
+        PhoneVerification.consumed_at.is_(None),
+        PhoneVerification.expires_at > datetime.utcnow()
+    ).order_by(PhoneVerification.created_at.desc()).all()
+
+    for candidate in phone_verifications:
+        if candidate.registration_token_hash and check_password_hash(
+            candidate.registration_token_hash,
+            registration_token
+        ):
+            phone_verification = candidate
+            break
+
+    if not phone_verification:
+        return jsonify({
+            "error": "La verificación del teléfono no es válida o ha caducado. Verifica el teléfono de nuevo."
+        }), 400
+
     # =====================================================
     # CREAR USER
     # =====================================================
@@ -768,7 +971,7 @@ def registro_usuario():
         # Datos introducidos durante el registro
         # ---------------------------------------------
 
-        phone=data["phone"],
+        phone=phone,
 
         is_active=True,
         role=expected_role
@@ -838,6 +1041,7 @@ def registro_usuario():
     # =====================================================
 
     registration.is_registered = True
+    phone_verification.consumed_at = datetime.utcnow()
 
     # =====================================================
     # COMMIT
@@ -4712,13 +4916,16 @@ def comprobar_registration_dni(dni):
 
     registro = db.session.execute(
         db.select(RegistrationDNI).where(
-            RegistrationDNI.dni == dni
+            db.or_(
+                RegistrationDNI.dni == dni,
+                RegistrationDNI.cip == dni
+            )
         )
     ).scalar_one_or_none()
 
     if not registro:
         return jsonify({
-            "error": "El DNI no está autorizado para registrarse"
+            "error": "El DNI o CIP no está autorizado para registrarse"
         }), 404
 
     # =====================================================
@@ -4727,7 +4934,7 @@ def comprobar_registration_dni(dni):
 
     if registro.is_registered:
         return jsonify({
-            "error": "Este DNI ya ha sido utilizado para crear una cuenta"
+            "error": "Este DNI o CIP ya ha sido utilizado para crear una cuenta"
         }), 409
 
     # =====================================================
