@@ -5,8 +5,8 @@ export const registrarUsuario = async (formData) => {
     email,
     password,
     phone,
-    phoneVerificationToken,
     medicalLicense,
+    turnstileToken,
   } = formData;
 
   const payload = {
@@ -14,8 +14,8 @@ export const registrarUsuario = async (formData) => {
     password,
     dni,
     phone,
-    phone_verification_token: phoneVerificationToken,
     role,
+    turnstile_token: turnstileToken,
   };
 
   // =====================================================
@@ -46,45 +46,35 @@ export const registrarUsuario = async (formData) => {
   return data;
 };
 
-export const enviarPinRegistro = async (phone) => {
+export const comprobarTelefonoRegistro = async (phone, signal) => {
   const response = await fetch(
-    `${import.meta.env.VITE_BACKEND_URL}/api/registration/send-phone-pin`,
+    `${import.meta.env.VITE_BACKEND_URL}/api/registration/check-phone`,
     {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ phone }),
+      signal,
     },
   );
 
   const data = await response.json();
   if (!response.ok) {
-    throw new Error(data.error || "No se pudo enviar el PIN.");
+    throw new Error(data.error || "No se pudo comprobar el teléfono.");
+  }
+  if (typeof data.exists !== "boolean") {
+    throw new Error("La respuesta al comprobar el teléfono no es válida.");
   }
   return data;
 };
 
-export const verificarPinRegistro = async ({ phone, pin }) => {
-  const response = await fetch(
-    `${import.meta.env.VITE_BACKEND_URL}/api/registration/verify-phone-pin`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ phone, pin }),
-    },
-  );
-
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.error || "No se pudo verificar el PIN.");
-  }
-  return data;
-};
-
-export const iniciarSesion = async ({ email, password, tipoUsuario }) => {
+export const iniciarSesion = async ({
+  email,
+  password,
+  tipoUsuario,
+  turnstileToken,
+}) => {
   const response = await fetch(
     `${import.meta.env.VITE_BACKEND_URL}/api/login`,
     {
@@ -92,7 +82,11 @@ export const iniciarSesion = async ({ email, password, tipoUsuario }) => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({
+        email,
+        password,
+        turnstile_token: turnstileToken,
+      }),
     },
   );
 

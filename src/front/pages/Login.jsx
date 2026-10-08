@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { iniciarSesion } from "../services/authServices";
 import useGlobalReducer from "../hooks/useGlobalReducer";
 import { Icon } from "../components/Icon";
+import { TurnstileCaptcha } from "../components/TurnstileCaptcha";
 
 export const Login = () => {
     const navigate = useNavigate();
@@ -11,6 +12,9 @@ export const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
+    const [submitting, setSubmitting] = useState(false);
+    const [turnstileToken, setTurnstileToken] = useState("");
+    const [captchaWidgetKey, setCaptchaWidgetKey] = useState(0);
     const [tipoUsuario, setTipoUsuario] = useState("paciente");
     const [showPassword, setShowPassword] = useState(false);
 
@@ -100,6 +104,12 @@ export const Login = () => {
             return;
         }
 
+        if (!turnstileToken) {
+            setError("Completa el CAPTCHA antes de iniciar sesión.");
+            return;
+        }
+
+        setSubmitting(true);
         try {
             setError("");
 
@@ -107,6 +117,7 @@ export const Login = () => {
                 email,
                 password,
                 tipoUsuario,
+                turnstileToken,
             });
 
             /*
@@ -209,6 +220,10 @@ export const Login = () => {
                 error.message ||
                 "No se pudo iniciar sesión"
             );
+            setTurnstileToken("");
+            setCaptchaWidgetKey((key) => key + 1);
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -397,13 +412,21 @@ export const Login = () => {
                                     </div>
                                 )}
 
+                                <TurnstileCaptcha
+                                    key={captchaWidgetKey}
+                                    onTokenChange={setTurnstileToken}
+                                />
+
                                 {/* BOTÓN */}
 
                                 <button
                                     type="submit"
+                                    disabled={submitting}
                                     className="btn btn-info rounded-pill fw-bold w-100 py-2 mt-2"
                                 >
-                                    Iniciar sesión →
+                                    {submitting
+                                        ? "Iniciando sesión..."
+                                        : "Iniciar sesión →"}
                                 </button>
 
                             </form>

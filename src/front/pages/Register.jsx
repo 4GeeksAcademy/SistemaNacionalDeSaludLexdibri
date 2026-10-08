@@ -1,10 +1,12 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
+import { TurnstileCaptcha } from "../components/TurnstileCaptcha";
 import {
-    enviarPinRegistro,
-    registrarUsuario,
-    verificarPinRegistro
+    comprobarTelefonoRegistro,
+    registrarUsuario
 } from "../services/authServices";
 import { Icon } from "../components/Icon";
 
@@ -12,7 +14,6 @@ const EMPTY_FORM = {
     dni: "",
     email: "",
     phone: "",
-    cip: "",
     medicalLicense: "",
     password: "",
     confirmPassword: ""
@@ -28,33 +29,25 @@ export const Register = () => {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const [submitting, setSubmitting] = useState(false);
+    const [turnstileToken, setTurnstileToken] = useState("");
+    const [captchaWidgetKey, setCaptchaWidgetKey] = useState(0);
 
     const [loadingDni, setLoadingDni] = useState(false);
-    const [sendingPhonePin, setSendingPhonePin] = useState(false);
-    const [verifyingPhonePin, setVerifyingPhonePin] = useState(false);
-    const [phonePinSent, setPhonePinSent] = useState(false);
-    const [phonePin, setPhonePin] = useState("");
-    const [phoneVerified, setPhoneVerified] = useState(false);
-    const [phoneVerificationToken, setPhoneVerificationToken] = useState("");
-    const [phoneVerificationError, setPhoneVerificationError] = useState("");
-    const [scanningDocument, setScanningDocument] = useState(false);
-    const [cameraActive, setCameraActive] = useState(false);
     const [errorDni, setErrorDni] = useState("");
-    const [errorScan, setErrorScan] = useState("");
+    const [dniValido, setDniValido] = useState(false);
+    const [dniVerificado, setDniVerificado] = useState("");
+    const [phoneCheckStatus, setPhoneCheckStatus] = useState("idle");
+    const [phoneCheckError, setPhoneCheckError] = useState("");
     const [loadingColegiado, setLoadingColegiado] = useState(false);
     const [errorColegiado, setErrorColegiado] = useState("");
     const [colegiadoValido, setColegiadoValido] = useState(false);
     const [datosColegiado, setDatosColegiado] = useState(null);
 
     const [formData, setFormData] = useState(EMPTY_FORM);
-    const [identificador, setIdentificador] = useState("");
-    const [dniValido, setDniValido] = useState(false);
-    const [dniVerificado, setDniVerificado] = useState("");
+    const [phoneCountry, setPhoneCountry] = useState("es");
 
     const dniAbortRef = useRef(null);
     const colegiadoAbortRef = useRef(null);
-    const videoRef = useRef(null);
-    const cameraStreamRef = useRef(null);
 
     // ============================================================
     // ANIMACIÓN DE ENTRADA
@@ -84,31 +77,9 @@ export const Register = () => {
     }, []);
 
     useEffect(() => {
-        const video = videoRef.current;
-        const stream = cameraStreamRef.current;
-
-        if (!cameraActive || !video || !stream) return undefined;
-
-        video.srcObject = stream;
-        video.play().catch((playError) => {
-            console.error("Error reproduciendo la cámara:", playError);
-            setErrorScan("No se pudo mostrar la vista de la cámara.");
-        });
-
-        return () => {
-            video.srcObject = null;
-        };
-    }, [cameraActive]);
-
-    // ============================================================
-    // CANCELAR COMPROBACIÓN DE DNI AL DESMONTAR
-    // ============================================================
-
-    useEffect(() => {
         return () => {
             dniAbortRef.current?.abort();
             colegiadoAbortRef.current?.abort();
-            cameraStreamRef.current?.getTracks().forEach((track) => track.stop());
         };
     }, []);
 
@@ -184,6 +155,41 @@ export const Register = () => {
         };
     }, [tipoUsuario, formData.medicalLicense]);
 
+    useEffect(() => {
+        const phone = formData.phone.trim();
+        if (!phone) {
+            setPhoneCheckStatus("idle");
+            setPhoneCheckError("");
+            return undefined;
+        }
+
+        const controller = new AbortController();
+        setPhoneCheckStatus("checking");
+        setPhoneCheckError("");
+
+        const timeoutId = setTimeout(async () => {
+            try {
+                const result = await comprobarTelefonoRegistro(
+                    phone,
+                    controller.signal
+                );
+                setPhoneCheckStatus(result.exists ? "exists" : "available");
+            } catch (phoneError) {
+                if (phoneError.name === "AbortError") return;
+                setPhoneCheckStatus("error");
+                setPhoneCheckError(
+                    phoneError.message ||
+                    "No se pudo comprobar el número de teléfono."
+                );
+            }
+        }, 400);
+
+        return () => {
+            clearTimeout(timeoutId);
+            controller.abort();
+        };
+    }, [formData.phone]);
+
     // ============================================================
     // CAMBIAR TIPO DE USUARIO
     // ============================================================
@@ -200,16 +206,12 @@ export const Register = () => {
         setSuccess("");
         setErrorDni("");
         setErrorColegiado("");
-        setColegiadoValido(false);
-        setDatosColegiado(null);
         setDniValido(false);
         setDniVerificado("");
-        setIdentificador("");
-        setPhonePinSent(false);
-        setPhonePin("");
-        setPhoneVerified(false);
-        setPhoneVerificationToken("");
-        setPhoneVerificationError("");
+        setColegiadoValido(false);
+        setDatosColegiado(null);
+        setPhoneCheckStatus("idle");
+        setPhoneCheckError("");
 
         setFormData({
             ...EMPTY_FORM
@@ -228,56 +230,20 @@ export const Register = () => {
             [name]: value
         }));
 
-        if (name === "phone") {
-            setPhonePinSent(false);
-            setPhonePin("");
-            setPhoneVerified(false);
-            setPhoneVerificationToken("");
-            setPhoneVerificationError("");
-        }
-
         if (name === "confirmPassword") {
             setError("");
         }
     };
 
-    const handleSendPhonePin = async () => {
-        setPhoneVerificationError("");
-        setPhoneVerified(false);
-        setPhoneVerificationToken("");
-        setSendingPhonePin(true);
-
-        try {
-            await enviarPinRegistro(formData.phone);
-            setPhonePinSent(true);
-        } catch (sendError) {
-            setPhoneVerificationError(
-                sendError.message || "No se pudo enviar el PIN."
-            );
-        } finally {
-            setSendingPhonePin(false);
-        }
-    };
-
-    const handleVerifyPhonePin = async () => {
-        setPhoneVerificationError("");
-        setVerifyingPhonePin(true);
-
-        try {
-            const data = await verificarPinRegistro({
-                phone: formData.phone,
-                pin: phonePin
-            });
-            setPhoneVerificationToken(data.registration_token);
-            setPhoneVerified(true);
-            setPhonePin("");
-        } catch (verifyError) {
-            setPhoneVerificationError(
-                verifyError.message || "No se pudo verificar el PIN."
-            );
-        } finally {
-            setVerifyingPhonePin(false);
-        }
+    const handlePhoneChange = (value, countryData) => {
+        setPhoneCountry(countryData.countryCode);
+        setFormData((prev) => ({
+            ...prev,
+            phone:
+                value.length > countryData.dialCode.length
+                    ? `+${value}`
+                    : ""
+        }));
     };
 
     const handleColegiadoChange = (e) => {
@@ -318,47 +284,30 @@ export const Register = () => {
         passwordRequirements.hasNumber &&
         passwordRequirements.hasSpecial;
 
-    // ============================================================
-    // VALIDACIÓN DEL DNI O CIP
-    // ============================================================
-
     const handleDniChange = async (value) => {
-        const identificadorIngresado = value
+        const dniIngresado = value
             .toUpperCase()
             .replace(/\s/g, "");
 
-        setErrorScan("");
         dniAbortRef.current?.abort();
         setLoadingDni(false);
-        setIdentificador(identificadorIngresado);
+        setErrorDni("");
+        setDniValido(false);
         setDniVerificado("");
-
         setFormData((prev) => ({
             ...prev,
-            cip: ""
+            dni: dniIngresado
         }));
-
-        setDniValido(false);
         setError("");
-        setErrorDni("");
 
-        if (identificadorIngresado.length === 0) {
-            return;
-        }
-
-        const esDni = /^\d{8}[A-Z]$/.test(identificadorIngresado);
-        const esCip = /^CIP[A-Z0-9]{1,47}$/.test(identificadorIngresado);
-
+        const esDni = /^\d{8}[A-Z]$/.test(dniIngresado);
+        const esCip = /^CIP[A-Z0-9]{1,47}$/.test(dniIngresado);
         if (!esDni && !esCip) {
-            if (/^\d{8}[A-Z0-9]$/.test(identificadorIngresado)) {
+            if (/^\d{8}[A-Z0-9]$/.test(dniIngresado)) {
                 setErrorDni("DNI no válido. Debe tener 8 números y una letra.");
             }
             return;
         }
-
-        // ====================================================
-        // COMPROBAR DNI O CIP EN BACKEND
-        // ====================================================
 
         const controller = new AbortController();
         dniAbortRef.current = controller;
@@ -369,39 +318,19 @@ export const Register = () => {
         }
 
         setLoadingDni(true);
-
-        const rolBackend =
-            tipoUsuario === "medico"
-                ? "doctor"
-                : "patient";
+        const role = tipoUsuario === "medico" ? "doctor" : "patient";
 
         try {
             const response = await fetch(
                 `${import.meta.env.VITE_BACKEND_URL}/api/registration-dni/${encodeURIComponent(
-                    identificadorIngresado
-                )}?role=${rolBackend}`,
-                {
-                    signal: controller.signal
-                }
+                    dniIngresado
+                )}?role=${role}`,
+                { signal: controller.signal }
             );
-
-            let data = {};
-
-            try {
-                data = await response.json();
-            } catch {
-                data = {};
-            }
+            const data = await response.json();
 
             if (controller.signal.aborted) return;
-
             if (!response.ok) {
-                if (response.status === 409) {
-                    throw new Error(
-                        "Este DNI o CIP ya ha sido utilizado para crear una cuenta."
-                    );
-                }
-
                 throw new Error(
                     data.error ||
                     "El DNI o CIP no es válido o no está autorizado para registrarse."
@@ -409,135 +338,16 @@ export const Register = () => {
             }
 
             setDniVerificado(data.dni);
-            setFormData((prev) => ({
-                ...prev,
-                cip: data.cip || ""
-            }));
-
             setDniValido(true);
-            setErrorDni("");
         } catch (dniError) {
-            if (dniError.name === "AbortError") {
-                return;
-            }
-
-            console.error(
-                "Error comprobando DNI o CIP:",
-                dniError
-            );
-
-            setDniValido(false);
-
+            if (dniError.name === "AbortError") return;
             setErrorDni(
-                dniError.message ||
-                "El DNI o CIP no es válido."
+                dniError.message || "El DNI o CIP no es válido."
             );
         } finally {
             if (dniAbortRef.current === controller) {
                 setLoadingDni(false);
             }
-        }
-    };
-
-    const stopDocumentCamera = () => {
-        cameraStreamRef.current?.getTracks().forEach((track) => track.stop());
-        cameraStreamRef.current = null;
-        setCameraActive(false);
-    };
-
-    const startDocumentCamera = async () => {
-        setErrorScan("");
-
-        try {
-            if (!navigator.mediaDevices?.getUserMedia) {
-                throw new Error(
-                    "Tu navegador no permite acceder a la cámara. Comprueba que la página se abre mediante HTTPS."
-                );
-            }
-
-            const stream = await navigator.mediaDevices.getUserMedia({
-                audio: false,
-                video: {
-                    facingMode: { ideal: "environment" }
-                }
-            });
-
-            cameraStreamRef.current = stream;
-            setCameraActive(true);
-        } catch (cameraError) {
-            console.error("Error accediendo a la cámara:", cameraError);
-            setErrorScan(
-                cameraError.name === "NotAllowedError"
-                    ? "Permite el acceso a la cámara en el navegador para escanear el documento."
-                    : cameraError.name === "NotFoundError"
-                        ? "No se encontró una cámara disponible en este dispositivo."
-                        : cameraError.message ||
-                            "No se pudo iniciar la cámara."
-            );
-        }
-    };
-
-    const handleDocumentScan = async () => {
-        const video = videoRef.current;
-        if (!video || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
-            setErrorScan("La cámara todavía no está lista. Inténtalo de nuevo.");
-            return;
-        }
-
-        setScanningDocument(true);
-        setErrorScan("");
-
-        try {
-            const canvas = document.createElement("canvas");
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext("2d").drawImage(video, 0, 0);
-            const image = await new Promise((resolve, reject) => {
-                canvas.toBlob((blob) => {
-                    if (blob) resolve(blob);
-                    else reject(new Error("No se pudo capturar la imagen."));
-                }, "image/jpeg", 0.95);
-            });
-
-            const { createWorker } = await import("tesseract.js");
-            const worker = await createWorker("spa+eng");
-
-            try {
-                const {
-                    data: { text }
-                } = await worker.recognize(image);
-                const normalizedText = text.toUpperCase();
-                const dniMatch = normalizedText.match(
-                    /(?:^|[^A-Z0-9])(\d{8})[\s-]?([A-Z])(?=$|[^A-Z0-9])/m
-                );
-                const cipMatch = normalizedText.match(
-                    /C\s*I\s*P[\s:-]*([A-Z0-9]{1,47})/
-                );
-                const scannedIdentifier = dniMatch
-                    ? `${dniMatch[1]}${dniMatch[2]}`
-                    : cipMatch
-                        ? `CIP${cipMatch[1]}`
-                        : "";
-
-                if (!scannedIdentifier) {
-                    setErrorScan(
-                        "No se detectó un DNI o CIP. Prueba con una foto más nítida y asegúrate de que el identificador sea legible."
-                    );
-                    return;
-                }
-
-                await handleDniChange(scannedIdentifier);
-                stopDocumentCamera();
-            } finally {
-                await worker.terminate();
-            }
-        } catch (scanError) {
-            console.error("Error escaneando el documento:", scanError);
-            setErrorScan(
-                "No se pudo leer la imagen. Inténtalo con otra foto o introduce el identificador manualmente."
-            );
-        } finally {
-            setScanningDocument(false);
         }
     };
 
@@ -551,21 +361,10 @@ export const Register = () => {
         setError("");
         setSuccess("");
 
-        // ========================================================
-        // COMPROBAR DNI
-        // ========================================================
-
-        if (!dniValido) {
+        if (!dniValido || !dniVerificado) {
             setError(
                 errorDni ||
-                "El DNI no es válido o no está autorizado para registrarse."
-            );
-            return;
-        }
-
-        if (!phoneVerified || !phoneVerificationToken) {
-            setError(
-                "Verifica tu número de teléfono con el PIN enviado por SMS."
+                "El DNI o CIP no es válido o no está autorizado para registrarse."
             );
             return;
         }
@@ -586,6 +385,11 @@ export const Register = () => {
             return;
         }
 
+        if (!turnstileToken) {
+            setError("Completa el CAPTCHA antes de crear la cuenta.");
+            return;
+        }
+
         // ========================================================
         // COMPROBAR DATOS DEL MÉDICO
         // ========================================================
@@ -601,6 +405,13 @@ export const Register = () => {
         setSubmitting(true);
 
         try {
+            const phoneCheck = await comprobarTelefonoRegistro(formData.phone);
+            if (phoneCheck.exists) {
+                throw new Error(
+                    "Este número de teléfono ya pertenece a una cuenta."
+                );
+            }
+
             await registrarUsuario({
                 role:
                     tipoUsuario === "medico"
@@ -611,7 +422,7 @@ export const Register = () => {
                 email: formData.email,
                 password: formData.password,
                 phone: formData.phone,
-                phoneVerificationToken,
+                turnstileToken,
 
                 medicalLicense: formData.medicalLicense.trim()
             });
@@ -626,6 +437,8 @@ export const Register = () => {
                 submitError.message ||
                 "No se pudo crear la cuenta."
             );
+            setTurnstileToken("");
+            setCaptchaWidgetKey((key) => key + 1);
         } finally {
             setSubmitting(false);
         }
@@ -747,7 +560,7 @@ export const Register = () => {
                                             <input
                                                 type="text"
                                                 name="dni"
-                                                value={identificador}
+                                                value={formData.dni}
                                                 onChange={(event) =>
                                                     handleDniChange(event.target.value)
                                                 }
@@ -763,104 +576,22 @@ export const Register = () => {
                                                 }`}
                                                 placeholder="Ingrese DNI (12345678Z) o CIP (CIP000001)"
                                             />
-                                            <button
-                                                type="button"
-                                                className="btn btn-outline-info"
-                                                onClick={cameraActive
-                                                    ? stopDocumentCamera
-                                                    : startDocumentCamera}
-                                                disabled={scanningDocument}
-                                                aria-label="Escanear DNI o tarjeta sanitaria"
-                                            >
-                                                <Icon
-                                                    name={scanningDocument
-                                                        ? "LoaderCircle"
-                                                        : cameraActive
-                                                            ? "Camera"
-                                                            : "ScanLine"}
-                                                    className="me-1"
-                                                />
-                                                {scanningDocument
-                                                    ? "Leyendo..."
-                                                    : cameraActive
-                                                        ? "Cerrar cámara"
-                                                        : "Escanear documento"}
-                                            </button>
                                         </div>
-                                        <div className="form-text text-white-50">
-                                            El reconocimiento se procesa en este dispositivo.
-                                        </div>
-
-                                        {cameraActive && (
-                                            <div className="mt-3">
-                                                <video
-                                                    ref={videoRef}
-                                                    className="w-100 rounded-3 border border-secondary"
-                                                    style={{
-                                                        maxHeight: "320px",
-                                                        objectFit: "cover"
-                                                    }}
-                                                    autoPlay
-                                                    muted
-                                                    playsInline
-                                                    aria-label="Vista en directo de la cámara"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-info rounded-pill mt-2"
-                                                    onClick={handleDocumentScan}
-                                                    disabled={scanningDocument}
-                                                >
-                                                    <Icon
-                                                        name={scanningDocument
-                                                            ? "LoaderCircle"
-                                                            : "ScanLine"}
-                                                        className="me-1"
-                                                    />
-                                                    {scanningDocument
-                                                        ? "Leyendo documento..."
-                                                        : "Capturar y leer DNI/CIP"}
-                                                </button>
-                                            </div>
-                                        )}
-
-                                        {errorScan && (
-                                            <div className="text-warning small mt-2" role="status">
-                                                {errorScan}
-                                            </div>
-                                        )}
-
                                         {loadingDni && (
-                                            <div className="text-info small mt-2">
-                                                <Icon
-                                                    name="LoaderCircle"
-                                                    className="me-1"
-                                                />
-                                                Comprobando DNI o CIP...
+                                            <div className="text-info small mt-2" role="status">
+                                                Comprobando DNI o CIP en la base de datos...
                                             </div>
                                         )}
-
-                                        {!loadingDni &&
-                                            errorDni && (
-                                                <div className="text-danger small mt-2">
-                                                    <Icon
-                                                        name="CircleAlert"
-                                                        className="me-1"
-                                                    />
-                                                    {errorDni}
-                                                </div>
-                                            )}
-
-                                        {!loadingDni &&
-                                            dniValido && (
-                                                <div className="text-success small mt-2">
-                                                    <Icon
-                                                        name="Check"
-                                                        className="me-1"
-                                                    />
-                                                    Identificador verificado en el sistema.
-                                                </div>
-                                            )}
+                                        {!loadingDni && errorDni && (
+                                            <div className="text-danger small mt-2" role="alert">
+                                                {errorDni}
+                                            </div>
+                                        )}
+                                        {!loadingDni && dniValido && (
+                                            <div className="text-success small mt-2" role="status">
+                                                DNI o CIP autorizado y disponible.
+                                            </div>
+                                        )}
 
                                     </div>
 
@@ -903,96 +634,50 @@ export const Register = () => {
                                             Teléfono
                                         </label>
 
-                                        <div className="input-group">
-                                            <input
-                                                type="tel"
-                                                name="phone"
-                                                value={formData.phone}
-                                                onChange={handleChange}
-                                                autoComplete="off"
-                                                required
-                                                className="form-control bg-dark text-white border-secondary"
-                                                placeholder="+34600000000"
-                                                disabled={
-                                                    sendingPhonePin ||
-                                                    verifyingPhonePin
-                                                }
-                                            />
-                                            <button
-                                                type="button"
-                                                className="btn btn-outline-info"
-                                                onClick={handleSendPhonePin}
-                                                disabled={
-                                                    sendingPhonePin ||
-                                                    verifyingPhonePin ||
-                                                    phoneVerified ||
-                                                    !formData.phone.trim()
-                                                }
-                                            >
-                                                {sendingPhonePin
-                                                    ? "Enviando..."
-                                                    : phonePinSent
-                                                        ? "Reenviar PIN"
-                                                        : "Enviar PIN"}
-                                            </button>
-                                        </div>
-                                        <div className="form-text text-white-50">
-                                            Introduce el teléfono en formato internacional, por ejemplo +34600000000.
-                                        </div>
-                                        <div className="form-text text-white-50">
-                                            El PIN se envía mediante Textbelt, un servicio externo gratuito con cuota limitada que puede conservar temporalmente el teléfono y el mensaje.{" "}
-                                            <a
-                                                href="https://textbelt.com/privacy"
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                            >
-                                                Consulta su política de privacidad.
-                                            </a>
-                                        </div>
-
-                                        {phonePinSent && !phoneVerified && (
-                                            <div className="input-group mt-2">
-                                                <input
-                                                    type="text"
-                                                    inputMode="numeric"
-                                                    autoComplete="one-time-code"
-                                                    maxLength={6}
-                                                    value={phonePin}
-                                                    onChange={(event) =>
-                                                        setPhonePin(
-                                                            event.target.value
-                                                                .replace(/\D/g, "")
-                                                                .slice(0, 6)
-                                                        )
-                                                    }
-                                                    className="form-control bg-dark text-white border-secondary"
-                                                    placeholder="PIN de 6 cifras"
-                                                    aria-label="PIN de verificación SMS"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-info"
-                                                    onClick={handleVerifyPhonePin}
-                                                    disabled={
-                                                        verifyingPhonePin ||
-                                                        phonePin.length !== 6
-                                                    }
-                                                >
-                                                    {verifyingPhonePin
-                                                        ? "Verificando..."
-                                                        : "Confirmar PIN"}
-                                                </button>
+                                        <PhoneInput
+                                            country={phoneCountry}
+                                            value={formData.phone.replace(/^\+/, "")}
+                                            onChange={handlePhoneChange}
+                                            enableSearch
+                                            disableSearchIcon
+                                            countryCodeEditable={false}
+                                            preferredCountries={[
+                                                "es",
+                                                "us",
+                                                "gb",
+                                                "fr",
+                                                "de"
+                                            ]}
+                                            searchPlaceholder="Buscar país o prefijo..."
+                                            inputProps={{
+                                                name: "phone",
+                                                required: true,
+                                                autoComplete: "tel",
+                                                "aria-label": "Teléfono"
+                                            }}
+                                            containerClass="register-phone-input"
+                                            inputClass="form-control"
+                                            buttonClass="btn-outline-info"
+                                            dropdownClass="register-phone-dropdown"
+                                        />
+                                        {phoneCheckStatus === "checking" && (
+                                            <div className="form-text text-white-50" role="status">
+                                                Comprobando si el teléfono ya está registrado...
                                             </div>
                                         )}
-
-                                        {phoneVerified && (
+                                        {phoneCheckStatus === "available" && (
                                             <div className="text-success small mt-2" role="status">
-                                                Número de teléfono verificado.
+                                                El teléfono está disponible.
                                             </div>
                                         )}
-                                        {phoneVerificationError && (
+                                        {phoneCheckStatus === "exists" && (
                                             <div className="text-danger small mt-2" role="alert">
-                                                {phoneVerificationError}
+                                                Este número de teléfono ya pertenece a una cuenta.
+                                            </div>
+                                        )}
+                                        {phoneCheckError && (
+                                            <div className="text-danger small mt-2" role="alert">
+                                                {phoneCheckError}
                                             </div>
                                         )}
                                     </div>
@@ -1281,6 +966,13 @@ export const Register = () => {
                                             </div>
                                         )}
 
+                                    </div>
+
+                                    <div className="col-12">
+                                        <TurnstileCaptcha
+                                            key={captchaWidgetKey}
+                                            onTokenChange={setTurnstileToken}
+                                        />
                                     </div>
 
                                     {/* BOTÓN */}
