@@ -27,6 +27,8 @@ from api.models import (
     ColegiadoRegistration,
 )
 
+from api.extensions import limiter
+
 from api.utils import generate_sitemap, APIException
 
 from flask_cors import CORS
@@ -71,10 +73,22 @@ def verify_turnstile_token(token):
 
     secret = os.getenv("TURNSTILE_SECRET_KEY")
     if not secret:
-        current_app.logger.error("Falta configurar TURNSTILE_SECRET_KEY.")
+        current_app.logger.error(
+            "Falta configurar TURNSTILE_SECRET_KEY."
+        )
         return jsonify({
             "error": "El servicio CAPTCHA no está configurado."
         }), 503
+    secret = os.getenv("TURNSTILE_SECRET_KEY")
+
+    current_app.logger.info(
+        "TURNSTILE_SECRET_KEY cargada: %s",
+        bool(secret)
+    )
+    current_app.logger.info(
+        "Longitud de la clave secreta: %s",
+        len(secret) if secret else 0
+    )
 
     try:
         response = requests.post(
@@ -85,17 +99,40 @@ def verify_turnstile_token(token):
             },
             timeout=10
         )
-        response.raise_for_status()
+
+        if not response.ok:
+            current_app.logger.error(
+                "Turnstile devolvió HTTP %s: %s",
+                response.status_code,
+                response.text[:1000]
+            )
+            return jsonify({
+                "error": "No se pudo verificar el CAPTCHA. Inténtalo de nuevo."
+            }), 503
+
         result = response.json()
+
     except (requests.RequestException, ValueError):
         current_app.logger.exception(
-            "No se pudo verificar el token de Cloudflare Turnstile."
+            "Error al comunicarse con Cloudflare Turnstile."
         )
         return jsonify({
             "error": "No se pudo verificar el CAPTCHA. Inténtalo de nuevo."
         }), 503
 
-    if not isinstance(result, dict) or not result.get("success"):
+    if not isinstance(result, dict):
+        current_app.logger.error(
+            "Respuesta inesperada de Cloudflare Turnstile."
+        )
+        return jsonify({
+            "error": "No se pudo verificar el CAPTCHA. Inténtalo de nuevo."
+        }), 503
+
+    if not result.get("success"):
+        current_app.logger.warning(
+            "Turnstile rechazó el token. Códigos: %s",
+            result.get("error-codes", [])
+        )
         return jsonify({
             "error": "La verificación CAPTCHA ha fallado. Inténtalo de nuevo."
         }), 400
@@ -714,6 +751,7 @@ def obtener_especialidades():
 # =========================================================
 
 @api.route("/register", methods=["POST"])
+@limiter.limit("3 per minute")
 def registro_usuario():
 
     data = request.get_json()
@@ -967,6 +1005,7 @@ def registro_usuario():
 
 
 @api.route("/login", methods=["POST"])
+@limiter.limit("5 per minute")  # Limitar a 5 intentos por minuto
 def login():
 
     data = request.get_json()
@@ -4854,6 +4893,7 @@ def comprobar_registration_license(medical_license):
 
 
 @api.route("/forgot-password", methods=["POST"])
+@limiter.limit("1 per 30 minutes")
 def forgot_password():
 
     data = request.get_json()
@@ -4954,8 +4994,12 @@ def forgot_password():
         "message": "Se han enviado las instrucciones a tu correo."
     }), 200
 
+#====================
+#Cambiar contraseña
+#=====================
 
 @api.route("/reset-password", methods=["POST"])
+@limiter.limit("3 per 15 minutes")
 def reset_password():
 
     data = request.get_json()
