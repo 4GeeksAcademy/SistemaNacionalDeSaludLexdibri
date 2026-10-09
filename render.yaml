@@ -19,6 +19,10 @@ services:
             value: 0
           - key: FLASK_APP_KEY # Imported from Heroku app
             value: "any key works"
+          - key: DIDIT_API_KEY
+            sync: false
+          - key: DIDIT_WEBHOOK_SECRET
+            sync: false
           - key: PYTHON_VERSION
             value: 3.10.6
           - key: DATABASE_URL # Render PostgreSQL database

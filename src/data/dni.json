@@ -2,6 +2,7 @@
 [
   {
     "dni": "12345678Z",
+    "hospital_id": 1,
     "first_name": "Ana",
     "last_name": "García López",
     "date_of_birth": "1988-04-15",
@@ -11,6 +12,7 @@
   },
   {
     "dni": "23456789D",
+    "hospital_id": 2,
     "first_name": "Carlos",
     "last_name": "Martínez Ruiz",
     "date_of_birth": "1975-09-22",
@@ -20,6 +22,7 @@
   },
   {
     "dni": "34567890V",
+    "hospital_id": 1,
     "first_name": "Laura",
     "last_name": "Sánchez Martín",
     "date_of_birth": "1995-02-10",
@@ -29,6 +32,7 @@
   },
   {
     "dni": "45678901G",
+    "hospital_id": 2,
     "first_name": "Miguel",
     "last_name": "Fernández García",
     "date_of_birth": "1968-11-30",
@@ -38,6 +42,7 @@
   },
   {
     "dni": "56789012B",
+    "hospital_id": 1,
     "first_name": "Marta",
     "last_name": "López Rodríguez",
     "date_of_birth": "2001-07-18",
@@ -47,6 +52,7 @@
   },
   {
     "dni": "67890123N",
+    "hospital_id": 2,
     "first_name": "David",
     "last_name": "Navarro Pérez",
     "date_of_birth": "1982-04-03",
@@ -56,6 +62,7 @@
   },
   {
     "dni": "78901234X",
+    "hospital_id": 1,
     "first_name": "Sofía",
     "last_name": "Romero Díaz",
     "date_of_birth": "1990-12-25",
@@ -65,6 +72,7 @@
   },
   {
     "dni": "89012345E",
+    "hospital_id": 2,
     "first_name": "Jorge",
     "last_name": "Molina Sánchez",
     "date_of_birth": "1959-06-12",
@@ -74,6 +82,7 @@
   },
   {
     "dni": "90123456W",
+    "hospital_id": 1,
     "first_name": "Elena",
     "last_name": "Castro Moreno",
     "date_of_birth": "1979-03-27",
@@ -83,6 +92,7 @@
   },
   {
     "dni": "01234567L",
+    "hospital_id": 2,
     "first_name": "Pablo",
     "last_name": "Ortega Jiménez",
     "date_of_birth": "1998-10-05",
@@ -92,11 +102,23 @@
   },
   {
     "dni": "99995278Z",
+    "hospital_id": 1,
     "first_name": "Brian",
     "last_name": "Borrajo Otalvaro",
     "date_of_birth": "1988-04-15",
     "sex": "F",
     "cip": "CIP999321",
     "is_registered": false
+  },
+  {
+    "dni": "71532334B",
+    "hospital_id": 1,
+    "first_name": "Brian",
+    "last_name": "Borrajo Otalvaro",
+    "date_of_birth": "2003-05-07",
+    "sex": "F",
+    "cip": "CIP119321",
+    "is_registered": false
   }
 ]
+

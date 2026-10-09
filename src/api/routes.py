@@ -24,16 +24,23 @@ from api.models import (
     Hospital,
     DoctorStatus,
     RegistrationDNI,
+    RegistrationKYC,
+    DiditWebhookEvent,
     ColegiadoRegistration,
 )
 
 from api.extensions import limiter
+from sqlalchemy.exc import IntegrityError
 
 from api.utils import generate_sitemap, APIException
 
 from flask_cors import CORS
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+import hashlib
+import hmac
+import unicodedata
+import uuid
 
 import os
 import json
@@ -60,6 +67,9 @@ from itsdangerous import (
 )
 
 api = Blueprint('api', __name__)
+
+# Workflow IDs identify published Didit configuration and are not secrets.
+DIDIT_REGISTRATION_WORKFLOW_ID = "8c17c2d0-98a9-49a2-a10d-c2d744d7852f"
 
 # Allow CORS requests to this API
 CORS(api)
@@ -145,6 +155,124 @@ def normalize_e164_phone(phone):
     if not re.fullmatch(r"\+[1-9]\d{7,14}", normalized):
         return None
     return normalized
+
+
+def normalize_kyc_value(value):
+    if not isinstance(value, str):
+        return ""
+
+    decomposed = unicodedata.normalize("NFKD", value)
+    without_accents = "".join(
+        character
+        for character in decomposed
+        if not unicodedata.combining(character)
+    )
+    return re.sub(r"[^A-Z0-9]", "", without_accents.upper())
+
+
+def matches_didit_identity(id_verification, registration):
+    mrz = id_verification.get("mrz")
+    mrz = mrz if isinstance(mrz, dict) else {}
+    document_numbers = {
+        normalize_kyc_value(id_verification.get("document_number")),
+        normalize_kyc_value(id_verification.get("personal_number")),
+        normalize_kyc_value(mrz.get("document_number")),
+    }
+    document_numbers.discard("")
+
+    if normalize_kyc_value(registration.dni) not in document_numbers:
+        return False
+
+    document_first_name = id_verification.get("first_name")
+    document_last_name = id_verification.get("last_name")
+
+    if document_first_name and document_last_name:
+        names_match = (
+            normalize_kyc_value(document_first_name)
+            == normalize_kyc_value(registration.first_name)
+            and normalize_kyc_value(document_last_name)
+            == normalize_kyc_value(registration.last_name)
+        )
+    else:
+        full_name = id_verification.get("full_name")
+        names_match = bool(full_name) and (
+            normalize_kyc_value(full_name)
+            == normalize_kyc_value(
+                f"{registration.first_name} {registration.last_name}"
+            )
+        )
+
+    if not names_match:
+        return False
+
+    document_date_of_birth = id_verification.get("date_of_birth")
+    if (
+        registration.date_of_birth
+        and document_date_of_birth
+        and str(registration.date_of_birth) != document_date_of_birth
+    ):
+        return False
+
+    return True
+
+
+def canonicalize_didit_payload(value):
+    if isinstance(value, list):
+        return [canonicalize_didit_payload(item) for item in value]
+
+    if isinstance(value, dict):
+        return {
+            key: canonicalize_didit_payload(value[key])
+            for key in sorted(value)
+        }
+
+    if isinstance(value, float) and value.is_integer():
+        return int(value)
+
+    return value
+
+
+def request_didit(method, url, api_key, payload=None):
+    try:
+        response = requests.request(
+            method,
+            url,
+            headers={
+                "x-api-key": api_key,
+                "Content-Type": "application/json",
+            },
+            json=payload,
+            timeout=15,
+        )
+    except requests.RequestException:
+        current_app.logger.exception(
+            "No se pudo conectar con la API de Didit."
+        )
+        return None
+
+    if not response.ok:
+        current_app.logger.error(
+            "Didit devolvió HTTP %s al %s una sesión.",
+            response.status_code,
+            method,
+        )
+        return None
+
+    try:
+        result = response.json()
+    except ValueError:
+        current_app.logger.error(
+            "Didit devolvió una respuesta JSON no válida."
+        )
+        return None
+
+    if not isinstance(result, dict):
+        current_app.logger.error(
+            "Didit devolvió una respuesta con formato inesperado."
+        )
+        return None
+
+    return result
 
 
 @api.route("/registration/check-phone", methods=["POST"])
@@ -540,6 +668,19 @@ def seed_registration_dni():
         registration = RegistrationDNI.query.filter_by(
             dni=data["dni"]
         ).first()
+        hospital_id = data.get("hospital_id")
+
+        if not isinstance(hospital_id, int) or not db.session.get(
+            Hospital,
+            hospital_id,
+        ):
+            db.session.rollback()
+            return jsonify({
+                "error": (
+                    "El origen contiene un hospital_id no válido "
+                    f"para el DNI {data['dni']}"
+                )
+            }), 400
 
         # =====================================================
         # DNI YA EXISTENTE
@@ -563,6 +704,7 @@ def seed_registration_dni():
 
             registration.sex = data.get("sex")
             registration.cip = data.get("cip")
+            registration.hospital_id = hospital_id
 
             registration.role = UserRole(
                 data.get("role", UserRole.PATIENT.value)
@@ -595,6 +737,7 @@ def seed_registration_dni():
             ),
             sex=data.get("sex"),
             cip=data.get("cip"),
+            hospital_id=hospital_id,
             role=UserRole(
                 data.get("role", UserRole.PATIENT.value)
             ),
@@ -754,7 +897,7 @@ def obtener_especialidades():
 @limiter.limit("3 per minute")
 def registro_usuario():
 
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
 
     if not data:
         return jsonify({
@@ -792,28 +935,42 @@ def registro_usuario():
             "error": "Introduce un teléfono internacional válido, por ejemplo +34600000000"
         }), 400
 
-    # =====================================================
-    # NORMALIZAR DNI
-    # =====================================================
-
     dni = str(data.get("dni") or "").strip().upper()
     if not dni:
         return jsonify({
             "error": "Introduce un DNI o CIP válido."
         }), 400
 
-    # =====================================================
-    # VALIDAR ROLE
-    # =====================================================
-
-    if data["role"] not in ["patient", "doctor"]:
+    role = str(data.get("role") or "").strip().lower()
+    if role not in ["patient", "doctor"]:
         return jsonify({
             "error": "El role debe ser 'patient' o 'doctor'"
         }), 400
 
-    # =====================================================
-    # BUSCAR DNI O CIP EN REGISTRATION_DNI
-    # =====================================================
+    if data.get("kyc_consent") is not True:
+        return jsonify({
+            "error": "Debes aceptar la verificación de identidad para continuar."
+        }), 400
+
+    email = str(data.get("email") or "").strip().lower()
+    if (
+        len(email) > 120
+        or not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email)
+    ):
+        return jsonify({
+            "error": "Introduce un correo electrónico válido."
+        }), 400
+
+    password = str(data.get("password") or "")
+    if (
+        len(password) < 8
+        or not re.search(r"[A-Z]", password)
+        or not re.search(r"\d", password)
+        or not re.search(r"[^A-Za-z0-9]", password)
+    ):
+        return jsonify({
+            "error": "La contraseña no cumple los requisitos de seguridad."
+        }), 400
 
     registration = db.session.execute(
         db.select(RegistrationDNI).where(
@@ -829,41 +986,17 @@ def registro_usuario():
             "error": "El DNI o CIP no está autorizado para registrarse"
         }), 404
 
-    dni = registration.dni
-
-    # =====================================================
-    # COMPROBAR SI YA ESTÁ REGISTRADO
-    # =====================================================
-
     if registration.is_registered:
         return jsonify({
             "error": "Este DNI ya está registrado"
         }), 409
 
-    expected_role = UserRole(data["role"])
-
-    # =====================================================
-    # COMPROBAR EMAIL
-    # =====================================================
-
-    existing_user = User.query.filter_by(
-        email=data["email"]
-    ).first()
-
-    if existing_user:
+    if User.query.filter_by(email=email).first():
         return jsonify({
             "error": "El email ya está registrado"
         }), 409
 
-    # =====================================================
-    # COMPROBAR DNI EN USERS
-    # =====================================================
-
-    existing_dni = User.query.filter_by(
-        dni=dni
-    ).first()
-
-    if existing_dni:
+    if User.query.filter_by(dni=registration.dni).first():
         return jsonify({
             "error": "Este DNI ya está asociado a un usuario"
         }), 409
@@ -873,58 +1006,10 @@ def registro_usuario():
             "error": "Este número de teléfono ya pertenece a una cuenta."
         }), 409
 
-    # =====================================================
-    # CREAR USER
-    # =====================================================
-
-    user = User(
-        email=data["email"],
-        password_hash=generate_password_hash(
-            data["password"]
-        ),
-
-        # ---------------------------------------------
-        # Datos oficiales de RegistrationDNI
-        # ---------------------------------------------
-
-        first_name=registration.first_name,
-        last_name=registration.last_name,
-        dni=registration.dni,
-        date_of_birth=registration.date_of_birth,
-        sex=registration.sex,
-
-        # ---------------------------------------------
-        # Datos introducidos durante el registro
-        # ---------------------------------------------
-
-        phone=phone,
-
-        is_active=True,
-        role=expected_role
+    medical_license = (
+        str(data.get("medical_license") or "").strip().upper()
     )
-
-    # =====================================================
-    # PACIENTE
-    # =====================================================
-
-    if data["role"] == "patient":
-        patient = Patient(
-            cip=registration.cip,
-            blood_type=data.get("blood_type")
-        )
-
-        user.patient = patient
-
-    # =====================================================
-    # MÉDICO
-    # =====================================================
-
-    elif data["role"] == "doctor":
-
-        medical_license = (
-            data.get("medical_license") or ""
-        ).strip().upper()
-
+    if role == "doctor":
         if not medical_license:
             return jsonify({
                 "error": "Para un médico se necesita medical_license"
@@ -946,47 +1031,481 @@ def registro_usuario():
                 "error": "Este número de colegiado ya está registrado"
             }), 409
 
-        doctor = Doctor(
+    if not db.session.get(Hospital, registration.hospital_id):
+        current_app.logger.error(
+            "El registro DNI autorizado referencia un hospital inexistente."
+        )
+        return jsonify({
+            "error": "El hospital asociado a este registro no está disponible."
+        }), 503
+
+    api_key = os.getenv("DIDIT_API_KEY")
+    callback_url = os.getenv("DIDIT_CALLBACK_URL")
+    if not api_key:
+        current_app.logger.error(
+            "Falta configurar DIDIT_API_KEY."
+        )
+        return jsonify({
+            "error": (
+                "La verificación de identidad no está configurada. "
+                "Comprueba DIDIT_API_KEY en el backend."
+            )
+        }), 503
+
+    vendor_data = f"registration-{uuid.uuid4().hex}"
+    expected_details = {
+        "first_name": registration.first_name,
+        "last_name": registration.last_name,
+        "id_country": "ESP",
+        "expected_document_types": ["ID"],
+    }
+    if registration.date_of_birth:
+        expected_details["date_of_birth"] = (
+            registration.date_of_birth.isoformat()
+        )
+
+    didit_payload = {
+        "workflow_id": DIDIT_REGISTRATION_WORKFLOW_ID,
+        "vendor_data": vendor_data,
+        "language": "es",
+        "contact_details": {
+            "email": email,
+            "phone": phone,
+            "send_notification_emails": False,
+        },
+        "expected_details": expected_details,
+    }
+    if callback_url:
+        didit_payload["callback"] = callback_url
+
+    didit_session = request_didit(
+        "POST",
+        "https://verification.didit.me/v3/session/",
+        api_key,
+        didit_payload,
+    )
+    if not didit_session:
+        return jsonify({
+            "error": "No se pudo iniciar la verificación con Didit. Inténtalo de nuevo."
+        }), 503
+
+    session_id = didit_session.get("session_id")
+    verification_url = didit_session.get("url")
+    if (
+        not isinstance(session_id, str)
+        or not isinstance(verification_url, str)
+        or not verification_url.startswith("https://")
+    ):
+        current_app.logger.error(
+            "Didit no devolvió un identificador y URL de sesión válidos."
+        )
+        return jsonify({
+            "error": "Didit devolvió una respuesta de verificación no válida."
+        }), 503
+
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    RegistrationKYC.query.filter(
+        RegistrationKYC.completed_at.is_(None),
+        RegistrationKYC.expires_at <= now,
+    ).delete(synchronize_session=False)
+    pending_registration = RegistrationKYC(
+        session_id=session_id,
+        vendor_data=vendor_data,
+        registration_dni_id=registration.id,
+        role=role,
+        email=email,
+        password_hash=generate_password_hash(password),
+        phone=phone,
+        medical_license=medical_license or None,
+        created_at=now,
+        expires_at=now + timedelta(hours=24),
+    )
+    db.session.add(pending_registration)
+
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception(
+            "No se pudo guardar la sesión de registro de Didit."
+        )
+        return jsonify({
+            "error": "No se pudo guardar la verificación. Inténtalo de nuevo."
+        }), 500
+
+    return jsonify({
+        "message": "Completa la verificación de identidad para continuar.",
+        "session_id": session_id,
+        "verification_url": verification_url,
+    }), 201
+
+
+@api.route("/didit/webhook", methods=["POST"])
+@limiter.limit("120 per minute")
+def recibir_webhook_didit():
+    webhook_secret = os.getenv("DIDIT_WEBHOOK_SECRET")
+    if not webhook_secret:
+        current_app.logger.error(
+            "Falta configurar DIDIT_WEBHOOK_SECRET."
+        )
+        return jsonify({
+            "error": "El webhook de Didit no está configurado."
+        }), 503
+
+    raw_body = request.get_data(cache=False)
+    try:
+        event = json.loads(raw_body)
+    except (UnicodeDecodeError, ValueError):
+        return jsonify({"error": "El cuerpo del webhook no es JSON válido."}), 400
+
+    if not isinstance(event, dict):
+        return jsonify({"error": "El cuerpo del webhook no es válido."}), 400
+
+    signature = request.headers.get("X-Signature-V2", "").strip()
+    canonical_body = json.dumps(
+        canonicalize_didit_payload(event),
+        ensure_ascii=False,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    expected_signature = hmac.new(
+        webhook_secret.encode("utf-8"),
+        canonical_body,
+        hashlib.sha256,
+    ).hexdigest()
+
+    if (
+        not signature
+        or not hmac.compare_digest(signature, expected_signature)
+    ):
+        current_app.logger.warning(
+            "Didit webhook rechazado: firma no válida."
+        )
+        return jsonify({"error": "Firma no válida."}), 401
+
+    try:
+        event_timestamp = float(event.get("timestamp"))
+    except (TypeError, ValueError):
+        return jsonify({"error": "El timestamp del webhook no es válido."}), 400
+
+    now = datetime.now(timezone.utc)
+    if abs(now.timestamp() - event_timestamp) > 300:
+        return jsonify({"error": "El webhook está fuera de plazo."}), 401
+
+    event_id = event.get("event_id")
+    session_id = event.get("session_id")
+    vendor_data = event.get("vendor_data")
+    status = event.get("status")
+    if not all(
+        isinstance(value, str) and value.strip()
+        for value in (event_id, session_id, vendor_data, status)
+    ):
+        return jsonify({
+            "error": "Faltan campos requeridos en el webhook."
+        }), 400
+
+    pending_registration = db.session.get(
+        RegistrationKYC,
+        session_id,
+    )
+    if (
+        not pending_registration
+        or pending_registration.vendor_data != vendor_data
+    ):
+        current_app.logger.info(
+            "Webhook Didit recibido para una sesión sin registro pendiente."
+        )
+        return jsonify({"received": True}), 200
+
+    if db.session.get(DiditWebhookEvent, event_id):
+        return jsonify({"received": True}), 200
+
+    decision = event.get("decision")
+    decision = decision if isinstance(decision, dict) else {}
+    decision_workflow_id = (
+        decision.get("workflow_id")
+        or event.get("workflow_id")
+    )
+    if (
+        decision_workflow_id
+        and decision_workflow_id != DIDIT_REGISTRATION_WORKFLOW_ID
+    ):
+        current_app.logger.warning(
+            "Webhook Didit recibido para un workflow diferente."
+        )
+        return jsonify({"received": True}), 200
+
+    event_row = DiditWebhookEvent(
+        event_id=event_id,
+        received_at=now.replace(tzinfo=None),
+    )
+    db.session.add(event_row)
+
+    try:
+        db.session.flush()
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"received": True}), 200
+
+    pending_registration.didit_status = status
+    pending_registration.identity_verified_at = None
+
+    if status == "Approved":
+        registration = db.session.get(
+            RegistrationDNI,
+            pending_registration.registration_dni_id,
+        )
+        id_verifications = decision.get("id_verifications")
+        approved_documents = (
+            [
+                item
+                for item in id_verifications
+                if isinstance(item, dict)
+                and item.get("status") == "Approved"
+            ]
+            if isinstance(id_verifications, list)
+            else []
+        )
+        is_user_session = decision.get("session_kind") in (None, "user")
+
+        if (
+            registration
+            and is_user_session
+            and approved_documents
+            and all(
+                matches_didit_identity(document, registration)
+                for document in approved_documents
+            )
+        ):
+            pending_registration.identity_verified_at = (
+                now.replace(tzinfo=None)
+            )
+        else:
+            pending_registration.didit_status = "Identity Mismatch"
+            current_app.logger.warning(
+                "Webhook Didit aprobado, pero los datos del documento "
+                "no coinciden con el registro autorizado."
+            )
+
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception(
+            "No se pudo guardar la decisión del webhook de Didit."
+        )
+        return jsonify({"error": "No se pudo guardar el resultado."}), 500
+
+    return jsonify({"received": True}), 200
+
+
+@api.route(
+    "/registration/status/<string:session_id>",
+    methods=["GET"],
+)
+@limiter.limit("30 per minute")
+def estado_registro_kyc(session_id):
+    try:
+        session_id = str(uuid.UUID(session_id))
+    except (ValueError, AttributeError):
+        return jsonify({
+            "error": "La sesión de verificación no es válida."
+        }), 400
+
+    pending_registration = db.session.get(
+        RegistrationKYC,
+        session_id,
+    )
+    if not pending_registration:
+        return jsonify({
+            "error": "No se encontró el registro pendiente."
+        }), 404
+
+    if pending_registration.completed_at:
+        return jsonify({"status": "completed"}), 200
+
+    if pending_registration.expires_at <= datetime.now(
+        timezone.utc
+    ).replace(tzinfo=None):
+        return jsonify({"status": "expired"}), 200
+
+    if pending_registration.identity_verified_at:
+        return jsonify({"status": "approved"}), 200
+
+    status = (pending_registration.didit_status or "").casefold()
+    if status == "identity mismatch":
+        return jsonify({"status": "identity_mismatch"}), 200
+    if status == "declined":
+        return jsonify({"status": "declined"}), 200
+    if status == "abandoned":
+        return jsonify({"status": "abandoned"}), 200
+    if status in ("expired", "kyc expired"):
+        return jsonify({"status": "expired"}), 200
+
+    return jsonify({"status": "pending"}), 200
+
+
+@api.route("/registration/complete", methods=["POST"])
+@limiter.limit("5 per minute")
+def completar_registro_usuario():
+    data = request.get_json(silent=True) or {}
+    session_id = str(data.get("session_id") or "").strip()
+    try:
+        session_id = str(uuid.UUID(session_id))
+    except (ValueError, AttributeError):
+        return jsonify({
+            "error": "La sesión de verificación no es válida."
+        }), 400
+
+    pending_registration = db.session.get(
+        RegistrationKYC,
+        session_id,
+    )
+    if not pending_registration:
+        return jsonify({
+            "error": "No se encontró un registro pendiente para esta verificación."
+        }), 404
+
+    if pending_registration.completed_at:
+        return jsonify({
+            "message": "El registro ya se completó correctamente."
+        }), 200
+
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    if pending_registration.expires_at <= now:
+        db.session.delete(pending_registration)
+        db.session.commit()
+        return jsonify({
+            "error": "La sesión de registro ha caducado. Inicia el registro de nuevo."
+        }), 410
+
+    if (
+        not pending_registration.registration_dni_id
+        or not pending_registration.role
+        or not pending_registration.email
+        or not pending_registration.password_hash
+        or not pending_registration.phone
+    ):
+        current_app.logger.error(
+            "La sesión de registro pendiente está incompleta."
+        )
+        return jsonify({
+            "error": "No se pudo recuperar el registro pendiente."
+        }), 500
+
+    registration = db.session.get(
+        RegistrationDNI,
+        pending_registration.registration_dni_id,
+    )
+    if not registration or registration.is_registered:
+        return jsonify({
+            "error": "Este DNI ya está registrado o no está autorizado."
+        }), 409
+
+    if not pending_registration.identity_verified_at:
+        status = (pending_registration.didit_status or "").casefold()
+        if status in {
+            "declined",
+            "identity mismatch",
+            "abandoned",
+            "expired",
+            "kyc expired",
+        }:
+            return jsonify({
+                "error": (
+                    "La verificación de identidad no fue aprobada "
+                    f"(estado: {pending_registration.didit_status})."
+                )
+            }), 409
+
+        return jsonify({
+            "status": "pending",
+            "message": "Esperando la confirmación firmada de Didit.",
+        }), 202
+
+    if User.query.filter_by(email=pending_registration.email).first():
+        return jsonify({
+            "error": "El email ya está registrado"
+        }), 409
+
+    if User.query.filter_by(dni=registration.dni).first():
+        return jsonify({
+            "error": "Este DNI ya está asociado a un usuario"
+        }), 409
+
+    if User.query.filter_by(phone=pending_registration.phone).first():
+        return jsonify({
+            "error": "Este número de teléfono ya pertenece a una cuenta."
+        }), 409
+
+    role = UserRole(pending_registration.role)
+    user = User(
+        email=pending_registration.email,
+        password_hash=pending_registration.password_hash,
+        first_name=registration.first_name,
+        last_name=registration.last_name,
+        dni=registration.dni,
+        phone=pending_registration.phone,
+        date_of_birth=registration.date_of_birth,
+        sex=registration.sex,
+        is_active=True,
+        role=role,
+    )
+
+    colegiado = None
+    if role == UserRole.PATIENT:
+        user.patient = Patient(
+            cip=registration.cip or registration.dni,
+            hospital_id=registration.hospital_id,
+        )
+    elif role == UserRole.DOCTOR:
+        medical_license = pending_registration.medical_license
+        if not medical_license:
+            return jsonify({
+                "error": "Para un médico se necesita medical_license"
+            }), 400
+
+        colegiado = ColegiadoRegistration.query.filter_by(
+            medical_license=medical_license
+        ).first()
+        if not colegiado:
+            return jsonify({
+                "error": "El número de colegiado ya no está autorizado."
+            }), 409
+        if colegiado.is_registered or Doctor.query.filter_by(
+            medical_license=medical_license
+        ).first():
+            return jsonify({
+                "error": "Este número de colegiado ya está registrado"
+            }), 409
+
+        user.doctor = Doctor(
             medical_license=medical_license,
             specialty_id=colegiado.specialty_id,
             years_experience=colegiado.years_since_license,
-            hospital_id=colegiado.hospital_id
+            hospital_id=colegiado.hospital_id,
         )
-
-        user.doctor = doctor
         colegiado.is_registered = True
 
-    # =====================================================
-    # GUARDAR USER
-    # =====================================================
-
     db.session.add(user)
-
-    # =====================================================
-    # MARCAR REGISTRATION DNI COMO REGISTRADO
-    # =====================================================
-
     registration.is_registered = True
-
-    # =====================================================
-    # COMMIT
-    # =====================================================
+    pending_registration.completed_at = now
+    pending_registration.registration_dni_id = None
+    pending_registration.role = None
+    pending_registration.email = None
+    pending_registration.password_hash = None
+    pending_registration.phone = None
+    pending_registration.medical_license = None
 
     try:
-
         db.session.commit()
-
     except Exception:
-
         db.session.rollback()
-
+        current_app.logger.exception(
+            "No se pudo completar el registro después de la verificación."
+        )
         return jsonify({
             "error": "No se pudo completar el registro"
         }), 500
-
-    # =====================================================
-    # RESPUESTA
-    # =====================================================
 
     return jsonify({
         "message": "Usuario registrado correctamente",
@@ -995,8 +1514,8 @@ def registro_usuario():
             "email": user.email,
             "first_name": user.first_name,
             "last_name": user.last_name,
-            "role": user.role.value
-        }
+            "role": user.role.value,
+        },
     }), 201
 
 # =========================================================

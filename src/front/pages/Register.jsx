@@ -2,9 +2,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import PhoneInput from "react-phone-input-2";
+import { DiditSdk } from "@didit-protocol/sdk-web";
 import "react-phone-input-2/lib/style.css";
 import { TurnstileCaptcha } from "../components/TurnstileCaptcha";
 import {
+    completarRegistroKyc,
     comprobarTelefonoRegistro,
     registrarUsuario
 } from "../services/authServices";
@@ -25,6 +27,7 @@ export const Register = () => {
     const [tipoUsuario, setTipoUsuario] = useState("paciente");
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [kycConsent, setKycConsent] = useState(false);
 
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
@@ -48,6 +51,7 @@ export const Register = () => {
 
     const dniAbortRef = useRef(null);
     const colegiadoAbortRef = useRef(null);
+    const verificationCallbackSession = useRef("");
 
     // ============================================================
     // ANIMACIÓN DE ENTRADA
@@ -75,6 +79,37 @@ export const Register = () => {
             elements.forEach((element) => observer.unobserve(element));
         };
     }, []);
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const sessionId = params.get("verificationSessionId");
+        if (!sessionId || verificationCallbackSession.current === sessionId) {
+            return;
+        }
+
+        verificationCallbackSession.current = sessionId;
+        setSubmitting(true);
+        setError("");
+
+        completarRegistroKyc(sessionId)
+            .then(() => navigate("/login", { replace: true }))
+            .catch((verificationError) => {
+                setError(
+                    verificationError.message ||
+                    "No se pudo completar el registro tras la verificación."
+                );
+                setSubmitting(false);
+
+                const cleanUrl = new URL(window.location.href);
+                cleanUrl.searchParams.delete("verificationSessionId");
+                cleanUrl.searchParams.delete("status");
+                window.history.replaceState(
+                    {},
+                    "",
+                    `${cleanUrl.pathname}${cleanUrl.search}${cleanUrl.hash}`
+                );
+            });
+    }, [navigate]);
 
     useEffect(() => {
         return () => {
@@ -204,6 +239,7 @@ export const Register = () => {
 
         setError("");
         setSuccess("");
+        setKycConsent(false);
         setErrorDni("");
         setErrorColegiado("");
         setDniValido(false);
@@ -385,6 +421,13 @@ export const Register = () => {
             return;
         }
 
+        if (!kycConsent) {
+            setError(
+                "Debes aceptar la verificación de identidad con Didit para continuar."
+            );
+            return;
+        }
+
         if (!turnstileToken) {
             setError("Completa el CAPTCHA antes de crear la cuenta.");
             return;
@@ -412,7 +455,7 @@ export const Register = () => {
                 );
             }
 
-            await registrarUsuario({
+            const verification = await registrarUsuario({
                 role:
                     tipoUsuario === "medico"
                         ? "doctor"
@@ -423,15 +466,41 @@ export const Register = () => {
                 password: formData.password,
                 phone: formData.phone,
                 turnstileToken,
+                kycConsent,
 
                 medicalLicense: formData.medicalLicense.trim()
             });
 
-            // ====================================================
-            // REGISTRO CORRECTO
-            // ====================================================
+            if (!verification.verification_url) {
+                throw new Error(
+                    "Didit no ha devuelto el enlace de verificación."
+                );
+            }
 
-            navigate("/login");
+            DiditSdk.shared.onComplete = async (result) => {
+                if (result.type !== "completed") {
+                    setError(
+                        result.type === "cancelled"
+                            ? "La verificación de identidad fue cancelada."
+                            : result.error?.message ||
+                                "Didit no pudo completar la verificación de identidad."
+                    );
+                    return;
+                }
+
+                try {
+                    await completarRegistroKyc(verification.session_id);
+                    navigate("/login", { replace: true });
+                } catch (verificationError) {
+                    setError(
+                        verificationError.message ||
+                        "No se pudo completar el registro tras la verificación."
+                    );
+                }
+            };
+            DiditSdk.shared.startVerification({
+                url: verification.verification_url
+            });
         } catch (submitError) {
             setError(
                 submitError.message ||
@@ -969,6 +1038,26 @@ export const Register = () => {
                                     </div>
 
                                     <div className="col-12">
+                                        <div className="form-check">
+                                            <input
+                                                id="kyc-consent"
+                                                type="checkbox"
+                                                checked={kycConsent}
+                                                onChange={(event) =>
+                                                    setKycConsent(event.target.checked)
+                                                }
+                                                className="form-check-input"
+                                            />
+                                            <label
+                                                htmlFor="kyc-consent"
+                                                className="form-check-label text-white-50 small"
+                                            >
+                                                Acepto verificar mi identidad con Didit y que se contrasten los datos del documento con el registro oficial.
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div className="col-12">
                                         <TurnstileCaptcha
                                             key={captchaWidgetKey}
                                             onTokenChange={setTurnstileToken}
@@ -990,7 +1079,7 @@ export const Register = () => {
                                             className="btn btn-info rounded-pill fw-bold w-100 py-2 mt-2"
                                         >
                                             {submitting
-                                                ? "Creando cuenta..."
+                                                ? "Verificando identidad..."
                                                 : "Crear cuenta →"}
                                         </button>
 
