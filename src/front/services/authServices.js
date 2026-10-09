@@ -1,3 +1,6 @@
+const backendUrl = (path) =>
+  `${(import.meta.env.VITE_BACKEND_URL || "").replace(/\/+$/, "")}${path}`;
+
 export const registrarUsuario = async (formData) => {
   const {
     role,
@@ -7,6 +10,7 @@ export const registrarUsuario = async (formData) => {
     phone,
     medicalLicense,
     turnstileToken,
+    kycConsent,
   } = formData;
 
   const payload = {
@@ -16,6 +20,7 @@ export const registrarUsuario = async (formData) => {
     phone,
     role,
     turnstile_token: turnstileToken,
+    kyc_consent: kycConsent,
   };
 
   // MÉDICO
@@ -24,7 +29,7 @@ export const registrarUsuario = async (formData) => {
   }
 
   const response = await fetch(
-    `${import.meta.env.VITE_BACKEND_URL}api/register`,
+    backendUrl("/api/register"),
     {
       method: "POST",
       headers: {
@@ -51,10 +56,86 @@ export const registrarUsuario = async (formData) => {
   return data;
 };
 
+export const completarRegistroKyc = async (sessionId) => {
+  const deadline = Date.now() + 120_000;
+  let diditStatus = "pending";
+
+  while (Date.now() < deadline) {
+    const statusResponse = await fetch(
+      backendUrl(
+        `/api/registration/status/${encodeURIComponent(sessionId)}`,
+      ),
+    );
+
+    let statusData;
+    try {
+      statusData = await statusResponse.json();
+    } catch {
+      statusData = {};
+    }
+
+    if (!statusResponse.ok) {
+      throw new Error(
+        statusData.message ||
+          statusData.error ||
+          "No se pudo consultar el estado de la verificación.",
+      );
+    }
+
+    diditStatus = statusData.status;
+    if (diditStatus === "approved" || diditStatus === "completed") {
+      break;
+    }
+
+    if (diditStatus !== "pending") {
+      throw new Error(
+        diditStatus === "identity_mismatch"
+          ? "El documento no coincide con los datos del registro oficial."
+          : `Didit no aprobó la verificación (${diditStatus}).`,
+      );
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 4000));
+  }
+
+  if (diditStatus !== "approved" && diditStatus !== "completed") {
+    throw new Error(
+      "La verificación sigue pendiente. Vuelve a intentar completar el registro en unos minutos.",
+    );
+  }
+
+  const response = await fetch(
+    backendUrl("/api/registration/complete"),
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ session_id: sessionId }),
+    },
+  );
+
+  let data;
+
+  try {
+    data = await response.json();
+  } catch {
+    data = {};
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      data.message || data.error || "No se pudo completar el registro.",
+    );
+  }
+
+  return data;
+};
+
 
 export const comprobarTelefonoRegistro = async (phone, signal) => {
   const response = await fetch(
-    `${import.meta.env.VITE_BACKEND_URL}/api/registration/check-phone`,
+    backendUrl("/api/registration/check-phone"),
     {
       method: "POST",
       headers: {
@@ -94,7 +175,7 @@ export const iniciarSesion = async ({
   turnstileToken,
 }) => {
   const response = await fetch(
-    `${import.meta.env.VITE_BACKEND_URL}/api/login`,
+    backendUrl("/api/login"),
     {
       method: "POST",
       headers: {
@@ -158,7 +239,7 @@ export const iniciarSesion = async ({
   try {
     // CONSULTAR EL DASHBOARD
     const dashboardResponse = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/api/dashboard`,
+      backendUrl("/api/dashboard"),
       {
         method: "GET",
         headers: {
@@ -217,4 +298,3 @@ export const iniciarSesion = async ({
     throw error;
   }
 };
-

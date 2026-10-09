@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import String, Boolean, Date, DateTime, ForeignKey, Integer, Text, Enum as SQLEnum
@@ -1389,6 +1389,11 @@ class RegistrationDNI(db.Model):
         nullable=True
     )
 
+    hospital_id: Mapped[int] = mapped_column(
+        ForeignKey("hospital.id"),
+        nullable=False,
+    )
+
     role: Mapped[UserRole] = mapped_column(
         SQLEnum(UserRole),
         nullable=False,
@@ -1405,6 +1410,79 @@ class RegistrationDNI(db.Model):
         DateTime,
         default=datetime.utcnow,
         nullable=False
+    )
+
+
+class RegistrationKYC(db.Model):
+    __tablename__ = "registration_kyc"
+
+    session_id: Mapped[str] = mapped_column(
+        String(64),
+        primary_key=True,
+    )
+    vendor_data: Mapped[str] = mapped_column(
+        String(100),
+        unique=True,
+        nullable=False,
+    )
+    registration_dni_id: Mapped[int | None] = mapped_column(
+        ForeignKey("registration_dni.id"),
+        nullable=True,
+    )
+    role: Mapped[str | None] = mapped_column(
+        String(20),
+        nullable=True,
+    )
+    email: Mapped[str | None] = mapped_column(
+        String(120),
+        nullable=True,
+    )
+    password_hash: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+    )
+    phone: Mapped[str | None] = mapped_column(
+        String(30),
+        nullable=True,
+    )
+    medical_license: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+        nullable=False,
+    )
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+    )
+    completed_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True,
+    )
+    didit_status: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True,
+    )
+    identity_verified_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True,
+    )
+
+
+class DiditWebhookEvent(db.Model):
+    __tablename__ = "didit_webhook_event"
+
+    event_id: Mapped[str] = mapped_column(
+        String(100),
+        primary_key=True,
+    )
+    received_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+        nullable=False,
     )
 
 
