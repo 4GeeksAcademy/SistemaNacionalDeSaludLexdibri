@@ -162,6 +162,25 @@ def check_registration_phone():
     }), 200
 
 
+@api.route("/registration/check-email", methods=["POST"])
+def check_registration_email():
+    data = request.get_json(silent=True) or {}
+    email = str(data.get("email") or "").strip().lower()
+
+    if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):
+        return jsonify({
+            "error": "Introduce un correo electrónico válido."
+        }), 400
+
+    return jsonify({
+        "exists": db.session.query(
+            User.id
+        ).filter(
+            db.func.lower(User.email) == email
+        ).first() is not None
+    }), 200
+
+
 # =========================================================
 # HELLO
 # =========================================================
@@ -792,6 +811,12 @@ def registro_usuario():
             "error": "Introduce un teléfono internacional válido, por ejemplo +34600000000"
         }), 400
 
+    email = str(data.get("email") or "").strip().lower()
+    if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):
+        return jsonify({
+            "error": "Introduce un correo electrónico válido."
+        }), 400
+
     # =====================================================
     # NORMALIZAR DNI
     # =====================================================
@@ -846,8 +871,10 @@ def registro_usuario():
     # COMPROBAR EMAIL
     # =====================================================
 
-    existing_user = User.query.filter_by(
-        email=data["email"]
+    existing_user = db.session.query(
+        User.id
+    ).filter(
+        db.func.lower(User.email) == email
     ).first()
 
     if existing_user:
@@ -878,7 +905,7 @@ def registro_usuario():
     # =====================================================
 
     user = User(
-        email=data["email"],
+        email=email,
         password_hash=generate_password_hash(
             data["password"]
         ),
