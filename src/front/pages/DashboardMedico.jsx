@@ -3,6 +3,7 @@ import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 import rigoImageUrl from "../assets/img/rigo-baby.jpg";
 import { Link } from "react-router-dom";
 import { Icon } from "../components/Icon";
+import { FeedbackModal } from "../components/FeedbackModal";
 
 export const DashboardMedico = () => {
     const { store } = useGlobalReducer();
@@ -39,6 +40,7 @@ export const DashboardMedico = () => {
         useState(false);
     const [surgeryPatientError, setSurgeryPatientError] = useState("");
     const [surgerySearchDone, setSurgerySearchDone] = useState(false);
+    const [successMessage, setSuccessMessage] = useState("");
 
     // =====================================================
     // TOKEN
@@ -250,7 +252,14 @@ export const DashboardMedico = () => {
                 return;
             }
 
-            await loadConsultations();
+            setConsultations((current) =>
+                current.map((consultation) =>
+                    consultation.id === consultationId
+                        ? { ...consultation, status: "completed" }
+                        : consultation
+                )
+            );
+            setSuccessMessage("La consulta se completó correctamente.");
         } catch (error) {
             console.error("Error completando consulta:", error);
             setConsultationError("Error de conexión con el servidor.");
@@ -630,12 +639,6 @@ export const DashboardMedico = () => {
 
                     </div>
 
-                    {patientError && (
-                        <div className="alert alert-danger mt-3 mb-0">
-                            {patientError}
-                        </div>
-                    )}
-
                 </div>
 
                 {/* =====================================================
@@ -926,12 +929,6 @@ export const DashboardMedico = () => {
 
                     </div>
 
-                    {surgeryPatientError && (
-                        <div className="alert alert-danger mt-3 mb-0">
-                            {surgeryPatientError}
-                        </div>
-                    )}
-
                     {surgerySearchDone &&
                         !loadingSurgeryPatients && (
 
@@ -1051,12 +1048,6 @@ export const DashboardMedico = () => {
                             </button>
 
                         </div>
-
-                        {patientError && (
-                            <div className="alert alert-danger">
-                                {patientError}
-                            </div>
-                        )}
 
                         {loadingMyPatients &&
                             patients.length === 0 && (
@@ -1327,12 +1318,6 @@ export const DashboardMedico = () => {
 
                             </div>
 
-                            {consultationError && (
-                                <div className="alert alert-danger">
-                                    {consultationError}
-                                </div>
-                            )}
-
                             {loadingConsultations &&
                                 consultations.length === 0 && (
 
@@ -1509,6 +1494,21 @@ export const DashboardMedico = () => {
                 </div>
 
             </div>
+            <FeedbackModal
+                message={
+                    successMessage ||
+                    patientError ||
+                    surgeryPatientError ||
+                    consultationError
+                }
+                type={successMessage ? "success" : "danger"}
+                onClose={() => {
+                    setSuccessMessage("");
+                    setPatientError("");
+                    setSurgeryPatientError("");
+                    setConsultationError("");
+                }}
+            />
         </div>
     );
 };

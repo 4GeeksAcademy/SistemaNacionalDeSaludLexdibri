@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 import rigoImageUrl from "../assets/img/rigo-baby.jpg";
+import { FeedbackModal } from "../components/FeedbackModal";
 
 const getToken = () => (
   localStorage.getItem("access_token") || localStorage.getItem("token")
@@ -49,7 +50,7 @@ export const DashboardPaciente = () => {
   const [mostrarTodosDiagnosticos, setMostrarTodosDiagnosticos] = useState(false);
 
   const [cancelandoConsultaId, setCancelandoConsultaId] = useState(null);
-  const [errorCancelacion, setErrorCancelacion] = useState("");
+  const [feedback, setFeedback] = useState({ message: "", type: "success" });
 
   useEffect(() => {
     let cancelled = false;
@@ -117,9 +118,19 @@ export const DashboardPaciente = () => {
   if (error || !dashboard) {
     return (
       <div className="container text-white py-5">
-        <div className="alert alert-danger" role="alert">
-          {error || "No se pudo cargar tu información sanitaria."}
-        </div>
+        <p>No se pudo cargar tu información sanitaria.</p>
+        <button
+          type="button"
+          className="btn btn-outline-info rounded-pill"
+          onClick={() => window.location.reload()}
+        >
+          Reintentar
+        </button>
+        <FeedbackModal
+          message={error}
+          type="danger"
+          onClose={() => setError("")}
+        />
       </div>
     );
   }
@@ -233,7 +244,7 @@ export const DashboardPaciente = () => {
 
   const cancelarConsulta = async (appointmentId) => {
     setCancelandoConsultaId(appointmentId);
-    setErrorCancelacion("");
+    setFeedback({ message: "", type: "success" });
 
     try {
       const response = await fetch(
@@ -267,8 +278,15 @@ export const DashboardPaciente = () => {
               : consultation
         )
       }));
+      setFeedback({
+        message: "La consulta se canceló correctamente.",
+        type: "success"
+      });
     } catch (cancelError) {
-      setErrorCancelacion(cancelError.message);
+      setFeedback({
+        message: cancelError.message,
+        type: "danger"
+      });
     } finally {
       setCancelandoConsultaId(null);
     }
@@ -570,12 +588,6 @@ export const DashboardPaciente = () => {
                 </div>
               )}
 
-              {errorCancelacion && (
-                <div className="alert alert-danger mt-3 mb-0">
-                  {errorCancelacion}
-                </div>
-              )}
-
             </section>
 
           </div>
@@ -867,6 +879,13 @@ export const DashboardPaciente = () => {
           </div>
 
         </div>
+        <FeedbackModal
+          message={feedback.message}
+          type={feedback.type}
+          onClose={() =>
+            setFeedback({ message: "", type: "success" })
+          }
+        />
       </div>
     </div>
   );
