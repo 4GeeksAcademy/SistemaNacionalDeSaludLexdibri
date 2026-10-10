@@ -167,6 +167,40 @@ export const comprobarTelefonoRegistro = async (phone, signal) => {
   return data;
 };
 
+export const comprobarEmailRegistro = async (email, signal) => {
+  const response = await fetch(
+    backendUrl("/api/registration/check-email"),
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+      signal,
+    },
+  );
+
+  let data;
+
+  try {
+    data = await response.json();
+  } catch {
+    data = {};
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      data.message || data.error || "No se pudo comprobar el correo electrónico.",
+    );
+  }
+
+  if (typeof data.exists !== "boolean") {
+    throw new Error("La respuesta al comprobar el correo electrónico no es válida.");
+  }
+
+  return data;
+};
+
 
 export const iniciarSesion = async ({
   email,

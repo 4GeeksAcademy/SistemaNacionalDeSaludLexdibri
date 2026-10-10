@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { iniciarSesion } from "../services/authServices";
 import useGlobalReducer from "../hooks/useGlobalReducer";
+import { FormErrorModal } from "../components/FormErrorModal";
 import { Icon } from "../components/Icon";
 import { TurnstileCaptcha } from "../components/TurnstileCaptcha";
 
@@ -404,14 +405,6 @@ export const Login = () => {
 
                                 </div>
 
-                                {/* ERROR */}
-
-                                {error && (
-                                    <div className="alert alert-danger py-2 small">
-                                        {error}
-                                    </div>
-                                )}
-
                                 <TurnstileCaptcha
                                     key={captchaWidgetKey}
                                     onTokenChange={setTurnstileToken}
@@ -482,6 +475,7 @@ export const Login = () => {
 
             </section>
 
+            <FormErrorModal message={error} onClose={() => setError("")} />
         </div>
     );
 };
