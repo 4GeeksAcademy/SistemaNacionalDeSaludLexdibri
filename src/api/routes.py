@@ -290,6 +290,26 @@ def check_registration_phone():
     }), 200
 
 
+@api.route("/registration/check-email", methods=["POST"])
+def check_registration_email():
+    data = request.get_json(silent=True) or {}
+    email = str(data.get("email") or "").strip().lower()
+
+    if (
+        len(email) > 120
+        or not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email)
+    ):
+        return jsonify({
+            "error": "Introduce un correo electrónico válido."
+        }), 400
+
+    return jsonify({
+        "exists": db.session.query(User.id).filter(
+            db.func.lower(User.email) == email
+        ).first() is not None
+    }), 200
+
+
 # =========================================================
 # HELLO
 # =========================================================

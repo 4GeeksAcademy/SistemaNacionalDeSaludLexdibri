@@ -7,9 +7,11 @@ import "react-phone-input-2/lib/style.css";
 import { TurnstileCaptcha } from "../components/TurnstileCaptcha";
 import {
     completarRegistroKyc,
+    comprobarEmailRegistro,
     comprobarTelefonoRegistro,
     registrarUsuario
 } from "../services/authServices";
+import { FormErrorModal } from "../components/FormErrorModal";
 import { Icon } from "../components/Icon";
 
 const EMPTY_FORM = {
@@ -39,6 +41,8 @@ export const Register = () => {
     const [errorDni, setErrorDni] = useState("");
     const [dniValido, setDniValido] = useState(false);
     const [dniVerificado, setDniVerificado] = useState("");
+    const [emailCheckStatus, setEmailCheckStatus] = useState("idle");
+    const [emailCheckError, setEmailCheckError] = useState("");
     const [phoneCheckStatus, setPhoneCheckStatus] = useState("idle");
     const [phoneCheckError, setPhoneCheckError] = useState("");
     const [loadingColegiado, setLoadingColegiado] = useState(false);
@@ -191,6 +195,41 @@ export const Register = () => {
     }, [tipoUsuario, formData.medicalLicense]);
 
     useEffect(() => {
+        const email = formData.email.trim().toLowerCase();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            setEmailCheckStatus("idle");
+            setEmailCheckError("");
+            return undefined;
+        }
+
+        const controller = new AbortController();
+        setEmailCheckStatus("checking");
+        setEmailCheckError("");
+
+        const timeoutId = setTimeout(async () => {
+            try {
+                const result = await comprobarEmailRegistro(
+                    email,
+                    controller.signal
+                );
+                setEmailCheckStatus(result.exists ? "exists" : "available");
+            } catch (emailError) {
+                if (emailError.name === "AbortError") return;
+                setEmailCheckStatus("error");
+                setEmailCheckError(
+                    emailError.message ||
+                    "No se pudo comprobar el correo electrónico."
+                );
+            }
+        }, 400);
+
+        return () => {
+            clearTimeout(timeoutId);
+            controller.abort();
+        };
+    }, [formData.email]);
+
+    useEffect(() => {
         const phone = formData.phone.trim();
         if (!phone) {
             setPhoneCheckStatus("idle");
@@ -246,6 +285,8 @@ export const Register = () => {
         setDniVerificado("");
         setColegiadoValido(false);
         setDatosColegiado(null);
+        setEmailCheckStatus("idle");
+        setEmailCheckError("");
         setPhoneCheckStatus("idle");
         setPhoneCheckError("");
 
@@ -448,6 +489,15 @@ export const Register = () => {
         setSubmitting(true);
 
         try {
+            const emailCheck = await comprobarEmailRegistro(
+                formData.email.trim().toLowerCase()
+            );
+            if (emailCheck.exists) {
+                throw new Error(
+                    "Este correo electrónico ya pertenece a una cuenta."
+                );
+            }
+
             const phoneCheck = await comprobarTelefonoRegistro(formData.phone);
             if (phoneCheck.exists) {
                 throw new Error(
@@ -652,27 +702,17 @@ export const Register = () => {
                                             </div>
                                         )}
                                         {!loadingDni && errorDni && (
-                                            <div className="text-danger small mt-2" role="alert">
+                                            <div className="bg-danger-subtle text-danger-emphasis border border-danger-subtle rounded-2 px-2 py-1 small mt-2" role="alert">
                                                 {errorDni}
                                             </div>
                                         )}
                                         {!loadingDni && dniValido && (
-                                            <div className="text-success small mt-2" role="status">
+                                            <div className="bg-success-subtle text-success-emphasis border border-success-subtle rounded-2 px-2 py-1 small mt-2" role="status">
                                                 DNI o CIP autorizado y disponible.
                                             </div>
                                         )}
 
                                     </div>
-
-                                    {/* ERROR GENERAL */}
-
-                                    {error && (
-                                        <div className="col-12">
-                                            <div className="alert alert-danger bg-danger bg-opacity-25 text-danger border-danger border-opacity-50 py-2 small mb-0">
-                                                {error}
-                                            </div>
-                                        </div>
-                                    )}
 
                                     {/* EMAIL */}
 
@@ -692,6 +732,26 @@ export const Register = () => {
                                             className="form-control bg-dark text-white border-secondary"
                                             placeholder="ejemplo@correo.com"
                                         />
+                                        {emailCheckStatus === "checking" && (
+                                            <div className="form-text text-white-50" role="status">
+                                                Comprobando si el correo ya está registrado...
+                                            </div>
+                                        )}
+                                        {emailCheckStatus === "available" && (
+                                            <div className="bg-success-subtle text-success-emphasis border border-success-subtle rounded-2 px-2 py-1 small mt-2" role="status">
+                                                El correo electrónico está disponible.
+                                            </div>
+                                        )}
+                                        {emailCheckStatus === "exists" && (
+                                            <div className="bg-danger-subtle text-danger-emphasis border border-danger-subtle rounded-2 px-2 py-1 small mt-2" role="alert">
+                                                Este correo electrónico ya pertenece a una cuenta.
+                                            </div>
+                                        )}
+                                        {emailCheckError && (
+                                            <div className="bg-danger-subtle text-danger-emphasis border border-danger-subtle rounded-2 px-2 py-1 small mt-2" role="alert">
+                                                {emailCheckError}
+                                            </div>
+                                        )}
 
                                     </div>
 
@@ -735,17 +795,17 @@ export const Register = () => {
                                             </div>
                                         )}
                                         {phoneCheckStatus === "available" && (
-                                            <div className="text-success small mt-2" role="status">
+                                            <div className="bg-success-subtle text-success-emphasis border border-success-subtle rounded-2 px-2 py-1 small mt-2" role="status">
                                                 El teléfono está disponible.
                                             </div>
                                         )}
                                         {phoneCheckStatus === "exists" && (
-                                            <div className="text-danger small mt-2" role="alert">
+                                            <div className="bg-danger-subtle text-danger-emphasis border border-danger-subtle rounded-2 px-2 py-1 small mt-2" role="alert">
                                                 Este número de teléfono ya pertenece a una cuenta.
                                             </div>
                                         )}
                                         {phoneCheckError && (
-                                            <div className="text-danger small mt-2" role="alert">
+                                            <div className="bg-danger-subtle text-danger-emphasis border border-danger-subtle rounded-2 px-2 py-1 small mt-2" role="alert">
                                                 {phoneCheckError}
                                             </div>
                                         )}
@@ -783,7 +843,7 @@ export const Register = () => {
                                                 )}
 
                                                 {!loadingColegiado && errorColegiado && (
-                                                    <div className="text-danger small mt-2">
+                                                    <div className="bg-danger-subtle text-danger-emphasis border border-danger-subtle rounded-2 px-2 py-1 small mt-2" role="alert">
                                                         <Icon
                                                             name="CircleAlert"
                                                             className="me-1"
@@ -795,7 +855,7 @@ export const Register = () => {
                                                 {!loadingColegiado &&
                                                     colegiadoValido &&
                                                     datosColegiado && (
-                                                        <div className="text-success small mt-2">
+                                                        <div className="bg-success-subtle text-success-emphasis border border-success-subtle rounded-2 px-2 py-1 small mt-2" role="status">
                                                             <Icon
                                                                 name="Check"
                                                                 className="me-1"
@@ -1014,7 +1074,7 @@ export const Register = () => {
                                         {/* NO COINCIDEN */}
 
                                         {passwordMismatch && (
-                                            <div className="text-danger small mt-2">
+                                            <div className="bg-danger-subtle text-danger-emphasis border border-danger-subtle rounded-2 px-2 py-1 small mt-2" role="alert">
                                                 <Icon
                                                     name="CircleAlert"
                                                     className="me-1"
@@ -1026,7 +1086,7 @@ export const Register = () => {
                                         {/* COINCIDEN */}
 
                                         {passwordsMatch && (
-                                            <div className="text-success small mt-2">
+                                            <div className="bg-success-subtle text-success-emphasis border border-success-subtle rounded-2 px-2 py-1 small mt-2" role="status">
                                                 <Icon
                                                     name="Check"
                                                     className="me-1"
@@ -1121,6 +1181,7 @@ export const Register = () => {
                     </div>
                 </div>
             </section>
+            <FormErrorModal message={error} onClose={() => setError("")} />
         </div>
     );
 };
