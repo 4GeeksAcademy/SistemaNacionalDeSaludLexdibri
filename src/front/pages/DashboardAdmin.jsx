@@ -1,6 +1,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { Icon } from "../components/Icon";
+import { FeedbackModal } from "../components/FeedbackModal";
 
 const API_URL = (
   import.meta.env.VITE_BACKEND_URL || ""
@@ -16,6 +17,7 @@ export const DashboardAdmin = () => {
   const [pacientes, setPacientes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [errorModalDismissed, setErrorModalDismissed] = useState(false);
 
   const [busquedaDoctor, setBusquedaDoctor] = useState("");
   const [busquedaPaciente, setBusquedaPaciente] = useState("");
@@ -108,6 +110,7 @@ export const DashboardAdmin = () => {
     try {
       setLoading(true);
       setError("");
+      setErrorModalDismissed(false);
 
       const [
         hospitalResponse,
@@ -758,12 +761,12 @@ export const DashboardAdmin = () => {
     return (
       <div className="text-white py-5">
         <div className="container">
-          <div
-            className="alert alert-danger rounded-4"
-            role="alert"
-          >
-            {error}
-          </div>
+          <p>No se pudo cargar el panel de administración.</p>
+          <FeedbackModal
+            message={errorModalDismissed ? "" : error}
+            type="danger"
+            onClose={() => setErrorModalDismissed(true)}
+          />
 
           <button
             className="btn btn-info rounded-pill"
@@ -817,13 +820,11 @@ export const DashboardAdmin = () => {
             MENSAJE
         ================================================= */}
 
-        {mensaje && (
-          <div
-            className={`alert alert-${tipoMensaje} rounded-4 border-0 mb-4`}
-          >
-            {mensaje}
-          </div>
-        )}
+        <FeedbackModal
+          message={mensaje}
+          type={tipoMensaje}
+          onClose={() => setMensaje("")}
+        />
 
         {/* =================================================
             HOSPITAL
@@ -1671,4 +1672,3 @@ export const DashboardAdmin = () => {
     </div>
   );
 };
-
