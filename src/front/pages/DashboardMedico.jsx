@@ -5,6 +5,39 @@ import { Link } from "react-router-dom";
 import { Icon } from "../components/Icon";
 import { FeedbackModal } from "../components/FeedbackModal";
 
+const formatearEdad = (fechaNacimiento) => {
+    if (!fechaNacimiento) {
+        return "No disponible";
+    }
+
+    const [year, month, day] = fechaNacimiento
+        .split("T")[0]
+        .split("-")
+        .map(Number);
+    const nacimiento = new Date(year, month - 1, day);
+
+    if (
+        Number.isNaN(nacimiento.getTime()) ||
+        nacimiento.getFullYear() !== year ||
+        nacimiento.getMonth() !== month - 1 ||
+        nacimiento.getDate() !== day
+    ) {
+        return "No disponible";
+    }
+
+    const hoy = new Date();
+    let edad = hoy.getFullYear() - year;
+
+    if (
+        hoy.getMonth() < month - 1 ||
+        (hoy.getMonth() === month - 1 && hoy.getDate() < day)
+    ) {
+        edad -= 1;
+    }
+
+    return `${edad} ${edad === 1 ? "año" : "años"}`;
+};
+
 export const DashboardMedico = () => {
     const { store } = useGlobalReducer();
 
@@ -716,12 +749,6 @@ export const DashboardMedico = () => {
                                                             {patient.nombre}{" "}
                                                             {patient.apellidos}
                                                         </h3>
-
-                                                        <span className="text-white-50 small">
-                                                            Paciente #
-                                                            {patient.id}
-                                                        </span>
-
                                                     </div>
 
                                                 </div>
@@ -729,19 +756,6 @@ export const DashboardMedico = () => {
                                                 <hr className="border-secondary opacity-25" />
 
                                                 <div className="row g-3">
-
-                                                    <div className="col-12 col-md-6">
-
-                                                        <span className="text-info small d-block">
-                                                            DNI
-                                                        </span>
-
-                                                        <span className="text-white-50 text-break">
-                                                            {patient.dni ||
-                                                                "No disponible"}
-                                                        </span>
-
-                                                    </div>
 
                                                     <div className="col-12 col-md-6">
 
@@ -759,43 +773,13 @@ export const DashboardMedico = () => {
                                                     <div className="col-12 col-md-6">
 
                                                         <span className="text-info small d-block">
-                                                            Email
-                                                        </span>
-
-                                                        <span className="text-white-50 text-break">
-                                                            {patient.email ||
-                                                                "No disponible"}
-                                                        </span>
-
-                                                    </div>
-
-                                                    <div className="col-12 col-md-6">
-
-                                                        <span className="text-info small d-block">
-                                                            Teléfono
+                                                            Edad
                                                         </span>
 
                                                         <span className="text-white-50">
-                                                            {patient.telefono ||
-                                                                "No disponible"}
-                                                        </span>
-
-                                                    </div>
-
-                                                    <div className="col-12 col-md-6">
-
-                                                        <span className="text-info small d-block">
-                                                            Fecha de nacimiento
-                                                        </span>
-
-                                                        <span className="text-white-50">
-                                                            {patient.fecha_nacimiento
-                                                                ? new Date(
-                                                                    patient.fecha_nacimiento
-                                                                ).toLocaleDateString(
-                                                                    "es-ES"
-                                                                )
-                                                                : "No disponible"}
+                                                            {formatearEdad(
+                                                                patient.fecha_nacimiento
+                                                            )}
                                                         </span>
 
                                                     </div>
@@ -816,7 +800,7 @@ export const DashboardMedico = () => {
                                                     <div className="col-12 col-md-6">
 
                                                         <span className="text-info small d-block">
-                                                            Grupo sanguíneo
+                                                            Tipo de sangre
                                                         </span>
 
                                                         <span className="text-white-50">
