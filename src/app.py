@@ -87,10 +87,10 @@ def handle_invalid_usage(error):
 
 @app.route("/")
 def sitemap():
-    index_path = os.path.join(static_file_dir, "index.html")
-    if os.path.isfile(index_path):
-        return send_from_directory(static_file_dir, "index.html")
-    return generate_sitemap(app)
+    if ENV == "development":
+        return generate_sitemap(app)
+
+    return send_from_directory(static_file_dir, "index.html")
 
 
 @app.route("/<path:path>", methods=["GET"])
@@ -107,4 +107,3 @@ def serve_any_other_file(path):
 if __name__ == "__main__":
     PORT = int(os.environ.get("PORT", 3001))
     app.run(host="0.0.0.0", port=PORT, debug=True)
-
