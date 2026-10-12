@@ -65,6 +65,7 @@ class User(db.Model):
         default=datetime.utcnow,
         nullable=False,
     )
+
     patient: Mapped["Patient | None"] = relationship(
         back_populates="user",
         uselist=False,
@@ -236,6 +237,38 @@ class Patient(db.Model):
             ),
             "doctors": self.doctors,
         }
+
+
+class PatientPrivacySetting(db.Model):
+    __tablename__ = "patient_privacy_setting"
+
+    patient_id: Mapped[int] = mapped_column(
+        ForeignKey("patient.id"),
+        primary_key=True,
+    )
+    access_scope: Mapped[str] = mapped_column(
+        String(32),
+        nullable=False,
+        default="national",
+    )
+    restrict_sensitive_records: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+    )
+    notify_accesses: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False,
+    )
+
+
 # Especialidades
 
 
@@ -1149,6 +1182,45 @@ class MedicalRecordAccessLog(db.Model):
                 if self.accessed_at else None
             ),
         }
+
+
+class MedicalRecordAccessReport(db.Model):
+    __tablename__ = "medical_record_access_report"
+
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+    )
+    access_log_id: Mapped[int] = mapped_column(
+        ForeignKey("medical_record_access_log.id", ondelete="CASCADE"),
+        unique=True,
+        nullable=False,
+    )
+    patient_id: Mapped[int] = mapped_column(
+        ForeignKey("patient.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    description: Mapped[str] = mapped_column(
+        Text,
+        nullable=False,
+    )
+    status: Mapped[str] = mapped_column(
+        String(32),
+        default="pending",
+        nullable=False,
+    )
+    resolution: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+    )
+    access_log: Mapped["MedicalRecordAccessLog"] = relationship()
+    patient: Mapped["Patient"] = relationship()
 
 
 class DoctorPatient(db.Model):

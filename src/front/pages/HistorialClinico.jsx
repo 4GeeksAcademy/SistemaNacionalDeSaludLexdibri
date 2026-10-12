@@ -1,11 +1,40 @@
 
-import { useEffect, useMemo, useState } from "react";
+import {
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState
+} from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Icon } from "../components/Icon";
 
 export const HistorialClinico = () => {
     const { state } = useLocation();
     const patient = state?.patient;
+    const clinicalVisit = useRef(null);
+    if (clinicalVisit.current?.patientId !== patient?.id) {
+        clinicalVisit.current = {
+            patientId: patient?.id,
+            id: crypto.randomUUID()
+        };
+    }
+    const clinicalVisitId = clinicalVisit.current.id;
+    // Keep one page visit from generating one access email per resource.
+    const clinicalRequestQueue = useRef(Promise.resolve());
+    const fetchClinicalRecord = useCallback(
+        (...args) => {
+            const request = clinicalRequestQueue.current.then(
+                () => fetch(...args)
+            );
+            clinicalRequestQueue.current = request.then(
+                () => undefined,
+                () => undefined
+            );
+            return request;
+        },
+        []
+    );
 
     // ==========================================================
     // ESTADOS
@@ -73,8 +102,8 @@ export const HistorialClinico = () => {
                     localStorage.getItem("access_token") ||
                     localStorage.getItem("token");
 
-                const response = await fetch(
-                    `${import.meta.env.VITE_BACKEND_URL}/api/medico/pacientes/${patient.id}/enfermedades`,
+                const response = await fetchClinicalRecord(
+                    `${import.meta.env.VITE_BACKEND_URL}/api/medico/pacientes/${patient.id}/enfermedades?visit_id=${clinicalVisitId}`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -101,7 +130,7 @@ export const HistorialClinico = () => {
         };
 
         cargarEnfermedades();
-    }, [patient?.id]);
+    }, [patient?.id, clinicalVisitId, fetchClinicalRecord]);
 
     // ==========================================================
     // CARGAR ALERGIAS
@@ -119,8 +148,8 @@ export const HistorialClinico = () => {
                     localStorage.getItem("access_token") ||
                     localStorage.getItem("token");
 
-                const response = await fetch(
-                    `${import.meta.env.VITE_BACKEND_URL}/api/medico/pacientes/${patient.id}/alergias`,
+                const response = await fetchClinicalRecord(
+                    `${import.meta.env.VITE_BACKEND_URL}/api/medico/pacientes/${patient.id}/alergias?visit_id=${clinicalVisitId}`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -147,7 +176,7 @@ export const HistorialClinico = () => {
         };
 
         cargarAlergias();
-    }, [patient?.id]);
+    }, [patient?.id, clinicalVisitId, fetchClinicalRecord]);
 
     // ==========================================================
     // CARGAR VACUNAS
@@ -165,8 +194,8 @@ export const HistorialClinico = () => {
                     localStorage.getItem("access_token") ||
                     localStorage.getItem("token");
 
-                const response = await fetch(
-                    `${import.meta.env.VITE_BACKEND_URL}/api/medico/pacientes/${patient.id}/vacunas`,
+                const response = await fetchClinicalRecord(
+                    `${import.meta.env.VITE_BACKEND_URL}/api/medico/pacientes/${patient.id}/vacunas?visit_id=${clinicalVisitId}`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -193,7 +222,7 @@ export const HistorialClinico = () => {
         };
 
         cargarVacunas();
-    }, [patient?.id]);
+    }, [patient?.id, clinicalVisitId, fetchClinicalRecord]);
 
     // ==========================================================
     // CARGAR CIRUGÍAS
@@ -211,8 +240,8 @@ export const HistorialClinico = () => {
                     localStorage.getItem("access_token") ||
                     localStorage.getItem("token");
 
-                const response = await fetch(
-                    `${import.meta.env.VITE_BACKEND_URL}/api/medico/pacientes/${patient.id}/cirugias`,
+                const response = await fetchClinicalRecord(
+                    `${import.meta.env.VITE_BACKEND_URL}/api/medico/pacientes/${patient.id}/cirugias?visit_id=${clinicalVisitId}`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -239,7 +268,7 @@ export const HistorialClinico = () => {
         };
 
         cargarCirugias();
-    }, [patient?.id]);
+    }, [patient?.id, clinicalVisitId, fetchClinicalRecord]);
 
     // ==========================================================
     // CARGAR CONSULTAS
@@ -257,8 +286,8 @@ export const HistorialClinico = () => {
                     localStorage.getItem("access_token") ||
                     localStorage.getItem("token");
 
-                const response = await fetch(
-                    `${import.meta.env.VITE_BACKEND_URL}/api/medico/pacientes/${patient.id}/consultas`,
+                const response = await fetchClinicalRecord(
+                    `${import.meta.env.VITE_BACKEND_URL}/api/medico/pacientes/${patient.id}/consultas?visit_id=${clinicalVisitId}`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -285,7 +314,7 @@ export const HistorialClinico = () => {
         };
 
         cargarConsultas();
-    }, [patient?.id]);
+    }, [patient?.id, clinicalVisitId, fetchClinicalRecord]);
 
     // ==========================================================
     // CARGAR RECETAS
@@ -303,8 +332,8 @@ export const HistorialClinico = () => {
                     localStorage.getItem("access_token") ||
                     localStorage.getItem("token");
 
-                const response = await fetch(
-                    `${import.meta.env.VITE_BACKEND_URL}/api/medico/recetas`,
+                const response = await fetchClinicalRecord(
+                    `${import.meta.env.VITE_BACKEND_URL}/api/medico/recetas?patient_id=${patient.id}&visit_id=${clinicalVisitId}`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -337,7 +366,7 @@ export const HistorialClinico = () => {
         };
 
         cargarRecetas();
-    }, [patient?.id]);
+    }, [patient?.id, clinicalVisitId, fetchClinicalRecord]);
 
     // ==========================================================
     // DATOS DEL PACIENTE
@@ -372,16 +401,6 @@ export const HistorialClinico = () => {
         return edad;
     };
 
-    const formatearNacimiento = (fechaNacimiento) => {
-        if (!fechaNacimiento) {
-            return "No disponible";
-        }
-
-        return new Date(
-            fechaNacimiento
-        ).toLocaleDateString("es-ES");
-    };
-
     const paciente = {
         nombre: patient
             ? `${patient.nombre} ${patient.apellidos}`
@@ -398,10 +417,6 @@ export const HistorialClinico = () => {
         tipoSangre: patient?.grupo_sanguineo || "No disponible",
 
         hospital: patient?.hospital || "No disponible",
-
-        nacimiento: formatearNacimiento(
-            patient?.fecha_nacimiento
-        ),
     };
 
     // ==========================================================
@@ -627,32 +642,28 @@ export const HistorialClinico = () => {
 
                             </div>
 
-                            <div className="text-white-50 mt-2 text-decoration-underline link-underline-info">
-
-                                {paciente.edad} años
-
-                                <span className="mx-2">
-                                    •
+                            <div className="text-white-50 mt-2">
+                                <span>
+                                    Edad:{" "}
                                 </span>
-
-                                {paciente.sexo}
-
-                                <span className="mx-2">
-                                    •
+                                <span className="text-info">
+                                     {paciente.edad === "No disponible"
+                                        ? paciente.edad
+                                        : `${paciente.edad} años`}
                                 </span>
-
-                                Fecha de nacimiento:
-                                {" "}
-                                {paciente.nacimiento}
-
-                                <span className="mx-2">
-                                    •
+                                <span className="mx-2">•</span>
+                                <span>Sexo: </span>
+                                <span className="text-info">
+                                    {paciente.sexo}
                                 </span>
-
-
-                                {" "}
-                                {paciente.hospital}
-
+                                <span className="mx-2">•</span>
+                                <span >
+                                    Hospital al que pertenece:{" "}
+                                    
+                                </span>
+                                <span className="text-info">
+                                    {paciente.hospital}
+                                </span>
                             </div>
 
                         </div>
