@@ -15,6 +15,12 @@ export const DashboardAdmin = () => {
   const [hospital, setHospital] = useState(null);
   const [doctores, setDoctores] = useState([]);
   const [pacientes, setPacientes] = useState([]);
+  const [denunciasAcceso, setDenunciasAcceso] = useState([]);
+  const [mostrarTodasDenuncias, setMostrarTodasDenuncias] = useState(false);
+  const [ordenDenuncias, setOrdenDenuncias] = useState("newest");
+  const [estadosDenunciasBorrador, setEstadosDenunciasBorrador] = useState({});
+  const [resolucionesBorrador, setResolucionesBorrador] = useState({});
+  const [guardandoDenunciaId, setGuardandoDenunciaId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [errorModalDismissed, setErrorModalDismissed] = useState(false);
@@ -116,6 +122,7 @@ export const DashboardAdmin = () => {
         hospitalResponse,
         doctoresResponse,
         pacientesResponse,
+        denunciasResponse,
       ] = await Promise.all([
         fetch(`${API_URL}/api/admin/hospital`, {
           headers: getHeaders(),
@@ -128,6 +135,10 @@ export const DashboardAdmin = () => {
         fetch(`${API_URL}/api/admin/pacientes`, {
           headers: getHeaders(),
         }),
+
+        fetch(`${API_URL}/api/admin/notificaciones/denuncias-acceso`, {
+          headers: getHeaders(),
+        }),
       ]);
 
       const hospitalData =
@@ -138,6 +149,9 @@ export const DashboardAdmin = () => {
 
       const pacientesData =
         await obtenerRespuesta(pacientesResponse);
+
+      const denunciasData =
+        await obtenerRespuesta(denunciasResponse);
 
       if (!hospitalResponse.ok) {
         throw new Error(
@@ -160,9 +174,17 @@ export const DashboardAdmin = () => {
         );
       }
 
+      if (!denunciasResponse.ok) {
+        throw new Error(
+          denunciasData.error ||
+          "No se han podido cargar las denuncias de acceso"
+        );
+      }
+
       setHospital(hospitalData);
       setDoctores(doctoresData.doctores || []);
       setPacientes(pacientesData.pacientes || []);
+      setDenunciasAcceso(denunciasData.denuncias || []);
     } catch (err) {
       console.error(err);
 
@@ -726,6 +748,200 @@ export const DashboardAdmin = () => {
     }
   };
 
+  const guardarEstadoDenuncia = async (denuncia) => {
+    const newStatus =
+      estadosDenunciasBorrador[denuncia.id] || denuncia.estado;
+    const resolution =
+      resolucionesBorrador[denuncia.id] ?? denuncia.resolucion ?? "";
+    if (!newStatus || newStatus === "pending") {
+      setTipoMensaje("danger");
+      setMensaje("Selecciona el nuevo estado de la denuncia.");
+      return;
+    }
+    if (newStatus === "resolved" && !resolution.trim()) {
+      setTipoMensaje("danger");
+      setMensaje("Añade la información de resolución para cerrar la denuncia.");
+      return;
+    }
+
+    setGuardandoDenunciaId(denuncia.id);
+    setMensaje("");
+    try {
+      const response = await fetch(
+        `${API_URL}/api/admin/notificaciones/denuncias-acceso/${denuncia.id}`,
+        {
+          method: "PUT",
+          headers: getHeaders(),
+          body: JSON.stringify({
+            status: newStatus,
+            resolution: resolution.trim(),
+          }),
+        }
+      );
+      const data = await obtenerRespuesta(response);
+      if (!response.ok) {
+        throw new Error(
+          data.error || "No se pudo actualizar la denuncia."
+        );
+      }
+
+      setDenunciasAcceso((current) =>
+        current.map((item) =>
+          item.id === denuncia.id
+            ? {
+                ...item,
+                estado: data.denuncia.estado,
+                resolucion: data.denuncia.resolucion,
+              }
+            : item
+        )
+      );
+      setTipoMensaje("success");
+      setMensaje("El estado de la denuncia se ha actualizado.");
+    } catch (err) {
+      setTipoMensaje("danger");
+      setMensaje(
+        err.message || "No se pudo actualizar la denuncia."
+      );
+    } finally {
+      setGuardandoDenunciaId(null);
+    }
+  };
+
+  const denunciasOrdenadas = [...denunciasAcceso].sort((left, right) => {
+    const getTimestamp = (value) => {
+      if (!value) return 0;
+      const normalized = /(?:Z|[+-]\d{2}:\d{2})$/i.test(value)
+        ? value
+        : `${value}Z`;
+      return new Date(normalized).getTime();
+    };
+    const difference =
+      getTimestamp(left.fecha_denuncia) -
+      getTimestamp(right.fecha_denuncia);
+    return ordenDenuncias === "newest" ? -difference : difference;
+  });
+
+  const renderDenunciaAcceso = (denuncia) => {
+    const selectedStatus =
+      estadosDenunciasBorrador[denuncia.id] || denuncia.estado || "";
+    const resolution =
+      resolucionesBorrador[denuncia.id] ?? denuncia.resolucion ?? "";
+    const statusLabels = {
+      pending: "Pendiente",
+      in_review: "En proceso de estudio",
+      resolved: "Resuelta",
+    };
+
+    return (
+      <article
+        key={denuncia.id}
+        className="border border-danger border-opacity-50 rounded-3 p-3"
+      >
+        <div className="d-flex flex-column flex-md-row justify-content-between gap-1">
+          <h3 className="h6 fw-semibold mb-0">
+            {denuncia.paciente} denuncia un acceso
+          </h3>
+          <span className="small text-white-50">
+            {denuncia.fecha_denuncia
+              ? new Date(
+                  /(?:Z|[+-]\d{2}:\d{2})$/i.test(denuncia.fecha_denuncia)
+                    ? denuncia.fecha_denuncia
+                    : `${denuncia.fecha_denuncia}Z`
+                ).toLocaleString("es-ES", {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                })
+              : "Fecha no disponible"}
+          </span>
+        </div>
+        <p className="small text-white-50 mb-2 mt-2">
+          Profesional: {denuncia.medico} · Hospital: {denuncia.hospital}
+        </p>
+        <p className="mb-2">
+          <span className="text-info">Motivo indicado por el médico: </span>
+          {denuncia.motivo_acceso}
+        </p>
+        <p className="mb-3">
+          <span className="text-danger">Motivo de la denuncia: </span>
+          {denuncia.motivo_denuncia}
+        </p>
+        <div className="d-flex flex-column flex-md-row align-items-md-end gap-2">
+          <div className="flex-grow-1">
+            <label
+              className="form-label small mb-1"
+              htmlFor={`access-report-status-${denuncia.id}`}
+            >
+              Estado: {statusLabels[denuncia.estado] || "Pendiente"}
+            </label>
+            <select
+              id={`access-report-status-${denuncia.id}`}
+              className="form-select bg-dark text-white border-secondary"
+              value={selectedStatus}
+              onChange={(event) =>
+                setEstadosDenunciasBorrador((current) => ({
+                  ...current,
+                  [denuncia.id]: event.target.value,
+                }))
+              }
+            >
+              <option value="pending" disabled>
+                Pendiente
+              </option>
+              <option value="" disabled>
+                Selecciona un estado
+              </option>
+              <option value="in_review">En proceso de estudio</option>
+              <option value="resolved">Resuelta</option>
+            </select>
+          </div>
+          {selectedStatus === "resolved" && (
+            <div className="flex-grow-1">
+              <label
+                className="form-label small mb-1"
+                htmlFor={`access-report-resolution-${denuncia.id}`}
+              >
+                Información de resolución
+              </label>
+              <textarea
+                id={`access-report-resolution-${denuncia.id}`}
+                className="form-control bg-dark text-white border-secondary"
+                rows="2"
+                maxLength={2000}
+                value={resolution}
+                onChange={(event) =>
+                  setResolucionesBorrador((current) => ({
+                    ...current,
+                    [denuncia.id]: event.target.value,
+                  }))
+                }
+              />
+            </div>
+          )}
+          <button
+            type="button"
+            className="btn btn-outline-info rounded-pill flex-shrink-0"
+            onClick={() => guardarEstadoDenuncia(denuncia)}
+            disabled={
+              guardandoDenunciaId === denuncia.id ||
+              !selectedStatus ||
+              (selectedStatus === "resolved" && !resolution.trim())
+            }
+          >
+            {guardandoDenunciaId === denuncia.id
+              ? "Guardando..."
+              : "Guardar estado"}
+          </button>
+        </div>
+        {denuncia.resolucion && denuncia.estado === "resolved" && (
+          <p className="small text-success mb-0 mt-3">
+            Resolución registrada: {denuncia.resolucion}
+          </p>
+        )}
+      </article>
+    );
+  };
+
   // =========================================================
   // LOADING
   // =========================================================
@@ -963,6 +1179,124 @@ export const DashboardAdmin = () => {
             </div>
           </div>
         </div>
+
+        <section className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 mb-4">
+          <div className="d-flex justify-content-between align-items-center gap-3 mb-3">
+            <div>
+              <span className="text-info text-uppercase small fw-semibold">
+                Revisión de accesos
+              </span>
+              <h2 className="h4 fw-bold mb-0 mt-1">
+                Notificaciones de denuncias
+              </h2>
+            </div>
+            <span className="badge bg-danger">
+              {denunciasAcceso.length}
+            </span>
+          </div>
+
+          {denunciasAcceso.length === 0 ? (
+            <p className="text-white-50 mb-0">
+              No hay denuncias de acceso para pacientes de este hospital.
+            </p>
+          ) : (
+            <>
+              <div className="d-flex flex-column gap-3">
+                {renderDenunciaAcceso(denunciasOrdenadas[0])}
+                {denunciasAcceso.length > 1 && (
+                  <button
+                    type="button"
+                    className="btn btn-outline-info rounded-pill align-self-center"
+                    onClick={() => setMostrarTodasDenuncias(true)}
+                  >
+                    Ver más ({denunciasAcceso.length - 1})
+                  </button>
+                )}
+              </div>
+              {mostrarTodasDenuncias && (
+                <div
+                  className="modal d-block"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="admin-access-reports-title"
+                  onMouseDown={(event) => {
+                    if (event.target === event.currentTarget) {
+                      setMostrarTodasDenuncias(false);
+                    }
+                  }}
+                  style={{
+                    backgroundColor: "rgba(0, 0, 0, 0.7)",
+                    backdropFilter: "blur(5px)",
+                    zIndex: 1060,
+                  }}
+                >
+                  <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+                    <div className="modal-content bg-dark text-white border border-danger border-opacity-50 rounded-4 shadow-lg">
+                      <div className="modal-header border-bottom border-white border-opacity-10">
+                        <div>
+                          <h2
+                            id="admin-access-reports-title"
+                            className="modal-title fs-5 fw-bold text-danger"
+                          >
+                            Todas las notificaciones de denuncias
+                          </h2>
+                          <p className="small text-white-50 mb-0 mt-1">
+                            {denunciasAcceso.length} notificaciones
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          className="btn-close btn-close-white"
+                          aria-label="Cerrar"
+                          onClick={() => setMostrarTodasDenuncias(false)}
+                        />
+                      </div>
+                      <div className="modal-body">
+                        <div className="row justify-content-end mb-3">
+                          <div className="col-12 col-md-5">
+                            <label
+                              htmlFor="admin-report-sort"
+                              className="form-label small"
+                            >
+                              Ordenar por fecha
+                            </label>
+                            <select
+                              id="admin-report-sort"
+                              className="form-select bg-dark text-white border-secondary"
+                              value={ordenDenuncias}
+                              onChange={(event) =>
+                                setOrdenDenuncias(event.target.value)
+                              }
+                            >
+                              <option value="newest">
+                                Más recientes primero
+                              </option>
+                              <option value="oldest">
+                                Más antiguas primero
+                              </option>
+                            </select>
+                          </div>
+                        </div>
+                        <div className="d-flex flex-column gap-3">
+                          {denunciasOrdenadas.map(renderDenunciaAcceso)}
+                        </div>
+                      </div>
+                      <div className="modal-footer border-top border-white border-opacity-10">
+                        <button
+                          type="button"
+                          className="btn btn-outline-light rounded-pill"
+                          onClick={() => setMostrarTodasDenuncias(false)}
+                        >
+                          Cerrar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </section>
 
         {/* =================================================
             MÉDICOS

@@ -27,6 +27,9 @@ from api.models import (
     RegistrationKYC,
     DiditWebhookEvent,
     ColegiadoRegistration,
+    PatientPrivacySetting,
+    MedicalRecordAccessLog,
+    MedicalRecordAccessReport,
 )
 
 from api.extensions import limiter
@@ -48,6 +51,7 @@ import requests
 import random
 import re
 import resend
+from html import escape
 
 from werkzeug.security import (
     generate_password_hash,
@@ -73,6 +77,195 @@ DIDIT_REGISTRATION_WORKFLOW_ID = "8c17c2d0-98a9-49a2-a10d-c2d744d7852f"
 
 # Allow CORS requests to this API
 CORS(api)
+
+PRIVACY_ACCESS_SCOPES = {
+    "hospital",
+    "national",
+    "national-restricted",
+}
+SENSITIVE_PATIENT_RECORD_CATEGORIES = {
+    "diagnoses",
+    "prescriptions",
+    "allergies",
+}
+
+
+def patient_privacy_preferences(patient):
+    setting = db.session.get(PatientPrivacySetting, patient.id)
+    if setting:
+        return setting
+
+    return PatientPrivacySetting(
+        patient_id=patient.id,
+        access_scope="national",
+        restrict_sensitive_records=False,
+        notify_accesses=False,
+    )
+
+
+def doctor_patient_access_error(doctor, patient, category):
+    settings = patient_privacy_preferences(patient)
+    if settings.access_scope not in PRIVACY_ACCESS_SCOPES:
+        current_app.logger.error(
+            "Invalid privacy access scope for patient %s.",
+            patient.id,
+        )
+        return "La configuración de privacidad del paciente no es válida."
+
+    is_external_hospital = (
+        doctor.hospital_id is None
+        or doctor.hospital_id != patient.hospital_id
+    )
+    if not is_external_hospital:
+        return None
+
+    if settings.access_scope == "hospital":
+        return (
+            "El paciente ha limitado el acceso a profesionales de su hospital."
+        )
+
+    if (
+        category in SENSITIVE_PATIENT_RECORD_CATEGORIES
+        and (
+            settings.restrict_sensitive_records
+            or settings.access_scope == "national-restricted"
+        )
+    ):
+        return (
+            "El paciente ha restringido esta categoría de información "
+            "para profesionales de otros hospitales."
+        )
+
+    return None
+
+
+def doctor_patient_access_denial(doctor, patient, category):
+    error = doctor_patient_access_error(doctor, patient, category)
+    if error:
+        return jsonify({"error": error}), 403
+    return None
+
+
+def log_patient_record_access(doctor, patient, category):
+    settings = patient_privacy_preferences(patient)
+    visit_id = request.args.get("visit_id")
+    if visit_id:
+        try:
+            visit_id = str(uuid.UUID(visit_id))
+        except ValueError:
+            return jsonify({"error": "Identificador de visita no válido."}), 400
+
+    notification_marker = (
+        f"clinical-visit:{visit_id}; notification:sent"
+        if visit_id
+        else None
+    )
+    notification_already_sent = bool(
+        notification_marker
+        and db.session.execute(
+            db.select(MedicalRecordAccessLog.id).where(
+                MedicalRecordAccessLog.doctor_id == doctor.id,
+                MedicalRecordAccessLog.patient_id == patient.id,
+                MedicalRecordAccessLog.reason.contains(
+                    notification_marker
+                ),
+            ).limit(1)
+        ).scalar_one_or_none()
+    )
+    access_log = MedicalRecordAccessLog(
+        doctor_id=doctor.id,
+        patient_id=patient.id,
+        action=f"read:{category}",
+        reason=(
+            "Acceso a través del historial clínico del paciente."
+            if not visit_id
+            else (
+                "Acceso a través del historial clínico del paciente; "
+                f"clinical-visit:{visit_id}."
+            )
+        ),
+    )
+    db.session.add(access_log)
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception(
+            "Could not persist clinical record access for patient %s.",
+            patient.id,
+        )
+        return jsonify({
+            "error": "No se pudo registrar el acceso al historial clínico."
+        }), 500
+
+    if not settings.notify_accesses or notification_already_sent:
+        return None
+
+    email_api_key = os.getenv("RESEND_API_KEY")
+    if not email_api_key:
+        current_app.logger.error(
+            "Cannot notify patient %s about a clinical record access: "
+            "RESEND_API_KEY is not configured.",
+            patient.id,
+        )
+        return jsonify({
+            "error": (
+                "No se pudo enviar el aviso de acceso. "
+                "El servicio de correo no está configurado."
+            )
+        }), 503
+
+    resend.api_key = email_api_key
+    try:
+        accessed_at = datetime.utcnow()
+        doctor_name = escape(
+            f"{doctor.user.first_name} {doctor.user.last_name}"
+        )
+        resend.Emails.send({
+            "from": "Sistema Nacional de Salud <onboarding@resend.dev>",
+            "to": [patient.user.email],
+            "subject": "Aviso de acceso a tu historial clínico",
+            "html": (
+                "<p>Se ha consultado información de tu historial clínico "
+                "desde la aplicación.</p>"
+                f"<p>Profesional: {doctor_name}.</p>"
+                f"<p>Fecha y hora: {accessed_at.isoformat()} UTC.</p>"
+                "<p>Este aviso no incluye detalles clínicos.</p>"
+            ),
+        })
+    except Exception:
+        current_app.logger.exception(
+            "Could not send clinical access notification to patient %s.",
+            patient.id,
+        )
+        return jsonify({
+            "error": (
+                "No se pudo enviar el aviso de acceso; "
+                "no se ha devuelto el historial clínico."
+            )
+        }), 503
+
+    if notification_marker:
+        access_log.reason = (
+            "Acceso a través del historial clínico del paciente; "
+            f"{notification_marker}."
+        )
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            current_app.logger.exception(
+                "Could not mark access notification as sent for patient %s.",
+                patient.id,
+            )
+            return jsonify({
+                "error": (
+                    "Se envió el aviso, pero no se pudo registrar su estado. "
+                    "No se ha devuelto el historial clínico."
+                )
+            }), 500
+
+    return None
 
 
 def verify_turnstile_token(token):
@@ -1814,24 +2007,30 @@ def obtener_enfermedades_paciente(patient_id):
             "error": "Usuario no encontrado"
         }), 404
 
-    if user.role != UserRole.DOCTOR:
-        print(UserRole.DOCTOR == user.role)
+    if user.role != UserRole.DOCTOR or not user.doctor:
         return jsonify({
             "error": "No tienes permisos para consultar enfermedades"
         }), 403
 
-    patient_is_assigned = db.session.execute(
-        db.select(DoctorPatient).where(
-            DoctorPatient.doctor_id == user.doctor.id,
-            DoctorPatient.patient_id == patient_id,
-            DoctorPatient.is_active.is_(True)
-        )
-    ).scalar_one_or_none()
+    patient = db.session.get(Patient, patient_id)
+    if not patient:
+        return jsonify({"error": "Paciente no encontrado"}), 404
 
-    # if not patient_is_assigned:
-    #     return jsonify({
-    #         "error": "El paciente no está asignado a este médico"
-    #     }), 403
+    denial = doctor_patient_access_denial(
+        user.doctor,
+        patient,
+        "diagnoses",
+    )
+    if denial:
+        return denial
+
+    access_result = log_patient_record_access(
+        user.doctor,
+        patient,
+        "enfermedades",
+    )
+    if access_result:
+        return access_result
 
     diagnoses = db.session.execute(
         db.select(Diagnosis)
@@ -1894,9 +2093,26 @@ def obtener_consultas_paciente_medico(patient_id):
             "error": "No tienes permisos para consultar el historial"
         }), 403
 
-    # Obtener todas las consultas del paciente.
-    # No comprobamos que el paciente esté asignado
-    # al médico que realiza la petición.
+    patient = db.session.get(Patient, patient_id)
+    if not patient:
+        return jsonify({"error": "Paciente no encontrado"}), 404
+
+    denial = doctor_patient_access_denial(
+        user.doctor,
+        patient,
+        "consultations",
+    )
+    if denial:
+        return denial
+
+    access_result = log_patient_record_access(
+        user.doctor,
+        patient,
+        "consultas",
+    )
+    if access_result:
+        return access_result
+
     consultas = db.session.execute(
         db.select(Appointment)
         .where(
@@ -1937,10 +2153,22 @@ def crear_diagnostico_paciente(patient_id):
             "error": "Usuario no encontrado"
         }), 404
 
+    patient = db.session.get(Patient, patient_id)
+    if not patient:
+        return jsonify({"error": "Paciente no encontrado"}), 404
+
     if user.role != UserRole.DOCTOR or not user.doctor:
         return jsonify({
             "error": "No tienes permisos para crear diagnósticos"
         }), 403
+
+    denial = doctor_patient_access_denial(
+        user.doctor,
+        patient,
+        "diagnoses",
+    )
+    if denial:
+        return denial
 
     patient_is_assigned = db.session.execute(
         db.select(DoctorPatient).where(
@@ -2625,6 +2853,178 @@ def cancelar_consulta_paciente(appointment_id):
 # =========================================================
 
 @api.route(
+    "/paciente/perfil",
+    methods=["PUT"]
+)
+@jwt_required()
+def actualizar_perfil_paciente():
+    user_id = int(get_jwt_identity())
+    user = db.session.get(User, user_id)
+
+    if not user:
+        return jsonify({
+            "error": "Usuario no encontrado"
+        }), 404
+
+    if user.role != UserRole.PATIENT or not user.patient:
+        return jsonify({
+            "error": "No tienes permisos para actualizar este perfil"
+        }), 403
+
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({
+            "error": "Debes enviar un correo electrónico y un teléfono"
+        }), 400
+
+    raw_email = data.get("email")
+    raw_phone = data.get("telefono")
+
+    if not isinstance(raw_email, str) or not isinstance(raw_phone, str):
+        return jsonify({
+            "error": "Debes enviar un correo electrónico y un teléfono válidos"
+        }), 400
+
+    email = raw_email.strip().lower()
+    phone = normalize_e164_phone(raw_phone)
+
+    if (
+        len(email) > 120
+        or not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email)
+    ):
+        return jsonify({
+            "error": "Introduce un correo electrónico válido"
+        }), 400
+
+    if not phone:
+        return jsonify({
+            "error": (
+                "Introduce un teléfono internacional válido, "
+                "por ejemplo +34600000000"
+            )
+        }), 400
+
+    email_in_use = db.session.query(User.id).filter(
+        db.func.lower(User.email) == email,
+        User.id != user.id
+    ).first()
+    if email_in_use:
+        return jsonify({
+            "error": "El correo electrónico ya está en uso"
+        }), 409
+
+    phone_in_use = db.session.query(User.id).filter(
+        User.phone == phone,
+        User.id != user.id
+    ).first()
+    if phone_in_use:
+        return jsonify({
+            "error": "El número de teléfono ya está en uso"
+        }), 409
+
+    user.email = email
+    user.phone = phone
+
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({
+            "error": (
+                "No se pudieron guardar los datos porque el correo "
+                "electrónico ya está en uso"
+            )
+        }), 409
+
+    return jsonify({
+        "message": "Tus datos se actualizaron correctamente",
+        "email": user.email,
+        "telefono": user.phone
+    }), 200
+
+
+@api.route("/paciente/privacidad", methods=["PUT"])
+@jwt_required()
+def actualizar_privacidad_paciente():
+    user_id = int(get_jwt_identity())
+    user = db.session.get(User, user_id)
+
+    if not user or user.role != UserRole.PATIENT or not user.patient:
+        return jsonify({
+            "error": "No tienes permisos para actualizar esta configuración."
+        }), 403
+
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({
+            "error": "La configuración de privacidad no es válida."
+        }), 400
+
+    access_scope = data.get("access_scope")
+    restrict_sensitive_records = data.get("restrict_sensitive_records")
+    notify_accesses = data.get("notify_accesses")
+    if access_scope not in PRIVACY_ACCESS_SCOPES:
+        return jsonify({
+            "error": "El alcance de acceso seleccionado no es válido."
+        }), 400
+    if type(restrict_sensitive_records) is not bool:
+        return jsonify({
+            "error": "La preferencia de restricción debe ser booleana."
+        }), 400
+    if type(notify_accesses) is not bool:
+        return jsonify({
+            "error": "La preferencia de notificaciones debe ser booleana."
+        }), 400
+    if notify_accesses and not os.getenv("RESEND_API_KEY"):
+        current_app.logger.error(
+            "Patient %s tried to enable access notifications without "
+            "RESEND_API_KEY configured.",
+            user.patient.id,
+        )
+        return jsonify({
+            "error": (
+                "No se puede activar el aviso por correo porque el servicio "
+                "de correo no está configurado."
+            )
+        }), 503
+
+    setting = db.session.get(
+        PatientPrivacySetting,
+        user.patient.id,
+    )
+    if not setting:
+        setting = PatientPrivacySetting(patient_id=user.patient.id)
+        db.session.add(setting)
+
+    setting.access_scope = access_scope
+    setting.restrict_sensitive_records = restrict_sensitive_records
+    setting.notify_accesses = notify_accesses
+
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception(
+            "Could not save privacy settings for patient %s.",
+            user.patient.id,
+        )
+        return jsonify({
+            "error": "No se pudo guardar la configuración de privacidad."
+        }), 500
+
+    return jsonify({
+        "privacy_settings": {
+            "access_scope": setting.access_scope,
+            "restrict_sensitive_records": (
+                setting.restrict_sensitive_records
+            ),
+            "notify_accesses": setting.notify_accesses,
+            "updated_at": setting.updated_at.isoformat(),
+        }
+    }), 200
+
+
+@api.route(
     "/paciente/dashboard",
     methods=["GET"]
 )
@@ -2652,6 +3052,29 @@ def obtener_dashboard_paciente():
         }), 403
 
     patient = user.patient
+    privacy_settings = patient_privacy_preferences(patient)
+    access_notifications = db.session.execute(
+        db.select(MedicalRecordAccessLog)
+        .where(
+            MedicalRecordAccessLog.patient_id == patient.id,
+            MedicalRecordAccessLog.action
+            == "search:open_clinical_record",
+        )
+        .order_by(MedicalRecordAccessLog.accessed_at.desc())
+        .limit(50)
+    ).scalars().all()
+    access_reports = db.session.execute(
+        db.select(MedicalRecordAccessReport).where(
+            MedicalRecordAccessReport.patient_id == patient.id,
+            MedicalRecordAccessReport.access_log_id.in_(
+                [notification.id for notification in access_notifications]
+            ),
+        )
+    ).scalars().all() if access_notifications else []
+    reports_by_access_id = {
+        report.access_log_id: report
+        for report in access_reports
+    }
 
     doctor_relation = db.session.execute(
         db.select(DoctorPatient).where(
@@ -2751,6 +3174,56 @@ def obtener_dashboard_paciente():
             "grupo_sanguineo": patient.blood_type
         },
 
+        "preferencias_privacidad": {
+            "access_scope": privacy_settings.access_scope,
+            "restrict_sensitive_records": (
+                privacy_settings.restrict_sensitive_records
+            ),
+            "notify_accesses": privacy_settings.notify_accesses,
+            "updated_at": (
+                privacy_settings.updated_at.isoformat()
+                if privacy_settings.updated_at
+                else None
+            ),
+        },
+        "notificaciones": [
+            {
+                "id": notification.id,
+                "tipo": "acceso_historial",
+                "titulo": "Un médico ha consultado tu registro",
+                "motivo": notification.reason,
+                "medico": (
+                    f"{notification.doctor.user.first_name} "
+                    f"{notification.doctor.user.last_name}"
+                    if notification.doctor and notification.doctor.user
+                    else "Profesional sanitario"
+                ),
+                "hospital": (
+                    notification.doctor.hospital.name
+                    if notification.doctor
+                    and notification.doctor.hospital
+                    else "Hospital no disponible"
+                ),
+                "fecha": (
+                    notification.accessed_at.isoformat()
+                    if notification.accessed_at
+                    else None
+                ),
+                "denuncia": (
+                    {
+                        "id": report.id,
+                        "descripcion": report.description,
+                        "estado": report.status,
+                        "resolucion": report.resolution,
+                        "fecha": report.created_at.isoformat(),
+                    }
+                    if (report := reports_by_access_id.get(notification.id))
+                    else None
+                ),
+            }
+            for notification in access_notifications
+        ],
+
         "medico_asignado": assigned_doctor,
 
         "consultas": [
@@ -2796,9 +3269,157 @@ def obtener_dashboard_paciente():
     }), 200
 
 
+@api.route(
+    "/paciente/notificaciones/<int:access_log_id>/denunciar",
+    methods=["POST"]
+)
+@jwt_required()
+def denunciar_acceso_historial(access_log_id):
+    user_id = int(get_jwt_identity())
+    user = db.session.get(User, user_id)
+
+    if not user or user.role != UserRole.PATIENT or not user.patient:
+        return jsonify({
+            "error": "Solo el paciente puede denunciar este acceso."
+        }), 403
+
+    access_log = db.session.get(MedicalRecordAccessLog, access_log_id)
+    if (
+        not access_log
+        or access_log.patient_id != user.patient.id
+        or access_log.action != "search:open_clinical_record"
+    ):
+        return jsonify({"error": "Notificación no encontrada."}), 404
+
+    existing_report = db.session.execute(
+        db.select(MedicalRecordAccessReport).where(
+            MedicalRecordAccessReport.access_log_id == access_log.id,
+            MedicalRecordAccessReport.patient_id == user.patient.id,
+        )
+    ).scalar_one_or_none()
+    if existing_report:
+        return jsonify({
+            "error": "Ya has denunciado este acceso.",
+            "report_id": existing_report.id,
+            "status": existing_report.status,
+        }), 409
+
+    data = request.get_json(silent=True)
+    raw_description = (
+        data.get("description") if isinstance(data, dict) else None
+    )
+    description = (
+        raw_description.strip()
+        if isinstance(raw_description, str)
+        else ""
+    )
+    if len(description) < 10 or len(description) > 1000:
+        return jsonify({
+            "error": (
+                "Describe el motivo de la denuncia en 10 a 1000 caracteres."
+            )
+        }), 400
+
+    report = MedicalRecordAccessReport(
+        access_log_id=access_log.id,
+        patient_id=user.patient.id,
+        description=description,
+    )
+    db.session.add(report)
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({
+            "error": "Este acceso ya tiene una denuncia registrada."
+        }), 409
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception(
+            "Could not save report for clinical access log %s.",
+            access_log.id,
+        )
+        return jsonify({
+            "error": "No se pudo registrar la denuncia."
+        }), 500
+
+    return jsonify({
+        "message": "La denuncia se ha registrado para su revisión.",
+        "report": {
+            "id": report.id,
+            "status": report.status,
+            "description": report.description,
+            "created_at": report.created_at.isoformat(),
+        },
+    }), 201
+
+
 # =========================================================
 # BUSCAR PACIENTES
 # =========================================================
+
+@api.route(
+    "/medico/pacientes/<int:patient_id>/acceso-historial",
+    methods=["POST"]
+)
+@jwt_required()
+def registrar_apertura_historial_paciente(patient_id):
+    user_id = int(get_jwt_identity())
+    user = db.session.get(User, user_id)
+
+    if not user:
+        return jsonify({"error": "Usuario no encontrado"}), 404
+    if user.role != UserRole.DOCTOR or not user.doctor:
+        return jsonify({
+            "error": "Solo un médico puede abrir este registro."
+        }), 403
+
+    patient = db.session.get(Patient, patient_id)
+    if not patient:
+        return jsonify({"error": "Paciente no encontrado"}), 404
+
+    denial = doctor_patient_access_denial(
+        user.doctor,
+        patient,
+        "identity",
+    )
+    if denial:
+        return denial
+
+    data = request.get_json(silent=True)
+    raw_reason = data.get("reason") if isinstance(data, dict) else None
+    reason = raw_reason.strip() if isinstance(raw_reason, str) else ""
+    if len(reason) < 10 or len(reason) > 255:
+        return jsonify({
+            "error": (
+                "Explica el motivo de la consulta en 10 a 255 caracteres."
+            )
+        }), 400
+
+    access_log = MedicalRecordAccessLog(
+        doctor_id=user.doctor.id,
+        patient_id=patient.id,
+        action="search:open_clinical_record",
+        reason=reason,
+    )
+    db.session.add(access_log)
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception(
+            "Could not save the reason for opening patient %s's record.",
+            patient.id,
+        )
+        return jsonify({
+            "error": "No se pudo registrar el motivo de acceso."
+        }), 500
+
+    return jsonify({
+        "message": "Motivo de acceso registrado.",
+        "access_id": access_log.id,
+    }), 201
+
 
 @api.route(
     "/medico/pacientes/buscar",
@@ -2825,6 +3446,12 @@ def buscar_pacientes():
                 "No tienes permisos para buscar pacientes"
             )
         }), 403
+
+    doctor = user.doctor
+    if not doctor:
+        return jsonify({
+            "error": "Perfil médico no encontrado"
+        }), 404
 
     query = request.args.get(
         "q",
@@ -2869,6 +3496,16 @@ def buscar_pacientes():
             User.first_name
         )
     ).scalars().all()
+
+    pacientes = [
+        paciente
+        for paciente in pacientes
+        if not doctor_patient_access_error(
+            doctor,
+            paciente,
+            "identity",
+        )
+    ]
 
     return jsonify({
 
@@ -3108,6 +3745,13 @@ def obtener_mis_pacientes():
     for relacion in relaciones:
 
         patient = relacion.patient
+        if doctor_patient_access_error(
+            doctor,
+            patient,
+            "identity",
+        ):
+            continue
+
         patient_user = patient.user
 
         pacientes.append({
@@ -3385,6 +4029,14 @@ def crear_receta():
             "error": "Paciente no encontrado"
         }), 404
 
+    denial = doctor_patient_access_denial(
+        doctor,
+        patient,
+        "prescriptions",
+    )
+    if denial:
+        return denial
+
     medication = None
 
     # -----------------------------------------------------
@@ -3647,10 +4299,39 @@ def obtener_recetas():
             "error": "Perfil médico no encontrado"
         }), 404
 
+    raw_patient_id = request.args.get("patient_id")
+    try:
+        patient_id = int(raw_patient_id)
+    except (TypeError, ValueError):
+        return jsonify({
+            "error": "Debes indicar un paciente válido para consultar recetas."
+        }), 400
+
+    patient = db.session.get(Patient, patient_id)
+    if not patient:
+        return jsonify({"error": "Paciente no encontrado"}), 404
+
+    denial = doctor_patient_access_denial(
+        doctor,
+        patient,
+        "prescriptions",
+    )
+    if denial:
+        return denial
+
+    access_result = log_patient_record_access(
+        doctor,
+        patient,
+        "recetas",
+    )
+    if access_result:
+        return access_result
+
     prescriptions = db.session.execute(
         db.select(Prescription)
         .where(
-            Prescription.doctor_id == doctor.id
+            Prescription.doctor_id == doctor.id,
+            Prescription.patient_id == patient.id,
         )
         .order_by(
             Prescription.issued_at.desc()
@@ -3750,6 +4431,22 @@ def obtener_receta(prescription_id):
         return jsonify({
             "error": "Receta no encontrada"
         }), 404
+
+    denial = doctor_patient_access_denial(
+        doctor,
+        prescription.patient,
+        "prescriptions",
+    )
+    if denial:
+        return denial
+
+    access_result = log_patient_record_access(
+        doctor,
+        prescription.patient,
+        "receta",
+    )
+    if access_result:
+        return access_result
 
     medicamentos = []
 
@@ -4276,6 +4973,22 @@ def obtener_alergias_paciente(patient_id):
             "error": "Paciente no encontrado."
         }), 404
 
+    denial = doctor_patient_access_denial(
+        doctor,
+        patient,
+        "allergies",
+    )
+    if denial:
+        return denial
+
+    access_result = log_patient_record_access(
+        doctor,
+        patient,
+        "alergias",
+    )
+    if access_result:
+        return access_result
+
     alergias = db.session.execute(
         db.select(Allergy)
         .where(
@@ -4352,6 +5065,14 @@ def crear_alergia_paciente(patient_id):
         return jsonify({
             "error": "Paciente no encontrado."
         }), 404
+
+    denial = doctor_patient_access_denial(
+        doctor,
+        patient,
+        "allergies",
+    )
+    if denial:
+        return denial
 
     data = request.get_json()
 
@@ -4458,6 +5179,22 @@ def obtener_vacunas_paciente(patient_id):
         return jsonify({
             "error": "Paciente no encontrado."
         }), 404
+
+    denial = doctor_patient_access_denial(
+        doctor,
+        patient,
+        "vaccinations",
+    )
+    if denial:
+        return denial
+
+    access_result = log_patient_record_access(
+        doctor,
+        patient,
+        "vacunas",
+    )
+    if access_result:
+        return access_result
 
     vacunas = db.session.execute(
         db.select(Vaccination)
@@ -4664,6 +5401,22 @@ def obtener_cirugias_paciente(patient_id):
         return jsonify({
             "error": "Paciente no encontrado."
         }), 404
+
+    denial = doctor_patient_access_denial(
+        doctor,
+        patient,
+        "surgeries",
+    )
+    if denial:
+        return denial
+
+    access_result = log_patient_record_access(
+        doctor,
+        patient,
+        "cirugias",
+    )
+    if access_result:
+        return access_result
 
     cirugias = db.session.execute(
         db.select(Surgery)
@@ -4913,6 +5666,126 @@ def admin_hospital():
         "name": hospital.name,
         "city": hospital.city,
         "address": hospital.address
+    }), 200
+
+
+@api.route("/admin/notificaciones/denuncias-acceso", methods=["GET"])
+@jwt_required()
+def admin_denuncias_acceso():
+    user, error, status = get_admin_actual()
+    if error:
+        return error, status
+
+    reports = db.session.execute(
+        db.select(MedicalRecordAccessReport)
+        .join(
+            Patient,
+            MedicalRecordAccessReport.patient_id == Patient.id,
+        )
+        .where(Patient.hospital_id == user.hospital_id)
+        .order_by(MedicalRecordAccessReport.created_at.desc())
+    ).scalars().all()
+
+    return jsonify({
+        "denuncias": [
+            {
+                "id": report.id,
+                "access_log_id": report.access_log_id,
+                "paciente": (
+                    f"{report.access_log.patient.user.first_name} "
+                    f"{report.access_log.patient.user.last_name}"
+                ),
+                "medico": (
+                    f"{report.access_log.doctor.user.first_name} "
+                    f"{report.access_log.doctor.user.last_name}"
+                ),
+                "hospital": report.access_log.patient.hospital.name,
+                "motivo_acceso": report.access_log.reason,
+                "motivo_denuncia": report.description,
+                "estado": report.status,
+                "resolucion": report.resolution,
+                "fecha_acceso": (
+                    report.access_log.accessed_at.isoformat()
+                    if report.access_log.accessed_at
+                    else None
+                ),
+                "fecha_denuncia": (
+                    report.created_at.isoformat()
+                    if report.created_at
+                    else None
+                ),
+            }
+            for report in reports
+        ],
+        "total": len(reports),
+    }), 200
+
+
+@api.route(
+    "/admin/notificaciones/denuncias-acceso/<int:report_id>",
+    methods=["PUT"]
+)
+@jwt_required()
+def actualizar_estado_denuncia_acceso(report_id):
+    user, error, status = get_admin_actual()
+    if error:
+        return error, status
+
+    report = db.session.execute(
+        db.select(MedicalRecordAccessReport)
+        .join(
+            Patient,
+            MedicalRecordAccessReport.patient_id == Patient.id,
+        )
+        .where(
+            MedicalRecordAccessReport.id == report_id,
+            Patient.hospital_id == user.hospital_id,
+        )
+    ).scalar_one_or_none()
+    if not report:
+        return jsonify({"error": "Denuncia no encontrada."}), 404
+
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "La actualización no es válida."}), 400
+
+    new_status = data.get("status")
+    if new_status not in {"in_review", "resolved"}:
+        return jsonify({
+            "error": "El estado debe ser en revisión o resuelta."
+        }), 400
+
+    raw_resolution = data.get("resolution")
+    resolution = raw_resolution.strip() if isinstance(raw_resolution, str) else ""
+    if new_status == "resolved" and not resolution:
+        return jsonify({
+            "error": "Indica la información de resolución antes de cerrar."
+        }), 400
+    if len(resolution) > 2000:
+        return jsonify({
+            "error": "La información de resolución no puede superar 2000 caracteres."
+        }), 400
+
+    report.status = new_status
+    report.resolution = resolution or None
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception(
+            "Could not update access report %s.",
+            report_id,
+        )
+        return jsonify({
+            "error": "No se pudo actualizar el estado de la denuncia."
+        }), 500
+
+    return jsonify({
+        "denuncia": {
+            "id": report.id,
+            "estado": report.status,
+            "resolucion": report.resolution,
+        }
     }), 200
 
 

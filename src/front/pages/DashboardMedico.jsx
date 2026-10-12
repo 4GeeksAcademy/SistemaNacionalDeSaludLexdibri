@@ -1,12 +1,46 @@
 import React, { useEffect, useState } from "react";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 import rigoImageUrl from "../assets/img/rigo-baby.jpg";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Icon } from "../components/Icon";
 import { FeedbackModal } from "../components/FeedbackModal";
 
+const formatearEdad = (fechaNacimiento) => {
+    if (!fechaNacimiento) {
+        return "No disponible";
+    }
+
+    const [year, month, day] = fechaNacimiento
+        .split("T")[0]
+        .split("-")
+        .map(Number);
+    const nacimiento = new Date(year, month - 1, day);
+
+    if (
+        Number.isNaN(nacimiento.getTime()) ||
+        nacimiento.getFullYear() !== year ||
+        nacimiento.getMonth() !== month - 1 ||
+        nacimiento.getDate() !== day
+    ) {
+        return "No disponible";
+    }
+
+    const hoy = new Date();
+    let edad = hoy.getFullYear() - year;
+
+    if (
+        hoy.getMonth() < month - 1 ||
+        (hoy.getMonth() === month - 1 && hoy.getDate() < day)
+    ) {
+        edad -= 1;
+    }
+
+    return `${edad} ${edad === 1 ? "año" : "años"}`;
+};
+
 export const DashboardMedico = () => {
     const { store } = useGlobalReducer();
+    const navigate = useNavigate();
 
     // =====================================================
     // PACIENTES
@@ -41,6 +75,10 @@ export const DashboardMedico = () => {
     const [surgeryPatientError, setSurgeryPatientError] = useState("");
     const [surgerySearchDone, setSurgerySearchDone] = useState(false);
     const [successMessage, setSuccessMessage] = useState("");
+    const [patientToOpen, setPatientToOpen] = useState(null);
+    const [recordAccessReason, setRecordAccessReason] = useState("");
+    const [savingRecordAccess, setSavingRecordAccess] = useState(false);
+    const [recordAccessError, setRecordAccessError] = useState("");
 
     // =====================================================
     // TOKEN
@@ -328,6 +366,54 @@ export const DashboardMedico = () => {
             setSearchResults([]);
         } finally {
             setLoadingPatients(false);
+        }
+    };
+
+    const openPatientRecord = async (event) => {
+        event.preventDefault();
+        if (!patientToOpen || recordAccessReason.trim().length < 10) {
+            setRecordAccessError(
+                "Explica el motivo de la consulta en al menos 10 caracteres."
+            );
+            return;
+        }
+
+        setSavingRecordAccess(true);
+        setRecordAccessError("");
+        try {
+            const response = await fetch(
+                `${BACKEND_URL}/api/medico/pacientes/${patientToOpen.id}/acceso-historial`,
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${getToken()}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        reason: recordAccessReason.trim(),
+                    }),
+                }
+            );
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(
+                    data.error || "No se pudo registrar el motivo de acceso."
+                );
+            }
+
+            navigate("/historial/clinico", {
+                state: {
+                    patient: patientToOpen,
+                    openedFromPatientSearch: true,
+                    accessId: data.access_id,
+                },
+            });
+        } catch (error) {
+            setRecordAccessError(
+                error.message || "No se pudo conectar con el servidor."
+            );
+        } finally {
+            setSavingRecordAccess(false);
         }
     };
 
@@ -716,12 +802,6 @@ export const DashboardMedico = () => {
                                                             {patient.nombre}{" "}
                                                             {patient.apellidos}
                                                         </h3>
-
-                                                        <span className="text-white-50 small">
-                                                            Paciente #
-                                                            {patient.id}
-                                                        </span>
-
                                                     </div>
 
                                                 </div>
@@ -729,19 +809,6 @@ export const DashboardMedico = () => {
                                                 <hr className="border-secondary opacity-25" />
 
                                                 <div className="row g-3">
-
-                                                    <div className="col-12 col-md-6">
-
-                                                        <span className="text-info small d-block">
-                                                            DNI
-                                                        </span>
-
-                                                        <span className="text-white-50 text-break">
-                                                            {patient.dni ||
-                                                                "No disponible"}
-                                                        </span>
-
-                                                    </div>
 
                                                     <div className="col-12 col-md-6">
 
@@ -759,43 +826,13 @@ export const DashboardMedico = () => {
                                                     <div className="col-12 col-md-6">
 
                                                         <span className="text-info small d-block">
-                                                            Email
-                                                        </span>
-
-                                                        <span className="text-white-50 text-break">
-                                                            {patient.email ||
-                                                                "No disponible"}
-                                                        </span>
-
-                                                    </div>
-
-                                                    <div className="col-12 col-md-6">
-
-                                                        <span className="text-info small d-block">
-                                                            Teléfono
+                                                            Edad
                                                         </span>
 
                                                         <span className="text-white-50">
-                                                            {patient.telefono ||
-                                                                "No disponible"}
-                                                        </span>
-
-                                                    </div>
-
-                                                    <div className="col-12 col-md-6">
-
-                                                        <span className="text-info small d-block">
-                                                            Fecha de nacimiento
-                                                        </span>
-
-                                                        <span className="text-white-50">
-                                                            {patient.fecha_nacimiento
-                                                                ? new Date(
-                                                                    patient.fecha_nacimiento
-                                                                ).toLocaleDateString(
-                                                                    "es-ES"
-                                                                )
-                                                                : "No disponible"}
+                                                            {formatearEdad(
+                                                                patient.fecha_nacimiento
+                                                            )}
                                                         </span>
 
                                                     </div>
@@ -816,7 +853,7 @@ export const DashboardMedico = () => {
                                                     <div className="col-12 col-md-6">
 
                                                         <span className="text-info small d-block">
-                                                            Grupo sanguíneo
+                                                            Tipo de sangre
                                                         </span>
 
                                                         <span className="text-white-50">
@@ -830,13 +867,17 @@ export const DashboardMedico = () => {
 
                                                 <div className="mt-4 d-flex flex-wrap gap-2">
 
-                                                    <Link
-                                                        to="/historial/clinico"
-                                                        state={{ patient }}
+                                                    <button
+                                                        type="button"
                                                         className="btn btn-outline-info rounded-pill btn-sm"
+                                                        onClick={() => {
+                                                            setPatientToOpen(patient);
+                                                            setRecordAccessReason("");
+                                                            setRecordAccessError("");
+                                                        }}
                                                     >
                                                         Ver historial
-                                                    </Link>
+                                                    </button>
 
                                                 </div>
 
@@ -980,8 +1021,8 @@ export const DashboardMedico = () => {
                                                                 Paciente #
                                                                 {patient.id}
 
-                                                                {patient.dni &&
-                                                                    ` · DNI: ${patient.dni}`}
+                                                                {patient.cip &&
+                                                                    ` · CIP: ${patient.cip}`}
                                                             </span>
 
                                                         </div>
@@ -1494,6 +1535,117 @@ export const DashboardMedico = () => {
                 </div>
 
             </div>
+            {patientToOpen && (
+                <div
+                    className="modal d-block"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="record-access-title"
+                    onMouseDown={(event) => {
+                        if (
+                            event.target === event.currentTarget &&
+                            !savingRecordAccess
+                        ) {
+                            setPatientToOpen(null);
+                        }
+                    }}
+                    style={{
+                        backgroundColor: "rgba(0, 0, 0, 0.7)",
+                        backdropFilter: "blur(5px)",
+                        zIndex: 1060,
+                    }}
+                >
+                    <div className="modal-dialog modal-dialog-centered">
+                        <form
+                            className="modal-content bg-dark text-white border border-info border-opacity-50 rounded-4 shadow-lg"
+                            onSubmit={openPatientRecord}
+                        >
+                            <div className="modal-header border-bottom border-white border-opacity-10">
+                                <div>
+                                    <h2
+                                        id="record-access-title"
+                                        className="modal-title fs-5 fw-bold text-info"
+                                    >
+                                        Motivo de acceso al registro
+                                    </h2>
+                                    <p className="small text-white-50 mb-0 mt-1">
+                                        Paciente: {patientToOpen.nombre}{" "}
+                                        {patientToOpen.apellidos}
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    className="btn-close btn-close-white"
+                                    aria-label="Cerrar"
+                                    onClick={() => setPatientToOpen(null)}
+                                    disabled={savingRecordAccess}
+                                />
+                            </div>
+                            <div className="modal-body">
+                                <label
+                                    htmlFor="clinical-record-access-reason"
+                                    className="form-label"
+                                >
+                                    Indica por qué necesitas consultar este
+                                    registro. El motivo quedará guardado y será
+                                    visible para el paciente.
+                                </label>
+                                <textarea
+                                    id="clinical-record-access-reason"
+                                    className="form-control bg-dark text-white border-secondary"
+                                    rows="4"
+                                    minLength={10}
+                                    maxLength={255}
+                                    value={recordAccessReason}
+                                    onChange={(event) =>
+                                        setRecordAccessReason(event.target.value)
+                                    }
+                                    required
+                                    autoFocus
+                                />
+                                <div className="d-flex justify-content-between mt-1">
+                                    <span className="small text-white-50">
+                                        Entre 10 y 255 caracteres.
+                                    </span>
+                                    <span className="small text-white-50">
+                                        {recordAccessReason.length}/255
+                                    </span>
+                                </div>
+                                {recordAccessError && (
+                                    <div
+                                        className="alert alert-danger mt-3 mb-0"
+                                        role="alert"
+                                    >
+                                        {recordAccessError}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="modal-footer border-top border-white border-opacity-10">
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-light rounded-pill"
+                                    onClick={() => setPatientToOpen(null)}
+                                    disabled={savingRecordAccess}
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="btn btn-info rounded-pill"
+                                    disabled={
+                                        savingRecordAccess ||
+                                        recordAccessReason.trim().length < 10
+                                    }
+                                >
+                                    {savingRecordAccess
+                                        ? "Registrando..."
+                                        : "Registrar motivo y abrir"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
             <FeedbackModal
                 message={
                     successMessage ||

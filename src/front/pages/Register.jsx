@@ -13,6 +13,7 @@ import {
 } from "../services/authServices";
 import { FormErrorModal } from "../components/FormErrorModal";
 import { Icon } from "../components/Icon";
+import { PrivacyRegistrationChecklist } from "../components/PrivacyRegistrationChecklist";
 
 const EMPTY_FORM = {
     dni: "",
@@ -30,6 +31,8 @@ export const Register = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [kycConsent, setKycConsent] = useState(false);
+    const [privacyDecisionsConfirmed, setPrivacyDecisionsConfirmed] =
+        useState(false);
 
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
@@ -74,7 +77,7 @@ export const Register = () => {
                     }
                 });
             },
-            { threshold: 0.2 }
+            { threshold: 0 }
         );
 
         elements.forEach((element) => observer.observe(element));
@@ -465,6 +468,13 @@ export const Register = () => {
         if (!kycConsent) {
             setError(
                 "Debes aceptar la verificación de identidad con Didit para continuar."
+            );
+            return;
+        }
+
+        if (!privacyDecisionsConfirmed) {
+            setError(
+                "Revisa y confirma el checklist de privacidad de la propuesta."
             );
             return;
         }
@@ -1096,6 +1106,12 @@ export const Register = () => {
                                         )}
 
                                     </div>
+
+                                    <PrivacyRegistrationChecklist
+                                        onConfirmationChange={
+                                            setPrivacyDecisionsConfirmed
+                                        }
+                                    />
 
                                     <div className="col-12">
                                         <div className="form-check">

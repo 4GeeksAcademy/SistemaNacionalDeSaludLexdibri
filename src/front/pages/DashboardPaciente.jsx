@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 import rigoImageUrl from "../assets/img/rigo-baby.jpg";
 import { FeedbackModal } from "../components/FeedbackModal";
+import { Icon } from "../components/Icon";
 
 const getToken = () => (
   localStorage.getItem("access_token") || localStorage.getItem("token")
@@ -17,7 +18,9 @@ const formatDate = (value) => value
   : "Fecha no disponible";
 
 const formatDateTime = (value) => value
-  ? new Date(value).toLocaleString("es-ES", {
+  ? new Date(
+      /(?:Z|[+-]\d{2}:\d{2})$/i.test(value) ? value : `${value}Z`
+    ).toLocaleString("es-ES", {
       dateStyle: "medium",
       timeStyle: "short"
     })
@@ -39,18 +42,31 @@ export const DashboardPaciente = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [mostrarRecetas, setMostrarRecetas] = useState(false);
-  const [mostrarDiagnosticos, setMostrarDiagnosticos] = useState(false);
-
-  /*
-   * Nuevos estados para mostrar el historial completo.
-   */
   const [mostrarTodasConsultas, setMostrarTodasConsultas] = useState(false);
   const [mostrarTodasRecetas, setMostrarTodasRecetas] = useState(false);
   const [mostrarTodosDiagnosticos, setMostrarTodosDiagnosticos] = useState(false);
 
   const [cancelandoConsultaId, setCancelandoConsultaId] = useState(null);
   const [feedback, setFeedback] = useState({ message: "", type: "success" });
+  const [editandoDatos, setEditandoDatos] = useState(false);
+  const [emailEditado, setEmailEditado] = useState("");
+  const [telefonoEditado, setTelefonoEditado] = useState("");
+  const [guardandoDatos, setGuardandoDatos] = useState(false);
+  const [errorDatos, setErrorDatos] = useState("");
+  const [exitoDatos, setExitoDatos] = useState("");
+  const [mostrarPrivacidad, setMostrarPrivacidad] = useState(false);
+  const [guardandoPrivacidad, setGuardandoPrivacidad] = useState(false);
+  const [errorPrivacidad, setErrorPrivacidad] = useState("");
+  const [exitoPrivacidad, setExitoPrivacidad] = useState("");
+  const [alcancePrivacidad, setAlcancePrivacidad] = useState("national");
+  const [restringirInformesSensibles, setRestringirInformesSensibles] =
+    useState(false);
+  const [notificarAccesos, setNotificarAccesos] = useState(false);
+  const [notificationToReport, setNotificationToReport] = useState(null);
+  const [reportDescription, setReportDescription] = useState("");
+  const [sendingReport, setSendingReport] = useState(false);
+  const [reportError, setReportError] = useState("");
+  const [visibleNotificationsCount, setVisibleNotificationsCount] = useState(4);
 
   useEffect(() => {
     let cancelled = false;
@@ -77,6 +93,12 @@ export const DashboardPaciente = () => {
 
         if (!cancelled) {
           setDashboard(data);
+          const privacy = data.preferencias_privacidad || {};
+          setAlcancePrivacidad(privacy.access_scope || "national");
+          setRestringirInformesSensibles(
+            privacy.restrict_sensitive_records === true
+          );
+          setNotificarAccesos(privacy.notify_accesses === true);
         }
       } catch (loadError) {
         if (!cancelled) {
@@ -139,6 +161,7 @@ export const DashboardPaciente = () => {
   const consultations = dashboard.consultas || [];
   const diagnoses = dashboard.diagnosticos || [];
   const prescriptions = dashboard.recetas || [];
+  const notifications = dashboard.notificaciones || [];
 
   const activePrescriptions = prescriptions.filter(
     (item) => item.status === "active"
@@ -150,6 +173,152 @@ export const DashboardPaciente = () => {
 
   const profileImage =
     store.user?.profile_image || rigoImageUrl;
+
+  const iniciarEdicionDatos = () => {
+    setEmailEditado(patient.email || "");
+    setTelefonoEditado(patient.telefono || "");
+    setErrorDatos("");
+    setExitoDatos("");
+    setEditandoDatos(true);
+  };
+
+  const guardarDatos = async (event) => {
+    event.preventDefault();
+    setGuardandoDatos(true);
+    setErrorDatos("");
+    setExitoDatos("");
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/paciente/perfil`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${getToken()}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            email: emailEditado,
+            telefono: telefonoEditado
+          })
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || "No se pudieron actualizar tus datos."
+        );
+      }
+
+      setDashboard((current) => ({
+        ...current,
+        paciente: {
+          ...current.paciente,
+          email: data.email,
+          telefono: data.telefono
+        }
+      }));
+      setEditandoDatos(false);
+      setExitoDatos(data.message);
+    } catch (saveError) {
+      setErrorDatos(saveError.message);
+    } finally {
+      setGuardandoDatos(false);
+    }
+  };
+
+  const guardarPrivacidad = async () => {
+    setGuardandoPrivacidad(true);
+    setErrorPrivacidad("");
+    setExitoPrivacidad("");
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/paciente/privacidad`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${getToken()}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            access_scope: alcancePrivacidad,
+            restrict_sensitive_records: restringirInformesSensibles,
+            notify_accesses: notificarAccesos
+          })
+        }
+      );
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || "No se pudo guardar tu configuración de privacidad."
+        );
+      }
+
+      setDashboard((current) => ({
+        ...current,
+        preferencias_privacidad: data.privacy_settings
+      }));
+      setExitoPrivacidad("Tu configuración de privacidad se ha guardado.");
+    } catch (saveError) {
+      setErrorPrivacidad(saveError.message);
+    } finally {
+      setGuardandoPrivacidad(false);
+    }
+  };
+
+  const denunciarAcceso = async (event) => {
+    event.preventDefault();
+    if (!notificationToReport) return;
+
+    setSendingReport(true);
+    setReportError("");
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/paciente/notificaciones/${notificationToReport.id}/denunciar`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${getToken()}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            description: reportDescription.trim()
+          })
+        }
+      );
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || "No se pudo registrar la denuncia."
+        );
+      }
+
+      setDashboard((current) => ({
+        ...current,
+        notificaciones: current.notificaciones.map((notification) =>
+          notification.id === notificationToReport.id
+            ? { ...notification, denuncia: {
+                id: data.report.id,
+                descripcion: data.report.description,
+                estado: data.report.status,
+                fecha: data.report.created_at
+              } }
+            : notification
+        )
+      }));
+      setNotificationToReport(null);
+      setReportDescription("");
+    } catch (submitError) {
+      setReportError(submitError.message);
+    } finally {
+      setSendingReport(false);
+    }
+  };
 
   /*
    * ==========================================================
@@ -298,7 +467,7 @@ export const DashboardPaciente = () => {
    * ==========================================================
    *
    * Por defecto se muestran solamente los 4 más recientes.
-   * Si el usuario pulsa "Ver más", se muestran todos.
+   * Si el usuario pulsa "Ver todos los registros", se muestran todos.
    */
 
   const visibleConsultations = mostrarTodasConsultas
@@ -320,29 +489,45 @@ export const DashboardPaciente = () => {
         {/* CABECERA */}
 
         <div className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 mb-4">
-          <div className="d-flex align-items-center gap-3">
+          <div className="d-flex align-items-start justify-content-between gap-3 flex-wrap">
 
-            <img
-              src={profileImage}
-              alt="Foto de perfil"
-              className="rounded-circle"
-              width="64"
-              height="64"
-            />
+            <div className="d-flex align-items-center gap-3">
+              <img
+                src={profileImage}
+                alt="Foto de perfil"
+                className="rounded-circle"
+                width="64"
+                height="64"
+              />
 
-            <div>
-              <span className="text-info small text-uppercase">
-                Área personal
-              </span>
+              <div>
+                <span className="text-info small text-uppercase">
+                  Área personal
+                </span>
 
-              <h1 className="h3 fw-bold mb-1">
-                Hola, {patient.nombre || "Paciente"}
-              </h1>
+                <h1 className="h3 fw-bold mb-1">
+                  Hola, {patient.nombre || "Paciente"}
+                </h1>
 
-              <p className="text-white-50 mb-0">
-                Información sanitaria actualizada desde tu cuenta.
-              </p>
+                <p className="text-white-50 mb-0">
+                  Información sanitaria actualizada desde tu cuenta.
+                </p>
+              </div>
             </div>
+
+            <button
+              type="button"
+              className="btn btn-outline-info rounded-pill"
+              onClick={() => {
+                setErrorPrivacidad("");
+                setExitoPrivacidad("");
+                setMostrarPrivacidad(true);
+              }}
+              aria-haspopup="dialog"
+            >
+              <Icon name="Settings" className="me-2" />
+              Configuración de privacidad
+            </button>
 
           </div>
         </div>
@@ -379,6 +564,100 @@ export const DashboardPaciente = () => {
           ))}
 
         </div>
+
+        <section className="bg-white bg-opacity-10 border border-secondary border-opacity-50 rounded-4 p-4 mb-4">
+          <div className="d-flex justify-content-between align-items-center gap-3 mb-3">
+            <div>
+              <span className="text-info text-uppercase small fw-semibold">
+                Avisos de acceso
+              </span>
+              <h2 className="h4 fw-bold mb-0 mt-1">Notificaciones</h2>
+            </div>
+            <span className="badge bg-info bg-opacity-25 text-info border border-info">
+              {notifications.length}
+            </span>
+          </div>
+
+          {notifications.length === 0 ? (
+            <p className="text-white-50 mb-0">
+              Aquí aparecerán los motivos que indiquen los médicos al abrir tu
+              registro desde la búsqueda de pacientes.
+            </p>
+          ) : (
+            <div className="d-flex flex-column gap-3">
+              {notifications.slice(0, visibleNotificationsCount).map((notification) => (
+                <article
+                  className="border border-secondary border-opacity-50 rounded-3 p-3"
+                  key={notification.id}
+                >
+                  <div className="d-flex flex-column flex-md-row justify-content-between gap-1">
+                    <h3 className="h6 fw-semibold mb-0">
+                      {notification.titulo}
+                    </h3>
+                    <span className="small text-white-50">
+                      {formatDateTime(notification.fecha)}
+                    </span>
+                  </div>
+                  <p className="small text-white-50 mb-1 mt-2">
+                    Profesional: {notification.medico} (
+                    {notification.hospital || "Hospital no disponible"})
+                  </p>
+                  <p className="mb-0">
+                    <span className="text-info">Motivo indicado: </span>
+                    {notification.motivo}
+                  </p>
+                  {notification.denuncia ? (
+                    <div className="small mt-3">
+                      <p className="text-danger  mb-1">
+                        Denuncia enviada: 
+                      </p>
+                      <p className="text-light">Estado:{" "}
+                        {{
+                          pending: "Pendiente de revisión",
+                          in_review: "En proceso de estudio",
+                          resolved: "Resuelta",
+                        }[notification.denuncia.estado] ||
+                          notification.denuncia.estado}</p>
+                      <p className="text-white-50 mb-0">
+                        Tu explicación: {notification.denuncia.descripcion}
+                      </p>
+                      {notification.denuncia.resolucion && (
+                        <p className="text-white mb-0 mt-2">
+                          Resolución: {notification.denuncia.resolucion}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn btn-outline-danger rounded-pill btn-sm mt-3"
+                      onClick={() => {
+                        setNotificationToReport(notification);
+                        setReportDescription("");
+                        setReportError("");
+                      }}
+                    >
+                      Denunciar este acceso
+                    </button>
+                  )}
+                </article>
+              ))}
+              {notifications.length > visibleNotificationsCount && (
+                <button
+                  type="button"
+                  className="btn btn-outline-info rounded-pill align-self-center"
+                  onClick={() =>
+                    setVisibleNotificationsCount((count) =>
+                      count + 4
+                    )
+                  }
+                >
+                  Ver más
+                </button>
+              )}
+            </div>
+          )}
+        </section>
 
         <div className="row g-4">
 
@@ -582,7 +861,7 @@ export const DashboardPaciente = () => {
                   >
                     {mostrarTodasConsultas
                       ? "Ver menos"
-                      : "Ver más"}
+                      : "Ver todos los registros"}
                   </button>
 
                 </div>
@@ -631,45 +910,139 @@ export const DashboardPaciente = () => {
                 Mis datos
               </h3>
 
-              <div className="d-flex flex-column gap-2 text-white">
+              {editandoDatos ? (
+                <form
+                  className="d-flex flex-column gap-3"
+                  onSubmit={guardarDatos}
+                >
+                  <div>
+                    <label
+                      className="form-label text-white-50"
+                      htmlFor="patient-email"
+                    >
+                      Email
+                    </label>
+                    <input
+                      id="patient-email"
+                      type="email"
+                      className="form-control bg-dark text-white border-secondary"
+                      value={emailEditado}
+                      onChange={(event) =>
+                        setEmailEditado(event.target.value)
+                      }
+                      maxLength={120}
+                      required
+                    />
+                  </div>
 
-                <div>
-                  <span className="text-white-50">
-                    Email:
-                  </span>{" "}
-                  {patient.email || "No disponible"}
+                  <div>
+                    <label
+                      className="form-label text-white-50"
+                      htmlFor="patient-phone"
+                    >
+                      Teléfono
+                    </label>
+                    <input
+                      id="patient-phone"
+                      type="tel"
+                      className="form-control bg-dark text-white border-secondary"
+                      value={telefonoEditado}
+                      onChange={(event) =>
+                        setTelefonoEditado(event.target.value)
+                      }
+                      placeholder="+34600000000"
+                      maxLength={30}
+                      required
+                    />
+                  </div>
+
+                  {errorDatos && (
+                    <p className="text-danger mb-0" role="alert">
+                      {errorDatos}
+                    </p>
+                  )}
+
+                  <div className="d-flex flex-wrap gap-2">
+                    <button
+                      type="submit"
+                      className="btn btn-info rounded-pill btn-sm"
+                      disabled={guardandoDatos}
+                    >
+                      {guardandoDatos
+                        ? "Guardando..."
+                        : "Guardar cambios"}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-outline-light rounded-pill btn-sm"
+                      onClick={() => {
+                        setEditandoDatos(false);
+                        setErrorDatos("");
+                      }}
+                      disabled={guardandoDatos}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                
+                <div className="d-flex flex-column gap-2 text-white">
+                  {!editandoDatos && (
+                <button
+                  type="button"
+                  className="btn btn-outline-info rounded-pill btn-sm mt-3 col-5 text-start"
+                  onClick={iniciarEdicionDatos}
+                >
+                  <Icon name="Settings" className="me-2" />
+                  Editar datos
+                </button>
+              )}
+                  <div>
+                    <span className="text-white-50">
+                      Email:
+                    </span>{" "}
+                    {patient.email || "No disponible"}
+                  </div>
+
+                  <div>
+                    <span className="text-white-50">
+                      Teléfono:
+                    </span>{" "}
+                    {patient.telefono || "No disponible"}
+                  </div>
+
+                  <div>
+                    <span className="text-white-50">
+                      CIP:
+                    </span>{" "}
+                    {patient.cip || "No disponible"}
+                  </div>
+
+                  <div>
+                    <span className="text-white-50">
+                      Nacimiento:
+                    </span>{" "}
+                    {formatDate(patient.fecha_nacimiento)}
+                  </div>
+
+                  <div>
+                    <span className="text-white-50">
+                      Grupo sanguíneo:
+                    </span>{" "}
+                    {patient.grupo_sanguineo ||
+                      "No disponible"}
+                  </div>
                 </div>
+              )}
 
-                <div>
-                  <span className="text-white-50">
-                    Teléfono:
-                  </span>{" "}
-                  {patient.telefono || "No disponible"}
-                </div>
+              
 
-                <div>
-                  <span className="text-white-50">
-                    CIP:
-                  </span>{" "}
-                  {patient.cip || "No disponible"}
-                </div>
-
-                <div>
-                  <span className="text-white-50">
-                    Nacimiento:
-                  </span>{" "}
-                  {formatDate(patient.fecha_nacimiento)}
-                </div>
-
-                <div>
-                  <span className="text-white-50">
-                    Grupo sanguíneo:
-                  </span>{" "}
-                  {patient.grupo_sanguineo ||
-                    "No disponible"}
-                </div>
-
-              </div>
+              {exitoDatos && (
+                <p className="text-success small mt-2 mb-0" role="status">
+                  {exitoDatos}
+                </p>
+              )}
 
             </section>
 
@@ -695,19 +1068,7 @@ export const DashboardPaciente = () => {
 
               </div>
 
-              <button
-                type="button"
-                className="btn btn-outline-info rounded-pill btn-sm mb-3"
-                onClick={() =>
-                  setMostrarRecetas((visible) => !visible)
-                }
-              >
-                {mostrarRecetas
-                  ? "Ocultar recetas"
-                  : "Ver recetas"}
-              </button>
-
-              {!mostrarRecetas ? null : prescriptions.length === 0 ? (
+              {prescriptions.length === 0 ? (
 
                 <p className="text-white-50 mb-0">
                   No tienes recetas registradas.
@@ -758,7 +1119,7 @@ export const DashboardPaciente = () => {
 
               {/* VER MÁS RECETAS */}
 
-              {mostrarRecetas && prescriptions.length > 4 && (
+              {prescriptions.length > 4 && (
                 <div className="text-center mt-3">
 
                   <button
@@ -772,7 +1133,7 @@ export const DashboardPaciente = () => {
                   >
                     {mostrarTodasRecetas
                       ? "Ver menos"
-                      : "Ver más"}
+                      : "Ver todos los registros"}
                   </button>
 
                 </div>
@@ -802,24 +1163,10 @@ export const DashboardPaciente = () => {
 
               </div>
 
-              <button
-                type="button"
-                className="btn btn-outline-info rounded-pill btn-sm mb-3"
-                onClick={() =>
-                  setMostrarDiagnosticos(
-                    (visible) => !visible
-                  )
-                }
-              >
-                {mostrarDiagnosticos
-                  ? "Ocultar enfermedades"
-                  : "Ver enfermedades"}
-              </button>
-
-              {!mostrarDiagnosticos ? null : diagnoses.length === 0 ? (
+              {diagnoses.length === 0 ? (
 
                 <p className="text-white-50 mb-0">
-                  No tienes enfermedades registradas.
+                  No tienes diagnósticos registrados.
                 </p>
 
               ) : (
@@ -854,7 +1201,7 @@ export const DashboardPaciente = () => {
 
               {/* VER MÁS DIAGNÓSTICOS */}
 
-              {mostrarDiagnosticos && diagnoses.length > 4 && (
+              {diagnoses.length > 4 && (
                 <div className="text-center mt-3">
 
                   <button
@@ -868,7 +1215,7 @@ export const DashboardPaciente = () => {
                   >
                     {mostrarTodosDiagnosticos
                       ? "Ver menos"
-                      : "Ver más"}
+                      : "Ver todos los registros"}
                   </button>
 
                 </div>
@@ -879,6 +1226,322 @@ export const DashboardPaciente = () => {
           </div>
 
         </div>
+        {mostrarPrivacidad && (
+          <div
+            className="modal d-block"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="patient-privacy-modal-title"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) {
+                setMostrarPrivacidad(false);
+              }
+            }}
+            style={{
+              backgroundColor: "rgba(0, 0, 0, 0.7)",
+              backdropFilter: "blur(5px)",
+              zIndex: 1060
+            }}
+          >
+            <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+              <div className="modal-content bg-dark text-white border border-info border-opacity-50 rounded-4 shadow-lg">
+                <div className="modal-header border-bottom border-white border-opacity-10">
+                  <div>
+                    <h2
+                      id="patient-privacy-modal-title"
+                      className="modal-title fs-5 fw-bold text-info"
+                    >
+                      Mi privacidad sanitaria
+                    </h2>
+                    
+                  </div>
+                  <button
+                    type="button"
+                    className="btn-close btn-close-white"
+                    aria-label="Cerrar"
+                    onClick={() => setMostrarPrivacidad(false)}
+                  />
+                </div>
+
+                <div className="modal-body">
+                  <fieldset className="mb-4">
+                    <legend className="h6 mb-3">
+                      ¿Quién puede consultar tu información clínica?
+                    </legend>
+                    <div className="form-check mb-2">
+                      <input
+                        id="privacy-scope-hospital"
+                        type="radio"
+                        name="privacy-scope"
+                        value="hospital"
+                        className="form-check-input"
+                        checked={alcancePrivacidad === "hospital"}
+                        onChange={() => setAlcancePrivacidad("hospital")}
+                      />
+                      <label
+                        htmlFor="privacy-scope-hospital"
+                        className="form-check-label"
+                      >
+                        Solo los profesionales autorizados de mi hospital o
+                        centro de referencia.
+                      </label>
+                    </div>
+                    <div className="form-check mb-2">
+                      <input
+                        id="privacy-scope-national"
+                        type="radio"
+                        name="privacy-scope"
+                        value="national"
+                        className="form-check-input"
+                        checked={alcancePrivacidad === "national"}
+                        onChange={() => setAlcancePrivacidad("national")}
+                      />
+                      <label
+                        htmlFor="privacy-scope-national"
+                        className="form-check-label"
+                      >
+                        Profesionales autorizados de cualquier centro del
+                        sistema nacional cuando exista una necesidad asistencial.
+                      </label>
+                    </div>
+                    <div className="form-check">
+                      <input
+                        id="privacy-scope-restricted"
+                        type="radio"
+                        name="privacy-scope"
+                        value="national-restricted"
+                        className="form-check-input"
+                        checked={alcancePrivacidad === "national-restricted"}
+                        onChange={() => {
+                          setAlcancePrivacidad("national-restricted");
+                          setRestringirInformesSensibles(true);
+                        }}
+                      />
+                      <label
+                        htmlFor="privacy-scope-restricted"
+                        className="form-check-label"
+                      >
+                        Acceso nacional con restricciones adicionales por
+                        documento o categoría clínica.
+                      </label>
+                    </div>
+                  </fieldset>
+
+                  <div className="form-check mb-3">
+                    <input
+                      id="privacy-sensitive-reports"
+                      type="checkbox"
+                      className="form-check-input"
+                      checked={restringirInformesSensibles}
+                      onChange={(event) =>
+                        setRestringirInformesSensibles(
+                          event.target.checked
+                        )
+                      }
+                    />
+                    <label
+                      htmlFor="privacy-sensitive-reports"
+                      className="form-check-label"
+                    >
+                      Aplicar restricciones adicionales a determinados
+                      informes sensibles: enfermedades, recetas y alergias
+                      para profesionales de otros hospitales.
+                    </label>
+                  </div>
+
+                  <div className="form-check mb-4">
+                    <input
+                      id="privacy-access-notifications"
+                      type="checkbox"
+                      className="form-check-input"
+                      checked={notificarAccesos}
+                      onChange={(event) =>
+                        setNotificarAccesos(event.target.checked)
+                      }
+                    />
+                    <label
+                      htmlFor="privacy-access-notifications"
+                      className="form-check-label"
+                    >
+                      Notificarme los accesos a mis informes clínicos.
+                    </label>
+                  </div>
+
+                  <div className="border border-info border-opacity-50 rounded-3 p-3">
+                    <h3 className="h6 text-info">Vista previa de tu configuración</h3>
+                    <ul className="small mb-2">
+                      <li>
+                        Alcance:{" "}
+                        {alcancePrivacidad === "hospital"
+                          ? "Hospital o centro de referencia"
+                          : "Red sanitaria nacional"}
+                        {alcancePrivacidad === "national-restricted" &&
+                          " con restricciones por documento o categoría clínica"}
+                        .
+                      </li>
+                      <li>
+                        Restricciones adicionales:{" "}
+                        {restringirInformesSensibles ||
+                        alcancePrivacidad === "national-restricted"
+                          ? "Activadas"
+                          : "Desactivadas"}
+                        .
+                      </li>
+                      <li>
+                        Notificaciones de acceso:{" "}
+                        {notificarAccesos ? "Activadas" : "Desactivadas"}.
+                      </li>
+                    </ul>
+                    <p className="small text-white-50 mb-0">
+                      Las restricciones pueden limitar la disponibilidad de
+                      información durante la atención fuera de tu centro.
+                    </p>
+                  </div>
+                  {errorPrivacidad && (
+                    <div className="alert alert-danger mt-3 mb-0" role="alert">
+                      {errorPrivacidad}
+                    </div>
+                  )}
+                  {exitoPrivacidad && (
+                    <div className="alert alert-success mt-3 mb-0" role="status">
+                      {exitoPrivacidad}
+                    </div>
+                  )}
+                </div>
+
+                <div className="modal-footer border-top border-white border-opacity-10">
+                  <button
+                    type="button"
+                    className="btn btn-outline-light rounded-pill"
+                    onClick={() => setMostrarPrivacidad(false)}
+                  >
+                    Cerrar
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-info rounded-pill"
+                    onClick={guardarPrivacidad}
+                    disabled={guardandoPrivacidad}
+                  >
+                    {guardandoPrivacidad ? "Guardando..." : "Guardar cambios"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {notificationToReport && (
+          <div
+            className="modal d-block"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="access-report-modal-title"
+            onMouseDown={(event) => {
+              if (
+                event.target === event.currentTarget &&
+                !sendingReport
+              ) {
+                setNotificationToReport(null);
+              }
+            }}
+            style={{
+              backgroundColor: "rgba(0, 0, 0, 0.7)",
+              backdropFilter: "blur(5px)",
+              zIndex: 1070
+            }}
+          >
+            <div className="modal-dialog modal-dialog-centered">
+              <form
+                className="modal-content bg-dark text-white border border-danger border-opacity-50 rounded-4 shadow-lg"
+                onSubmit={denunciarAcceso}
+              >
+                <div className="modal-header border-bottom border-white border-opacity-10">
+                  <div>
+                    <h2
+                      id="access-report-modal-title"
+                      className="modal-title fs-5 fw-bold text-danger"
+                    >
+                      Denunciar acceso
+                    </h2>
+                    <p className="small text-white-50 mb-0 mt-1">
+                      {notificationToReport.medico} ·{" "}
+                      {formatDateTime(notificationToReport.fecha)}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn-close btn-close-white"
+                    aria-label="Cerrar"
+                    onClick={() => setNotificationToReport(null)}
+                    disabled={sendingReport}
+                  />
+                </div>
+                <div className="modal-body">
+                  <p>
+                    Si crees que este acceso no estaba justificado, explica
+                    brevemente por qué. La denuncia quedará registrada para
+                    revisión.
+                  </p>
+                  <label
+                    htmlFor="access-report-description"
+                    className="form-label"
+                  >
+                    Motivo de la denuncia
+                  </label>
+                  <textarea
+                    id="access-report-description"
+                    className="form-control bg-dark text-white border-secondary"
+                    rows="4"
+                    minLength={10}
+                    maxLength={1000}
+                    value={reportDescription}
+                    onChange={(event) =>
+                      setReportDescription(event.target.value)
+                    }
+                    required
+                    autoFocus
+                  />
+                  <div className="d-flex justify-content-between mt-1">
+                    <span className="small text-white-50">
+                      Entre 10 y 1000 caracteres.
+                    </span>
+                    <span className="small text-white-50">
+                      {reportDescription.length}/1000
+                    </span>
+                  </div>
+                  {reportError && (
+                    <div
+                      className="alert alert-danger mt-3 mb-0"
+                      role="alert"
+                    >
+                      {reportError}
+                    </div>
+                  )}
+                </div>
+                <div className="modal-footer border-top border-white border-opacity-10">
+                  <button
+                    type="button"
+                    className="btn btn-outline-light rounded-pill"
+                    onClick={() => setNotificationToReport(null)}
+                    disabled={sendingReport}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-danger rounded-pill"
+                    disabled={
+                      sendingReport ||
+                      reportDescription.trim().length < 10
+                    }
+                  >
+                    {sendingReport ? "Enviando..." : "Enviar denuncia"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
         <FeedbackModal
           message={feedback.message}
           type={feedback.type}
