@@ -24,6 +24,7 @@ resend = "*"
 tomli = "*"
 pyyaml = ">=6.0.2"
 psycopg2-binary = ">=2.9.3"
+flask-limiter = "*"
 
 [requires]
 python_version = "3.10.13"
