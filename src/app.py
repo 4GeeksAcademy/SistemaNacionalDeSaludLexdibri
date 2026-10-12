@@ -87,10 +87,10 @@ def handle_invalid_usage(error):
 
 @app.route("/")
 def sitemap():
-    if ENV == "development":
-        return generate_sitemap(app)
-
-    return send_from_directory(static_file_dir, "index.html")
+    index_path = os.path.join(static_file_dir, "index.html")
+    if os.path.isfile(index_path):
+        return send_from_directory(static_file_dir, "index.html")
+    return generate_sitemap(app)
 
 
 @app.route("/<path:path>", methods=["GET"])
