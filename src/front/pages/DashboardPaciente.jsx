@@ -94,9 +94,12 @@ export const DashboardPaciente = () => {
         if (!cancelled) {
           setDashboard(data);
           const privacy = data.preferencias_privacidad || {};
-          setAlcancePrivacidad(privacy.access_scope || "national");
+          setAlcancePrivacidad(
+            privacy.access_scope === "hospital" ? "hospital" : "national"
+          );
           setRestringirInformesSensibles(
-            privacy.restrict_sensitive_records === true
+            privacy.restrict_sensitive_records === true ||
+              privacy.access_scope === "national-restricted"
           );
           setNotificarAccesos(privacy.notify_accesses === true);
         }
@@ -517,7 +520,7 @@ export const DashboardPaciente = () => {
 
             <button
               type="button"
-              className="btn btn-outline-info rounded-pill"
+              className="btn btn-outline-info text-light rounded-pill mt-3"
               onClick={() => {
                 setErrorPrivacidad("");
                 setExitoPrivacidad("");
@@ -525,7 +528,7 @@ export const DashboardPaciente = () => {
               }}
               aria-haspopup="dialog"
             >
-              <Icon name="Settings" className="me-2" />
+              <Icon name="Settings" className="me-2 " />
               Configuración de privacidad
             </button>
 
@@ -986,18 +989,7 @@ export const DashboardPaciente = () => {
                   </div>
                 </form>
               ) : (
-                
                 <div className="d-flex flex-column gap-2 text-white">
-                  {!editandoDatos && (
-                <button
-                  type="button"
-                  className="btn btn-outline-info rounded-pill btn-sm mt-3 col-5 text-start"
-                  onClick={iniciarEdicionDatos}
-                >
-                  <Icon name="Settings" className="me-2" />
-                  Editar datos
-                </button>
-              )}
                   <div>
                     <span className="text-white-50">
                       Email:
@@ -1033,6 +1025,15 @@ export const DashboardPaciente = () => {
                     {patient.grupo_sanguineo ||
                       "No disponible"}
                   </div>
+
+                  <button
+                    type="button"
+                    className="btn btn-outline-info rounded-pill btn-sm mt-3 align-self-start text-start"
+                    onClick={iniciarEdicionDatos}
+                  >
+                    <Icon name="Settings" className="me-2" />
+                    Editar datos
+                  </button>
                 </div>
               )}
 
@@ -1264,10 +1265,14 @@ export const DashboardPaciente = () => {
                 </div>
 
                 <div className="modal-body">
-                  <fieldset className="mb-4">
-                    <legend className="h6 mb-3">
+                  <fieldset className="border border-secondary border-opacity-50 rounded-3 p-3 mb-3">
+                    <legend className="h6 text-info float-none w-auto px-2 mb-1">
                       ¿Quién puede consultar tu información clínica?
                     </legend>
+                    <p className="small text-white-50 mb-3">
+                      Elige el alcance de acceso para profesionales autorizados
+                      cuando exista una necesidad asistencial.
+                    </p>
                     <div className="form-check mb-2">
                       <input
                         id="privacy-scope-hospital"
@@ -1304,85 +1309,76 @@ export const DashboardPaciente = () => {
                         sistema nacional cuando exista una necesidad asistencial.
                       </label>
                     </div>
+                  </fieldset>
+
+                  <fieldset className="border border-secondary border-opacity-50 rounded-3 p-3 mb-3">
+                    <legend className="h6 text-info float-none w-auto px-2 mb-1">
+                      Restricciones de información sensible
+                    </legend>
+                    <p className="small text-white-50 mb-3">
+                      Esta restricción afecta a profesionales de otros
+                      hospitales; los profesionales de tu hospital mantienen
+                      el acceso asistencial.
+                    </p>
                     <div className="form-check">
                       <input
-                        id="privacy-scope-restricted"
-                        type="radio"
-                        name="privacy-scope"
-                        value="national-restricted"
+                        id="privacy-sensitive-reports"
+                        type="checkbox"
                         className="form-check-input"
-                        checked={alcancePrivacidad === "national-restricted"}
-                        onChange={() => {
-                          setAlcancePrivacidad("national-restricted");
-                          setRestringirInformesSensibles(true);
-                        }}
+                        checked={restringirInformesSensibles}
+                        onChange={(event) =>
+                          setRestringirInformesSensibles(
+                            event.target.checked
+                          )
+                        }
                       />
                       <label
-                        htmlFor="privacy-scope-restricted"
+                        htmlFor="privacy-sensitive-reports"
                         className="form-check-label"
                       >
-                        Acceso nacional con restricciones adicionales por
-                        documento o categoría clínica.
+                        Restringir enfermedades, recetas y alergias.
                       </label>
                     </div>
                   </fieldset>
 
-                  <div className="form-check mb-3">
-                    <input
-                      id="privacy-sensitive-reports"
-                      type="checkbox"
-                      className="form-check-input"
-                      checked={restringirInformesSensibles}
-                      onChange={(event) =>
-                        setRestringirInformesSensibles(
-                          event.target.checked
-                        )
-                      }
-                    />
-                    <label
-                      htmlFor="privacy-sensitive-reports"
-                      className="form-check-label"
-                    >
-                      Aplicar restricciones adicionales a determinados
-                      informes sensibles: enfermedades, recetas y alergias
-                      para profesionales de otros hospitales.
-                    </label>
-                  </div>
-
-                  <div className="form-check mb-4">
-                    <input
-                      id="privacy-access-notifications"
-                      type="checkbox"
-                      className="form-check-input"
-                      checked={notificarAccesos}
-                      onChange={(event) =>
-                        setNotificarAccesos(event.target.checked)
-                      }
-                    />
-                    <label
-                      htmlFor="privacy-access-notifications"
-                      className="form-check-label"
-                    >
-                      Notificarme los accesos a mis informes clínicos.
-                    </label>
-                  </div>
+                  <fieldset className="border border-secondary border-opacity-50 rounded-3 p-3 mb-3">
+                    <legend className="h6 text-info float-none w-auto px-2 mb-1">
+                      Notificaciones
+                    </legend>
+                    <div className="form-check">
+                      <input
+                        id="privacy-access-notifications"
+                        type="checkbox"
+                        className="form-check-input"
+                        checked={notificarAccesos}
+                        onChange={(event) =>
+                          setNotificarAccesos(event.target.checked)
+                        }
+                      />
+                      <label
+                        htmlFor="privacy-access-notifications"
+                        className="form-check-label"
+                      >
+                        Notificarme los accesos a mis informes clínicos.
+                      </label>
+                    </div>
+                  </fieldset>
 
                   <div className="border border-info border-opacity-50 rounded-3 p-3">
-                    <h3 className="h6 text-info">Vista previa de tu configuración</h3>
-                    <ul className="small mb-2">
+                    <h3 className="h6 text-info mb-3">
+                      Vista previa de tu configuración
+                    </h3>
+                    <ul className="small mb-3">
                       <li>
                         Alcance:{" "}
                         {alcancePrivacidad === "hospital"
                           ? "Hospital o centro de referencia"
                           : "Red sanitaria nacional"}
-                        {alcancePrivacidad === "national-restricted" &&
-                          " con restricciones por documento o categoría clínica"}
                         .
                       </li>
                       <li>
                         Restricciones adicionales:{" "}
-                        {restringirInformesSensibles ||
-                        alcancePrivacidad === "national-restricted"
+                        {restringirInformesSensibles
                           ? "Activadas"
                           : "Desactivadas"}
                         .

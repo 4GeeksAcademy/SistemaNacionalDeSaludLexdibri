@@ -38,11 +38,8 @@ export const PrivacyRegistrationChecklist = ({ onConfirmationChange }) => {
         identity: false,
         information: false
     });
-    const [preferencesReviewed, setPreferencesReviewed] = useState(false);
-    const [accessPreference, setAccessPreference] = useState("care-team");
-    const [restrictSensitiveReports, setRestrictSensitiveReports] =
+    const [privacyConfigurationAccepted, setPrivacyConfigurationAccepted] =
         useState(false);
-    const [notifications, setNotifications] = useState("essential");
     const [optionalNotificationsConsent, setOptionalNotificationsConsent] =
         useState(false);
     const [confirmedRecord, setConfirmedRecord] = useState(null);
@@ -66,10 +63,7 @@ export const PrivacyRegistrationChecklist = ({ onConfirmationChange }) => {
             timestamp: new Date().toISOString(),
             identityAcknowledged: acknowledgements.identity,
             informationAcknowledged: acknowledgements.information,
-            preferencesReviewed,
-            accessPreference,
-            restrictSensitiveReports,
-            notifications,
+            privacyConfigurationAccepted,
             optionalNotificationsConsent
         };
         setConfirmedRecord(record);
@@ -80,7 +74,7 @@ export const PrivacyRegistrationChecklist = ({ onConfirmationChange }) => {
     const requiredItemsReviewed =
         acknowledgements.identity &&
         acknowledgements.information &&
-        preferencesReviewed;
+        privacyConfigurationAccepted;
 
     return (
         <section
@@ -280,151 +274,37 @@ export const PrivacyRegistrationChecklist = ({ onConfirmationChange }) => {
                             3. Configuración de privacidad
                         </h3>
                         <p className="small text-white-50">
-                            Opciones propuestas, sujetas a validación de qué
-                            restricciones son legal y asistencialmente posibles.
-                            Restringir información puede dificultar que un
-                            profesional disponga de datos necesarios para la
-                            atención.
+                            Configuración inicial propuesta para esta
+                            demostración. Podrás modificar quién puede consultar
+                            tu información y las demás opciones de privacidad al
+                            crear tu cuenta y posteriormente desde tu perfil.
                         </p>
-                        <fieldset className="mb-3">
-                            <legend className="small fw-semibold">
-                                Acceso profesional propuesto
-                            </legend>
-                            <div className="form-check">
-                                <input
-                                    id="privacy-access-care-team"
-                                    type="radio"
-                                    name="privacy-access"
-                                    className="form-check-input"
-                                    value="care-team"
-                                    checked={accessPreference === "care-team"}
-                                    onChange={() => {
-                                        setAccessPreference("care-team");
-                                        clearConfirmation();
-                                    }}
-                                />
-                                <label
-                                    htmlFor="privacy-access-care-team"
-                                    className="form-check-label small"
-                                >
-                                    Profesionales autorizados implicados en la
-                                    atención.
-                                </label>
-                            </div>
-                            <div className="form-check">
-                                <input
-                                    id="privacy-access-emergency"
-                                    type="radio"
-                                    name="privacy-access"
-                                    className="form-check-input"
-                                    value="care-team-emergency"
-                                    checked={
-                                        accessPreference === "care-team-emergency"
-                                    }
-                                    onChange={() => {
-                                        setAccessPreference(
-                                            "care-team-emergency"
-                                        );
-                                        clearConfirmation();
-                                    }}
-                                />
-                                <label
-                                    htmlFor="privacy-access-emergency"
-                                    className="form-check-label small"
-                                >
-                                    Lo anterior y acceso excepcional en una
-                                    urgencia, si la normativa lo permite.
-                                </label>
-                            </div>
-                        </fieldset>
-                        <div className="form-check mb-3">
+                        <div className="form-check">
                             <input
-                                id="privacy-restrict-reports"
+                                id="privacy-configuration-accepted"
                                 type="checkbox"
                                 className="form-check-input"
-                                checked={restrictSensitiveReports}
+                                checked={privacyConfigurationAccepted}
                                 onChange={(event) => {
-                                    setRestrictSensitiveReports(
+                                    setPrivacyConfigurationAccepted(
                                         event.target.checked
                                     );
                                     clearConfirmation();
                                 }}
                             />
                             <label
-                                htmlFor="privacy-restrict-reports"
+                                htmlFor="privacy-configuration-accepted"
                                 className="form-check-label small"
                             >
-                                Simular una restricción selectiva de informes
-                                marcados como sensibles.
+                                Acepto que toda mi información sanitaria quede
+                                disponible para los profesionales sanitarios
+                                autorizados de mi hospital y, cuando exista una
+                                necesidad asistencial, de centros sanitarios de
+                                toda España. Podré modificar quién puede verla y
+                                las demás opciones de privacidad al crear mi
+                                cuenta.
                             </label>
                         </div>
-                        <div className="form-check mb-3">
-                            <input
-                                id="privacy-preferences-reviewed"
-                                type="checkbox"
-                                className="form-check-input"
-                                checked={preferencesReviewed}
-                                onChange={(event) => {
-                                    setPreferencesReviewed(
-                                        event.target.checked
-                                    );
-                                    clearConfirmation();
-                                }}
-                            />
-                            <label
-                                htmlFor="privacy-preferences-reviewed"
-                                className="form-check-label small"
-                            >
-                                He revisado y elegido las preferencias de acceso,
-                                informes y notificaciones de esta simulación.
-                            </label>
-                        </div>
-                        <fieldset>
-                            <legend className="small fw-semibold">
-                                Notificaciones propuestas
-                            </legend>
-                            <div className="form-check">
-                                <input
-                                    id="privacy-notifications-essential"
-                                    type="radio"
-                                    name="privacy-notifications"
-                                    className="form-check-input"
-                                    value="essential"
-                                    checked={notifications === "essential"}
-                                    onChange={() => {
-                                        setNotifications("essential");
-                                        clearConfirmation();
-                                    }}
-                                />
-                                <label
-                                    htmlFor="privacy-notifications-essential"
-                                    className="form-check-label small"
-                                >
-                                    Avisos necesarios para la cuenta o la
-                                    atención, según se defina.
-                                </label>
-                            </div>
-                            <div className="form-check">
-                                <input
-                                    id="privacy-notifications-none"
-                                    type="radio"
-                                    name="privacy-notifications"
-                                    className="form-check-input"
-                                    value="none"
-                                    checked={notifications === "none"}
-                                    onChange={() => {
-                                        setNotifications("none");
-                                        clearConfirmation();
-                                    }}
-                                />
-                                <label
-                                    htmlFor="privacy-notifications-none"
-                                    className="form-check-label small"
-                                >
-                                    No recibir notificaciones opcionales.
-                                </label>
-                            </div>
-                        </fieldset>
                     </li>
 
                     <li className="border border-secondary rounded-3 p-3">
@@ -498,24 +378,10 @@ export const PrivacyRegistrationChecklist = ({ onConfirmationChange }) => {
                                             : "no"}
                                     </li>
                                     <li>
-                                        Acceso:{" "}
-                                        {confirmedRecord.accessPreference ===
-                                        "care-team"
-                                            ? "profesionales autorizados implicados en la atención"
-                                            : "equipo asistencial y acceso excepcional en urgencia, si se permite"}
-                                    </li>
-                                    <li>
-                                        Restricción de informes sensibles:{" "}
-                                        {confirmedRecord.restrictSensitiveReports
-                                            ? "seleccionada (simulación)"
-                                            : "no seleccionada"}
-                                    </li>
-                                    <li>
-                                        Notificaciones:{" "}
-                                        {confirmedRecord.notifications ===
-                                        "essential"
-                                            ? "necesarias para cuenta o atención (propuesta)"
-                                            : "sin notificaciones opcionales"}
+                                        Configuración de privacidad:{" "}
+                                        {confirmedRecord.privacyConfigurationAccepted
+                                            ? "aceptada para la demostración"
+                                            : "no aceptada"}
                                     </li>
                                     <li>
                                         Consentimiento opcional:{" "}
