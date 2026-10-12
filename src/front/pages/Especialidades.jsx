@@ -300,58 +300,58 @@ export const Especialidades = () => {
     ];
 
     return (
-        <div className="especialidades-page py-5">
+        <div className="text-white min-vh-100">
 
             {/* HERO */}
             <section className="container py-5 text-center">
-                <div className="scroll-reveal">
+                <div className="row justify-content-center">
+                    <div className="col-lg-9 py-lg-5 scroll-reveal">
 
-                    <span className="badge rounded-pill bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-3 py-2 mb-3">
-                        Sistema Nacional de Salud
-                    </span>
+                        <span className="badge rounded-pill bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-3 py-2 mb-4">
+                            Sistema Nacional de Salud
+                        </span>
 
-                    <h1 className="display-5 fw-bold text-white mb-3">
-                        Especialidades{" "}
-                        <span className="text-info">Médicas</span>
-                    </h1>
+                        <h1 className="display-3 fw-bold mb-4">
+                            Especialidades
+                            <br />
+                            <span className="text-info">Médicas.</span>
+                        </h1>
 
-                    <p
-                        className="lead text-white-50 mb-4 mx-auto"
-                        style={{ maxWidth: "650px" }}
-                    >
-                        Consulta las distintas áreas asistenciales agrupadas
-                        por categorías o usa la búsqueda rápida.
-                    </p>
+                        <p className="lead text-white-50 mx-auto col-lg-10 mb-4">
+                            Consulta las distintas áreas asistenciales agrupadas
+                            por categorías o usa la búsqueda rápida.
+                        </p>
 
-                    {/* BUSCADOR */}
-                    <div className="row justify-content-center mb-4">
-                        <div className="col-12 col-md-8 col-lg-6">
+                        {/* BUSCADOR */}
+                        <div className="row justify-content-center">
+                            <div className="col-12 col-md-8 col-lg-8">
 
-                            <div className="input-group input-group-lg bg-info bg-opacity-10 rounded-4 border border-info border-opacity-25">
+                                <div className="input-group input-group-lg bg-info bg-opacity-10 rounded-4 border border-info border-opacity-25">
 
-                                <span className="input-group-text bg-transparent border-0 text-info">
-                                    <Icon name="Search" />
-                                </span>
+                                    <span className="input-group-text bg-transparent border-0 text-info ps-4">
+                                        <Icon name="Search" />
+                                    </span>
 
-                                <input
-                                    type="text"
-                                    className="form-control bg-transparent border-0 text-white shadow-none"
-                                    placeholder="Buscar especialidad (ej. Cardiología, Pediatría)..."
-                                    value={busqueda}
-                                    onChange={(e) =>
-                                        setBusqueda(e.target.value)
-                                    }
-                                />
+                                    <input
+                                        type="text"
+                                        className="form-control bg-transparent border-0 text-light especialidades-search shadow-none py-3"
+                                        placeholder="Buscar especialidad (ej. Cardiología, Pediatría)..."
+                                        value={busqueda}
+                                        onChange={(e) =>
+                                            setBusqueda(e.target.value)
+                                        }
+                                    />
+
+                                </div>
 
                             </div>
-
                         </div>
                     </div>
                 </div>
             </section>
 
             {/* SECCIÓN PRINCIPAL */}
-            <section className="container py-2">
+            <section className="container py-5">
 
                 <div className="accordion" id="accordionEspecialidades">
 

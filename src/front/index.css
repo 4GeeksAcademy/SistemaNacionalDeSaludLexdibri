@@ -37,6 +37,11 @@ body {
   transform: translateY(0);
 }
 
+.especialidades-search::placeholder {
+  color: var(--bs-light);
+  opacity: 1;
+}
+
 .register-phone-input.react-tel-input {
   width: 100%;
   max-width: 100%;
